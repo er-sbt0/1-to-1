@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Shadow of a Ring — First Isomorphism Theorem</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<style>
+  :root {
+    --bg0:#0a0d1a; --bg1:#121631; --panel:rgba(20,25,52,0.72);
+    --stroke:rgba(120,140,220,0.22); --ink:#e8ecff; --dim:#9aa6d8;
+    --accent:#7fb2ff; --gold:#ffcf6b; --good:#5ce6b0;
+    --shadow:0 10px 40px rgba(0,0,0,0.45);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 800px at 70% -10%, #1a2148 0%, var(--bg0) 55%);
+    color:var(--ink); -webkit-font-smoothing:antialiased;
+  }
+  #app { display:flex; height:100vh; width:100vw; }
+  #stage { position:relative; flex:1 1 auto; min-width:0; }
+  canvas { display:block; }
+  #sidebar {
+    flex:0 0 400px; max-width:42vw; height:100%; overflow-y:auto;
+    background:linear-gradient(180deg, rgba(14,18,40,0.96), rgba(10,13,28,0.98));
+    border-left:1px solid var(--stroke); padding:20px 20px 40px; z-index:5;
+  }
+  #sidebar::-webkit-scrollbar { width:9px; }
+  #sidebar::-webkit-scrollbar-thumb { background:rgba(120,140,220,0.3); border-radius:6px; }
+  h1 { font-size:19px; margin:0 0 2px; letter-spacing:.2px; }
+  .sub { color:var(--dim); font-size:12.5px; margin:0 0 16px; line-height:1.5; }
+  .card {
+    background:var(--panel); border:1px solid var(--stroke); border-radius:14px;
+    padding:14px 15px; margin-bottom:14px; box-shadow:var(--shadow); backdrop-filter:blur(6px);
+  }
+  .steptag { display:inline-block; font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin-bottom:6px; }
+  .step-title { font-size:16px; font-weight:700; margin:0 0 8px; }
+  .step-body { font-size:13.5px; line-height:1.62; color:#d7ddff; }
+  .step-body .katex { font-size:1.02em; }
+  .navrow { display:flex; gap:9px; margin-top:14px; align-items:center; }
+  button {
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--ink);
+    background:linear-gradient(180deg,#2c3663,#222a52);
+    border:1px solid var(--stroke); border-radius:10px; padding:9px 14px; cursor:pointer;
+    transition:transform .08s, border-color .15s, background .15s;
+  }
+  button:hover { border-color:var(--accent); transform:translateY(-1px); }
+  button:active { transform:translateY(0); }
+  button:disabled { opacity:.4; cursor:default; transform:none; }
+  button.primary { background:linear-gradient(180deg,#3d63c9,#2f4ea3); border-color:#5a82e0; }
+  button.gold { background:linear-gradient(180deg,#7a5b1e,#6a4c16); border-color:var(--gold); color:#ffe6ad; }
+  .dots { display:flex; gap:6px; margin-left:auto; }
+  .dot { width:8px; height:8px; border-radius:50%; background:rgba(140,155,220,0.28); }
+  .dot.on { background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .ctl { margin:11px 0; }
+  .ctl label { display:flex; justify-content:space-between; font-size:12.5px; color:var(--dim); margin-bottom:6px; }
+  .ctl label b { color:var(--ink); font-variant-numeric:tabular-nums; }
+  input[type=range]{ width:100%; accent-color:var(--gold); cursor:pointer; }
+  .toggles { display:flex; flex-wrap:wrap; gap:8px; }
+  .toggle {
+    font-size:12px; padding:7px 11px; border-radius:9px; border:1px solid var(--stroke);
+    background:rgba(30,38,74,0.6); cursor:pointer; user-select:none; transition:.15s;
+  }
+  .toggle.on { border-color:var(--good); color:#c9ffe9; background:rgba(30,70,58,0.55); }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:4px; }
+  .stat { background:rgba(18,24,52,0.7); border:1px solid var(--stroke); border-radius:11px; padding:10px 6px; text-align:center; }
+  .stat .big { font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .stat .lab { font-size:10.5px; color:var(--dim); margin-top:3px; letter-spacing:.4px; }
+  .stat.match .big { color:var(--good); }
+  #readout { min-height:54px; font-size:13.5px; line-height:1.55; }
+  #readout .hint { color:var(--dim); font-style:italic; }
+  .swatch { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:middle; margin-right:5px; box-shadow:0 0 6px rgba(0,0,0,.4);}
+  .caveat { font-size:11.5px; color:#c3b489; line-height:1.55; background:rgba(60,48,18,0.32);
+    border:1px solid rgba(255,207,107,0.28); border-radius:11px; padding:11px 13px; }
+  .caveat b { color:var(--gold); }
+  .legend { font-size:12px; color:var(--dim); line-height:1.7; }
+  .overlay-hint {
+    position:absolute; left:16px; top:14px; font-size:12px; color:var(--dim);
+    background:rgba(10,13,28,0.55); border:1px solid var(--stroke); border-radius:9px;
+    padding:7px 11px; pointer-events:none; z-index:4; backdrop-filter:blur(4px);
+  }
+  .overlay-hint b { color:var(--accent); }
+  #tip {
+    position:absolute; pointer-events:none; z-index:6; font-size:12.5px;
+    background:rgba(8,11,24,0.94); border:1px solid var(--accent); border-radius:10px;
+    padding:8px 11px; color:var(--ink); box-shadow:var(--shadow); opacity:0; transition:opacity .12s;
+    transform:translate(-50%,calc(-100% - 12px)); white-space:nowrap;
+  }
+  #tip .katex { font-size:1em; }
+  #loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--dim); font-size:14px; z-index:10; background:var(--bg0); }
+  .kbd { font-family:ui-monospace,monospace; font-size:11px; background:rgba(120,140,220,0.18);
+    border:1px solid var(--stroke); border-radius:5px; padding:1px 5px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="loading">Loading 3D scene…</div>
+    <div class="overlay-hint">Drag to <b>orbit</b> · scroll to <b>zoom</b> · hover / click a column to inspect its fiber</div>
+    <div id="tip"></div>
+  </div>
+
+  <aside id="sidebar">
+    <h1>The Shadow of a Ring</h1>
+    <p class="sub">First Isomorphism Theorem for rings, told as a projection casting a shadow.
+      The ring <span class="katex-inline" data-tex="R=(\mathbb{Z}/3\mathbb{Z})^3"></span> is a real cube of 27 points; the homomorphism flattens it onto its shadow.</p>
+
+    <!-- Narration -->
+    <div class="card" id="narration">
+      <span class="steptag" id="steptag">Step 1 / 6</span>
+      <div class="step-title" id="stitle"></div>
+      <div class="step-body" id="sbody"></div>
+      <div class="navrow">
+        <button id="prev">‹ Back</button>
+        <button id="next" class="primary">Next ›</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="card">
+      <div class="ctl">
+        <label>Cast the shadow (collapse along <span class="katex-inline" data-tex="\ker\varphi"></span>) <b id="collapseval">0%</b></label>
+        <input type="range" id="collapse" min="0" max="100" value="0" />
+      </div>
+      <div class="navrow" style="margin-top:6px;">
+        <button id="playbtn" class="gold">▶ Collapse</button>
+        <button id="resetbtn">↺ Lift back</button>
+      </div>
+      <div class="toggles" style="margin-top:13px;">
+        <div class="toggle on" id="tFibers">Fibers (columns)</div>
+        <div class="toggle on" id="tKernel">Kernel axis</div>
+        <div class="toggle on" id="tShadow">Shadow floor</div>
+        <div class="toggle" id="tSpin">Auto-spin</div>
+      </div>
+    </div>
+
+    <!-- Live readout -->
+    <div class="card">
+      <div id="readout"><span class="hint">Hover or click a column to see its coset map to one shadow point.</span></div>
+    </div>
+
+    <!-- Counter -->
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><div class="big" id="nR">27</div><div class="lab">|R| points</div></div>
+        <div class="stat"><div class="big" id="nK">3</div><div class="lab">|ker φ|</div></div>
+        <div class="stat match"><div class="big" id="nQ">9</div><div class="lab">slices = shadow pts</div></div>
+      </div>
+      <div class="legend" style="margin-top:11px;">
+        <span class="katex-inline" data-tex="\#\text{slices}=\dfrac{|R|}{|\ker\varphi|}=\dfrac{27}{3}=9=|\operatorname{im}\varphi|"></span>
+      </div>
+    </div>
+
+    <!-- Honesty -->
+    <div class="card">
+      <div class="caveat">
+        <b>Honest about the metaphor.</b> The cube is a <i>picture of a finite, discrete</i> ring — not a continuous solid.
+        The projection faithfully shows the <b>set map</b> and the <b>additive</b> structure: fibers are exactly cosets of
+        <span class="katex-inline" data-tex="\ker\varphi"></span>, so the shadow really equals
+        <span class="katex-inline" data-tex="\operatorname{im}\varphi"></span>.
+        The picture does <i>not</i> prove multiplication is preserved — that is checked in the algebra (φ is componentwise, so
+        <span class="katex-inline" data-tex="\varphi(ab)=\varphi(a)\varphi(b)"></span>). Click a column to see both sums and products agree.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script src="lib/auto-render.min.js"></script>
+<script>
+/* ============================================================
+   MATH MODEL  (computed honestly, not faked)
+   R = (Z/3Z)^3 , 27 points.
+   phi : R -> (Z/3Z)^2 , (x,y,z) |-> (x,y)   [drop 3rd coord]
+   ker phi = {(0,0,z)} = the z-axis column   (collapse direction)
+   fibers  = 9 columns (vary z)              = cosets of ker
+   im phi  = (Z/3Z)^2 = 9 shadow points on the floor
+   R/ker phi  ~=  im phi     (First Isomorphism Theorem)
+   ============================================================ */
+const N = 3;                    // Z/3Z
+const SP = 2.3;                 // lattice spacing (world units)
+const OFF = (N - 1) / 2 * SP;   // centering offset
+
+// Build the 27 ring elements and compute phi / fibers in code.
+const points = [];              // {a,b,c, col, img:[a,b], color}
+const columns = [];             // 9 fibers, each {a,b, key, members:[], color, shadowPos}
+const colIndex = {};            // "a,b" -> column idx
+
+function keyAB(a,b){ return a + "," + b; }
+
+for (let a=0;a<N;a++) for (let b=0;b<N;b++){
+  const idx = columns.length;
+  colIndex[keyAB(a,b)] = idx;
+  const hue = (a*N + b) / (N*N);            // distinct hue per shadow point
+  const color = new THREE.Color().setHSL(hue, 0.62, 0.56);
+  columns.push({ a, b, key:keyAB(a,b), members:[], color,
+    shadowPos:new THREE.Vector3((a*SP-OFF), 0, (b*SP-OFF)) });
+}
+for (let a=0;a<N;a++) for (let b=0;b<N;b++) for (let c=0;c<N;c++){
+  const col = colIndex[keyAB(a,b)];         // phi(a,b,c) = (a,b) -> column
+  points.push({ a, b, c, col, img:[a,b], color:columns[col].color });
+  columns[col].members.push(points.length-1);
+}
+const KERNEL_COL = colIndex[keyAB(0,0)];    // ker phi = column over (0,0)
+
+/* ============================================================
+   THREE.JS SCENE
+   ============================================================ */
+let scene, camera, renderer, controls, raycaster, mouse;
+const state = { collapse:0, spin:false, showFibers:true, showKernel:true, showShadow:true, hoverCol:-1, lockCol:-1 };
+const pointMeshes = [];   // one sphere per ring element
+const fiberLines = [];    // one line per column
+const shadowDiscs = [];   // one disc per column (landing target = shadow point)
+let kernelGroup, floorGrid;
+
+const stageEl = document.getElementById('stage');
+
+function initThree(){
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0a0d1a');
+  scene.fog = new THREE.Fog('#0a0d1a', 26, 60);
+
+  const W = stageEl.clientWidth, H = stageEl.clientHeight;
+  camera = new THREE.PerspectiveCamera(46, W/H, 0.1, 200);
+  camera.position.set(10.5, 8.5, 13);
+
+  renderer = new THREE.WebGLRenderer({ antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  stageEl.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.target.set(0, SP, 0);
+  controls.minDistance = 8; controls.maxDistance = 34;
+  controls.maxPolarAngle = Math.PI*0.92;
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x8ea0d8, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 1.15);
+  key.position.set(9, 16, 8); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x86b6ff, 0.5);
+  rim.position.set(-8, 5, -9); scene.add(rim);
+  const up = new THREE.PointLight(0x5c78ff, 0.5, 40); up.position.set(0,-4,0); scene.add(up);
+
+  raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+
+  buildFloor();
+  buildShadowDiscs();
+  buildKernelAxis();
+  buildFibers();
+  buildPoints();
+  buildAxisLabels();
+
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('pointermove', onHover);
+  renderer.domElement.addEventListener('click', onClick);
+  document.getElementById('loading').remove();
+  animate();
+}
+
+/* ---- floor plane + shadow-frame ---- */
+function buildFloor(){
+  const g = new THREE.PlaneGeometry(N*SP+3.2, N*SP+3.2);
+  const m = new THREE.MeshStandardMaterial({ color:0x121732, roughness:0.95, metalness:0.0,
+    transparent:true, opacity:0.9 });
+  const floor = new THREE.Mesh(g, m);
+  floor.rotation.x = -Math.PI/2; floor.position.y = -0.02;
+  scene.add(floor);
+
+  floorGrid = new THREE.GridHelper(N*SP+3.2, N+1, 0x4a5aa0, 0x232c58);
+  floorGrid.position.y = 0.0; scene.add(floorGrid);
+}
+
+/* ---- 9 shadow discs = im(phi) landing points ---- */
+function buildShadowDiscs(){
+  columns.forEach((col)=>{
+    const g = new THREE.CircleGeometry(0.62, 40);
+    const m = new THREE.MeshStandardMaterial({ color:col.color, roughness:0.5,
+      emissive:col.color, emissiveIntensity:0.15, transparent:true, opacity:0.28,
+      side:THREE.DoubleSide });
+    const disc = new THREE.Mesh(g, m);
+    disc.rotation.x = -Math.PI/2;
+    disc.position.copy(col.shadowPos); disc.position.y = 0.015;
+    disc.userData.col = col;
+    scene.add(disc); shadowDiscs.push(disc);
+
+    // thin ring outline
+    const rg = new THREE.RingGeometry(0.62, 0.72, 40);
+    const rm = new THREE.MeshBasicMaterial({ color:col.color, transparent:true, opacity:0.5, side:THREE.DoubleSide });
+    const ring = new THREE.Mesh(rg, rm); ring.rotation.x = -Math.PI/2;
+    ring.position.copy(col.shadowPos); ring.position.y = 0.02;
+    disc.userData.ring = ring; scene.add(ring);
+  });
+}
+
+/* ---- kernel axis: the vertical (0,0) column direction ---- */
+function buildKernelAxis(){
+  kernelGroup = new THREE.Group();
+  const base = columns[KERNEL_COL].shadowPos;
+  const top = (N-1)*SP + 1.4;
+  // glowing tube
+  const geo = new THREE.CylinderGeometry(0.06, 0.06, top, 16);
+  const mat = new THREE.MeshBasicMaterial({ color:0xffcf6b, transparent:true, opacity:0.85 });
+  const cyl = new THREE.Mesh(geo, mat);
+  cyl.position.set(base.x, top/2, base.z);
+  kernelGroup.add(cyl);
+  // arrow head
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.55, 20),
+    new THREE.MeshBasicMaterial({ color:0xffcf6b }));
+  cone.position.set(base.x, top+0.25, base.z);
+  kernelGroup.add(cone);
+  // faint glow halo along axis
+  const halo = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,top,16),
+    new THREE.MeshBasicMaterial({ color:0xffcf6b, transparent:true, opacity:0.10 }));
+  halo.position.set(base.x, top/2, base.z);
+  kernelGroup.add(halo);
+  scene.add(kernelGroup);
+}
+
+/* ---- fiber lines: one vertical segment per column (the coset) ---- */
+function buildFibers(){
+  columns.forEach((col)=>{
+    const p = col.shadowPos;
+    const top = (N-1)*SP;
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(p.x, 0, p.z), new THREE.Vector3(p.x, top, p.z) ]);
+    const mat = new THREE.LineBasicMaterial({ color:col.color, transparent:true, opacity:0.55 });
+    const line = new THREE.Line(geo, mat);
+    line.userData.col = col; scene.add(line); fiberLines.push(line);
+  });
+}
+
+/* ---- the 27 ring-element spheres ---- */
+function buildPoints(){
+  const geo = new THREE.SphereGeometry(0.32, 28, 20);
+  points.forEach((pt, i)=>{
+    const mat = new THREE.MeshStandardMaterial({ color:pt.color, roughness:0.32, metalness:0.25,
+      emissive:pt.color, emissiveIntensity:0.22 });
+    const m = new THREE.Mesh(geo, mat);
+    const col = columns[pt.col];
+    m.userData = { i, pt, baseY: pt.c*SP, colIdx: pt.col };
+    m.position.set(col.shadowPos.x, pt.c*SP, col.shadowPos.z);
+    scene.add(m); pointMeshes.push(m);
+  });
+}
+
+/* ---- 3D text sprites for axis / region labels ---- */
+function makeLabel(text, color){
+  const cv = document.createElement('canvas'); cv.width=512; cv.height=128;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = color; ctx.font = 'bold 64px Georgia, serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=12;
+  ctx.fillText(text, 256, 64);
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true }));
+  spr.scale.set(3.2, 0.8, 1);
+  return spr;
+}
+function buildAxisLabels(){
+  const base = columns[KERNEL_COL].shadowPos;
+  const kl = makeLabel('ker φ', '#ffcf6b');
+  kl.position.set(base.x-0.2, (N-1)*SP+1.7, base.z); kl.scale.set(2.6,0.65,1);
+  kl.userData.kernel = true; scene.add(kl);
+
+  const sl = makeLabel('shadow = im φ', '#8fb6ff');
+  sl.position.set(0, 0.05, (N-1)*SP/2 + 3.0); sl.scale.set(4.2,1.05,1);
+  sl.userData.shadow = true; scene.add(sl);
+  makeLabel._shadowLabel = sl; makeLabel._kernelLabel = kl;
+
+  const rl = makeLabel('R  (the object)', '#e8ecff');
+  rl.position.set(0, (N-1)*SP+2.6, -((N-1)*SP/2+2.4)); rl.scale.set(4.6,1.15,1);
+  scene.add(rl); makeLabel._objLabel = rl;
+}
+
+/* ============================================================
+   INTERACTION
+   ============================================================ */
+function onResize(){
+  const W = stageEl.clientWidth, H = stageEl.clientHeight;
+  camera.aspect = W/H; camera.updateProjectionMatrix(); renderer.setSize(W,H);
+}
+function pickColumn(ev){
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((ev.clientX-r.left)/r.width)*2-1;
+  mouse.y = -((ev.clientY-r.top)/r.height)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(pointMeshes, false);
+  if (hits.length) return { colIdx: hits[0].object.userData.colIdx, screen:{x:ev.clientX-r.left, y:ev.clientY-r.top} };
+  const dhits = raycaster.intersectObjects(shadowDiscs, false);
+  if (dhits.length) return { colIdx: columns.indexOf(dhits[0].object.userData.col), screen:{x:ev.clientX-r.left, y:ev.clientY-r.top} };
+  return null;
+}
+const tip = document.getElementById('tip');
+function onHover(ev){
+  const hit = pickColumn(ev);
+  state.hoverCol = hit ? hit.colIdx : -1;
+  if (hit){
+    const c = columns[hit.colIdx];
+    tip.style.left = hit.screen.x+'px'; tip.style.top = hit.screen.y+'px';
+    katex.render(`(${c.a},${c.b},z)+\\ker\\varphi \\;\\mapsto\\; (${c.a},${c.b})`, tip, {throwOnError:false});
+    tip.style.opacity = 1; renderer.domElement.style.cursor='pointer';
+  } else { tip.style.opacity = 0; renderer.domElement.style.cursor='grab'; }
+}
+function onClick(ev){
+  const hit = pickColumn(ev);
+  if (hit){ state.lockCol = (state.lockCol===hit.colIdx)? -1 : hit.colIdx; updateReadout(); }
+}
+
+function updateReadout(){
+  const el = document.getElementById('readout');
+  const ci = state.lockCol;
+  if (ci<0){ el.innerHTML = '<span class="hint">Hover or click a column to see its coset map to one shadow point.</span>'; return; }
+  const c = columns[ci];
+  const hex = '#'+c.color.getHexString();
+  const isK = (ci===KERNEL_COL);
+  // pick two members to show a product living inside the fiber structure
+  const tex = String.raw`
+    \begin{aligned}
+    \text{fiber (coset): }\;& (${c.a},${c.b},z)+\ker\varphi=\{(${c.a},${c.b},0),(${c.a},${c.b},1),(${c.a},${c.b},2)\}\\[2pt]
+    \varphi:\;& \text{every element } \mapsto (${c.a},${c.b})\ \in\ \operatorname{im}\varphi\\[2pt]
+    \text{one slice }&\longleftrightarrow\text{ one shadow point}
+    \end{aligned}`;
+  let head = `<div style="margin-bottom:8px;"><span class="swatch" style="background:${hex}"></span>
+     <b>${isK ? 'This is the kernel coset' : 'A coset of&nbsp;'}</b>${isK ? '' : '<span data-tex-i="\\ker\\varphi"></span>'}</div>`;
+  el.innerHTML = head + `<div data-tex="disp">${tex}</div>` +
+    (isK ? `<div style="margin-top:9px;font-size:12px;color:var(--gold)">This column is <span data-tex-i="\\ker\\varphi=\\{(0,0,z)\\}"></span> itself — it collapses onto the zero shadow point <span data-tex-i="(0,0)"></span>, the additive identity of <span data-tex-i="\\operatorname{im}\\varphi"></span>.</div>` : '');
+  renderMathInElement(el, {delimiters:[]});
+  // render our custom tex holders
+  el.querySelectorAll('[data-tex="disp"]').forEach(n=>{ const t=n.textContent; katex.render(t, n, {throwOnError:false, displayMode:true}); });
+  el.querySelectorAll('[data-tex-i]').forEach(n=>{ katex.render(n.getAttribute('data-tex-i'), n, {throwOnError:false}); });
+}
+
+/* ---- per-frame visual update ---- */
+function updateVisual(){
+  const k = state.collapse;                     // 0..1
+  const active = (state.lockCol>=0)? state.lockCol : state.hoverCol;
+  // points collapse along kernel (Y) direction
+  pointMeshes.forEach(m=>{
+    m.position.y = m.userData.baseY * (1-k);
+    const hot = (active===m.userData.colIdx);
+    m.material.emissiveIntensity = hot? 0.85 : 0.22;
+    const s = hot? 1.28 : 1.0; m.scale.setScalar(s);
+  });
+  // fiber lines: visible when not collapsed, fade as they flatten
+  fiberLines.forEach((ln,i)=>{
+    const on = state.showFibers && k<0.98;
+    ln.visible = on;
+    const hot = (active===i);
+    ln.material.opacity = (hot?0.95:0.5) * (1-k*0.85);
+    ln.material.color.copy(hot? new THREE.Color(0xffffff) : columns[i].color);
+  });
+  // shadow discs brighten as collapse completes
+  shadowDiscs.forEach((d,i)=>{
+    const hot = (active===i);
+    const base = 0.22 + 0.55*k;
+    d.material.opacity = state.showShadow ? (hot? Math.min(0.95, base+0.3) : base) : 0.0;
+    d.material.emissiveIntensity = 0.15 + 0.75*k + (hot?0.4:0);
+    d.userData.ring.visible = state.showShadow;
+    d.userData.ring.material.opacity = (hot?0.95:0.45)*(0.4+0.6*k);
+    d.visible = state.showShadow;
+    const sc = hot? 1.15 : 1.0; d.scale.setScalar(sc); d.userData.ring.scale.setScalar(sc);
+  });
+  kernelGroup.visible = state.showKernel;
+  if (makeLabel._kernelLabel) makeLabel._kernelLabel.visible = state.showKernel;
+  if (makeLabel._shadowLabel) makeLabel._shadowLabel.visible = state.showShadow;
+  // kernel column emphasis
+  kernelGroup.children.forEach(ch=>{ if(ch.material) ch.material.opacity = ch.material.opacity; });
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  if (state.spin) controls.autoRotate = true; else controls.autoRotate=false;
+  controls.autoRotateSpeed = 0.9;
+  updateVisual();
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   CONTROLS WIRING
+   ============================================================ */
+const collapseSlider = document.getElementById('collapse');
+const collapseVal = document.getElementById('collapseval');
+function setCollapse(v, fromSlider){
+  state.collapse = Math.max(0,Math.min(1,v));
+  collapseVal.textContent = Math.round(state.collapse*100)+'%';
+  if (!fromSlider) collapseSlider.value = Math.round(state.collapse*100);
+}
+collapseSlider.addEventListener('input', e=>{ gsap.killTweensOf(state); setCollapse(e.target.value/100, true); });
+document.getElementById('playbtn').addEventListener('click', ()=>{
+  gsap.killTweensOf(state);
+  gsap.to(state, { collapse:1, duration:1.7, ease:'power3.inOut',
+    onUpdate:()=>setCollapse(state.collapse) });
+});
+document.getElementById('resetbtn').addEventListener('click', ()=>{
+  gsap.killTweensOf(state);
+  gsap.to(state, { collapse:0, duration:1.2, ease:'power2.inOut',
+    onUpdate:()=>setCollapse(state.collapse) });
+});
+function wireToggle(id, key){
+  const el = document.getElementById(id);
+  el.addEventListener('click', ()=>{ state[key]=!state[key]; el.classList.toggle('on', state[key]); });
+}
+wireToggle('tFibers','showFibers');
+wireToggle('tKernel','showKernel');
+wireToggle('tShadow','showShadow');
+document.getElementById('tSpin').addEventListener('click', function(){
+  state.spin=!state.spin; this.classList.toggle('on', state.spin);
+});
+
+/* ============================================================
+   NARRATION (staged panels)
+   ============================================================ */
+const STEPS = [
+  { tag:'R as an object',
+    title:'A ring you can see',
+    body:`Take \\(R=(\\mathbb{Z}/3\\mathbb{Z})^3\\): every element is a triple \\((x,y,z)\\) with each entry in \\(\\{0,1,2\\}\\).
+      That is a genuine \\(3\\times3\\times3\\) lattice — <b>27 points</b> floating in space. Ring \\(+\\) and \\(\\times\\) act
+      coordinate-by-coordinate. Rotate the cube: this whole object is \\(R\\).`,
+    apply:()=>{ animTo(0); state.showFibers=false; state.showShadow=false; state.showKernel=false; syncToggles(); state.lockCol=-1; } },
+
+  { tag:'The projection φ',
+    title:'A homomorphism that flattens',
+    body:`Define \\(\\varphi:R\\to(\\mathbb{Z}/3\\mathbb{Z})^2\\) by \\(\\varphi(x,y,z)=(x,y)\\) — <b>forget the third coordinate.</b>
+      Because everything is componentwise, \\(\\varphi\\) respects \\(+\\) and \\(\\times\\): it is a real ring homomorphism.
+      Geometrically it is <b>projection straight down onto the floor</b>. The 9 glowing discs are the possible shadows,
+      \\(\\operatorname{im}\\varphi=(\\mathbb{Z}/3\\mathbb{Z})^2\\).`,
+    apply:()=>{ animTo(0); state.showShadow=true; state.showFibers=false; state.showKernel=false; syncToggles(); } },
+
+  { tag:'Kernel = collapse direction',
+    title:'What flattens to a single point',
+    body:`Which elements land on the zero shadow \\((0,0)\\)? Exactly \\(\\ker\\varphi=\\{(0,0,z):z\\in\\mathbb{Z}/3\\mathbb{Z}\\}\\)
+      — the <b>vertical golden axis</b>. This is the honest "collapse direction": moving along it changes nothing in the shadow.
+      \\(|\\ker\\varphi|=3\\).`,
+    apply:()=>{ animTo(0); state.showKernel=true; state.showShadow=true; state.showFibers=false; syncToggles(); state.lockCol=KERNEL_COL; updateReadout(); } },
+
+  { tag:'Fibers = cosets',
+    title:'Every column is a coset',
+    body:`Slide the whole object sideways by any \\((a,b)\\): the vertical column over \\((a,b)\\) is the coset
+      \\((a,b,z)+\\ker\\varphi\\). There are <b>9 columns</b>, one per shadow point, and they perfectly tile \\(R\\).
+      Each column is exactly one element of the quotient \\(R/\\ker\\varphi\\). Hover any column to read its label.`,
+    apply:()=>{ animTo(0); state.showFibers=true; state.showKernel=true; state.showShadow=true; syncToggles(); state.lockCol=-1; } },
+
+  { tag:'Cast the shadow',
+    title:'Collapse onto the image',
+    body:`Now press <b>Collapse</b> (or drag the slider). Each column slides down its kernel direction and its 3 points
+      <b>merge into one shadow point</b>. \\(27\\) points become \\(9\\). Watch each colored fiber land on its matching disc:
+      the set of shadows <em>is</em> \\(\\operatorname{im}\\varphi\\).`,
+    apply:()=>{ state.showFibers=true; state.showKernel=true; state.showShadow=true; syncToggles(); animTo(1); state.lockCol=-1; } },
+
+  { tag:'The isomorphism',
+    title:'R / ker φ  ≅  im φ',
+    body:`Count: <b>9 slices</b> \\(=\\dfrac{|R|}{|\\ker\\varphi|}=\\dfrac{27}{3}\\), and <b>9 shadow points</b> \\(=|\\operatorname{im}\\varphi|\\).
+      The map \\(r+\\ker\\varphi\\mapsto\\varphi(r)\\) is a well-defined bijection that also preserves \\(+\\) and \\(\\times\\).
+      That is the <b>First Isomorphism Theorem</b>: \\(R/\\ker\\varphi\\;\\cong\\;\\operatorname{im}\\varphi\\).
+      The quotient is nothing but \\(R\\) reorganized into these parallel slices — its shadow.`,
+    apply:()=>{ state.showFibers=true; state.showKernel=true; state.showShadow=true; syncToggles(); animTo(1); state.lockCol=-1; } },
+];
+let stepI = 0;
+function animTo(target){
+  gsap.killTweensOf(state);
+  gsap.to(state, { collapse:target, duration:1.4, ease:'power3.inOut', onUpdate:()=>setCollapse(state.collapse) });
+}
+function syncToggles(){
+  document.getElementById('tFibers').classList.toggle('on', state.showFibers);
+  document.getElementById('tKernel').classList.toggle('on', state.showKernel);
+  document.getElementById('tShadow').classList.toggle('on', state.showShadow);
+}
+function renderStep(){
+  const s = STEPS[stepI];
+  document.getElementById('steptag').textContent = `Step ${stepI+1} / ${STEPS.length} · ${s.tag}`;
+  document.getElementById('stitle').textContent = s.title;
+  const body = document.getElementById('sbody'); body.innerHTML = s.body;
+  renderMathInElement(body, { delimiters:[
+    {left:'\\(',right:'\\)',display:false},{left:'$$',right:'$$',display:true}], throwOnError:false });
+  document.getElementById('prev').disabled = (stepI===0);
+  document.getElementById('next').disabled = (stepI===STEPS.length-1);
+  // dots
+  const dots = document.getElementById('dots'); dots.innerHTML='';
+  STEPS.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'+(i===stepI?' on':''); dots.appendChild(d); });
+  s.apply();
+}
+document.getElementById('next').addEventListener('click', ()=>{ if(stepI<STEPS.length-1){stepI++; renderStep();} });
+document.getElementById('prev').addEventListener('click', ()=>{ if(stepI>0){stepI--; renderStep();} });
+
+/* render the inline katex bits in static labels */
+function renderStaticKatex(){
+  document.querySelectorAll('.katex-inline[data-tex]').forEach(n=>{
+    katex.render(n.getAttribute('data-tex'), n, {throwOnError:false});
+  });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+window.addEventListener('load', ()=>{
+  try {
+    renderStaticKatex();
+    initThree();
+    renderStep();
+  } catch(err){
+    document.getElementById('loading').textContent = 'Error: '+err.message;
+    console.error(err);
+  }
+});
+</script>
+</body>
+</html>

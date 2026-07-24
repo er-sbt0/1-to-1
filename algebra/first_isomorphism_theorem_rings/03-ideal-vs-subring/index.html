@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Why the kernel must be an ideal — First Isomorphism Theorem for Rings</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<script src="lib/katex.min.js"></script>
+<script src="lib/auto-render.min.js"></script>
+<style>
+  :root{
+    --bg:#0c1018; --panel:#141b28; --panel2:#1b2434; --ink:#e8edf6; --muted:#93a1b8;
+    --line:#28324a;
+    --blue:#3b82f6; --amber:#f5a623; --violet:#a855f7;
+    --green:#22c55e; --red:#ef4444; --gold:#facc15;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 70% -10%, #14203a 0%, var(--bg) 55%);
+    color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px; margin:0 auto; padding:32px 22px 90px}
+  header.hero{margin-bottom:26px}
+  .eyebrow{color:var(--violet); font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:12.5px}
+  h1{font-size:30px; line-height:1.2; margin:.35em 0 .3em; font-weight:800}
+  h1 .accent{color:var(--gold)}
+  .sub{color:var(--muted); font-size:16px; max-width:820px}
+  .theorem{
+    margin:20px 0 0; padding:16px 20px; background:linear-gradient(180deg,#16233c,#121a2b);
+    border:1px solid var(--line); border-left:4px solid var(--violet); border-radius:12px;
+  }
+  .theorem .lbl{font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700}
+  section.card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:22px 24px; margin:22px 0; box-shadow:0 12px 30px rgba(0,0,0,.28);
+  }
+  .step-tag{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.08em;
+    color:#0c1018; background:var(--gold); padding:3px 10px; border-radius:999px; margin-bottom:10px}
+  h2{font-size:21px; margin:.1em 0 .5em; font-weight:800}
+  h3{font-size:15px; margin:1.1em 0 .4em; color:#c8d3e6; letter-spacing:.02em}
+  p{margin:.5em 0}
+  .muted{color:var(--muted)}
+  .lab{display:grid; grid-template-columns:minmax(0,420px) minmax(0,1fr); gap:26px; align-items:start}
+  @media(max-width:820px){ .lab{grid-template-columns:1fr} }
+  canvas{display:block; width:100%; height:auto; border-radius:12px; touch-action:none}
+  .canvas-host{background:#0b1220; border:1px solid var(--line); border-radius:12px; padding:12px}
+  .legend{display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:12px; font-size:13px; color:var(--muted)}
+  .legend .sw{display:inline-block; width:13px; height:13px; border-radius:3px; margin-right:6px; vertical-align:-1px}
+  .controls{display:flex; flex-direction:column; gap:14px}
+  .btnrow{display:flex; flex-wrap:wrap; gap:9px}
+  button{
+    font:inherit; cursor:pointer; color:var(--ink); background:var(--panel2);
+    border:1px solid var(--line); padding:8px 13px; border-radius:9px; transition:.13s; font-weight:600;
+  }
+  button:hover{border-color:#3b4a6b; background:#212c42}
+  button.active{background:var(--violet); border-color:var(--violet); color:#fff}
+  button.ghost{background:transparent}
+  .chip{padding:6px 11px; border-radius:8px; font-weight:700; font-size:14px}
+  .rep-chip{min-width:64px; text-align:center; font-variant-numeric:tabular-nums}
+  .rep-chip.sel{outline:2px solid #fff; outline-offset:1px}
+  .axioms{display:flex; flex-direction:column; gap:10px}
+  .axiom{
+    display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px;
+    background:var(--panel2); border:1px solid var(--line);
+  }
+  .axiom .badge{font-weight:800; font-size:12.5px; padding:4px 10px; border-radius:999px; white-space:nowrap}
+  .badge.pass{background:rgba(34,197,94,.16); color:#7ff0a6; border:1px solid rgba(34,197,94,.45)}
+  .badge.fail{background:rgba(239,68,68,.16); color:#ff9d9d; border:1px solid rgba(239,68,68,.5)}
+  .axiom .txt{font-size:13.5px}
+  .axiom .txt b{color:#dbe4f3}
+  .witness{font-size:12.5px; color:var(--muted); margin-top:2px}
+  .witness code{color:#ffb4b4}
+  .verdict{
+    margin-top:6px; padding:16px 18px; border-radius:13px; font-size:15px; font-weight:600;
+    border:1px solid var(--line); background:var(--panel2);
+  }
+  .verdict.good{border-color:rgba(34,197,94,.55); background:linear-gradient(180deg,rgba(34,197,94,.13),rgba(34,197,94,.05))}
+  .verdict.bad{border-color:rgba(239,68,68,.6); background:linear-gradient(180deg,rgba(239,68,68,.14),rgba(239,68,68,.05))}
+  .verdict .big{display:block; font-size:18px; font-weight:800; margin-bottom:4px}
+  .verdict.good .big{color:#8bf3b0}
+  .verdict.bad .big{color:#ff9d9d}
+  .landing{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .land-pill{padding:6px 11px; border-radius:8px; font-size:13px; font-weight:700; border:1px solid var(--line);
+    font-variant-numeric:tabular-nums; display:flex; align-items:center; gap:7px}
+  .land-pill .dot{width:11px;height:11px;border-radius:50%}
+  .readout{font-size:14px; background:#0b1220; border:1px solid var(--line); border-radius:10px; padding:11px 14px;
+    font-variant-numeric:tabular-nums; min-height:44px; display:flex; align-items:center}
+  .kalg{background:#0b1220; border:1px solid var(--line); border-radius:12px; padding:16px 18px; overflow-x:auto}
+  .kalg .row{margin:9px 0}
+  .hl-abs{color:var(--gold); font-weight:700}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media(max-width:720px){ .two-col{grid-template-columns:1fr} }
+  .mini{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .mini h4{margin:.1em 0 .5em; font-size:14px}
+  .mini.ideal{border-top:3px solid var(--green)}
+  .mini.subring{border-top:3px solid var(--red)}
+  .tag-yes{color:#8bf3b0; font-weight:700}
+  .tag-no{color:#ff9d9d; font-weight:700}
+  .foot{color:var(--muted); font-size:13px; margin-top:8px}
+  .kbd{font-family:ui-monospace,Menlo,Consolas,monospace; background:#0b1220; border:1px solid var(--line);
+    padding:1px 6px; border-radius:5px; font-size:12.5px}
+  .note{font-size:13.5px; color:var(--muted); border-left:3px solid var(--line); padding-left:12px; margin:12px 0}
+  hr.soft{border:none; border-top:1px solid var(--line); margin:18px 0}
+  .selline{font-size:13.5px; color:var(--muted); margin-top:2px}
+  .selline b{color:#dbe4f3}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">First Isomorphism Theorem · Rings · the subtlety</div>
+    <h1>The kernel must be an <span class="accent">ideal</span>, not merely a subring</h1>
+    <p class="sub">The theorem says <span class="kx">R/\ker\varphi \;\cong\; \operatorname{im}\varphi</span>. For the left side to even <em>be a ring</em>, coset multiplication has to be well-defined — and that is exactly the <b>absorption</b> property of an ideal. Here you can watch it work for a real ideal, and <b>break</b> for a mere subring.</p>
+    <div class="theorem">
+      <div class="lbl">The claim we stress-test</div>
+      <div class="kx" style="font-size:18px; margin-top:6px">R/\ker\varphi \;\cong\; \operatorname{im}\varphi \qquad\text{where}\qquad \ker\varphi=\{x\in R: \varphi(x)=0\}.</div>
+      <p class="muted" style="margin:.5em 0 0">Why is <span class="kx">R/\ker\varphi</span> guaranteed to be a ring? Because <span class="kx">\ker\varphi</span> is always an <b>ideal</b>. Remove that property and the quotient falls apart.</p>
+    </div>
+  </header>
+
+  <!-- STEP 1 : what an ideal is -->
+  <section class="card">
+    <span class="step-tag">STEP 1 · THE DEFINITION</span>
+    <h2>Additive subgroup is easy. Absorption is the hard part.</h2>
+    <div class="two-col">
+      <div>
+        <p>A subset <span class="kx">I\subseteq R</span> is a <b>(two-sided) ideal</b> when <em>both</em> hold:</p>
+        <div class="kalg">
+          <div class="row"><span class="kx">\textbf{(A)}\quad (I,+)\ \text{is a subgroup of}\ (R,+)</span></div>
+          <div class="row"><span class="kx">\textbf{(B)}\quad \forall\, r\in R,\ \forall\, x\in I:\quad r\cdot x\in I\ \ \text{and}\ \ x\cdot r\in I</span></div>
+        </div>
+        <p class="note">(A) alone is enough to build the quotient <b>group</b> <span class="kx">R/I</span> under addition. Multiplication of cosets is the extra promise — and it needs (B), <b>absorption</b>.</p>
+      </div>
+      <div>
+        <h3>Why <span class="kx">\ker\varphi</span> always passes both</h3>
+        <p>Let <span class="kx">\varphi:R\to S</span> be a ring homomorphism and <span class="kx">x\in\ker\varphi</span>, so <span class="kx">\varphi(x)=0</span>. For any <span class="kx">r\in R</span>:</p>
+        <div class="kalg">
+          <div class="row kx">\varphi(rx)=\varphi(r)\,\varphi(x)=\varphi(r)\cdot 0 = 0 \;\Rightarrow\; rx\in\ker\varphi.</div>
+        </div>
+        <p class="muted">Absorption is automatic for a kernel. That is the whole reason the theorem is phrased about kernels — they are never "just" subrings.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 : the algebra -->
+  <section class="card">
+    <span class="step-tag">STEP 2 · WHERE ABSORPTION IS FORCED</span>
+    <h2>Coset multiplication, honestly</h2>
+    <p>Define <span class="kx">(a+I)(b+I) := ab+I</span>. To be a real operation this must not depend on which representatives we pick. Take other representatives <span class="kx">a'=a+i</span>, <span class="kx">b'=b+j</span> with <span class="kx">i,j\in I</span> and expand:</p>
+    <div class="kalg">
+      <div class="row kx">a'b' = (a+i)(b+j) = ab + \underbrace{aj + ib + ij}_{\textstyle \text{must live in } I}.</div>
+      <div class="row kx" style="margin-top:14px">a'b' \in ab + I \quad\Longleftrightarrow\quad aj+ib+ij \in I \ \ \text{for all } a,b\in R,\ i,j\in I.</div>
+    </div>
+    <p style="margin-top:14px">That condition — <span class="hl-abs kx">aj,\ ib,\ ij \in I</span> for every <span class="kx">a,b</span> — is <b>precisely</b> absorption. So:</p>
+    <div class="verdict good" style="margin-top:8px">
+      <span class="kx" style="font-size:16px">\text{Coset multiplication is well-defined} \iff I \text{ absorbs products} \iff I \text{ is an ideal.}</span>
+    </div>
+    <p class="foot">No hand-waving: if even one of <span class="kx">aj,ib,ij</span> escapes <span class="kx">I</span>, two legitimate representative choices give products in <em>different</em> cosets, and <span class="kx">R/I</span> has no consistent multiplication.</p>
+  </section>
+
+  <!-- STEP 3 : the live lab -->
+  <section class="card">
+    <span class="step-tag">STEP 3 · THE LIVE TESTER</span>
+    <h2>Pick a subset of <span class="kx">R=\mathbb{Z}/3\mathbb{Z}\times\mathbb{Z}/3\mathbb{Z}</span> and break it (or don't)</h2>
+    <p class="muted">Nine elements <span class="kx">(a,b)</span>, added and multiplied coordinatewise mod 3. Choose a subset <span class="kx">I</span>; the axioms are checked live. Then multiply two cosets with representatives of your choosing and watch where the product lands.</p>
+
+    <div class="btnrow" style="margin:16px 0 4px">
+      <button id="pre-ideal" class="active">Ideal &nbsp;<span class="kx">\{0\}\times\mathbb{Z}/3\mathbb{Z}</span></button>
+      <button id="pre-diag">Subring &nbsp;<span class="kx">\Delta=\{(a,a)\}</span></button>
+      <button id="pre-edit" class="ghost">Custom (click cells)</button>
+      <button id="pre-clear" class="ghost">Clear</button>
+    </div>
+    <p class="selline">Current subset <span class="kx">I</span> = <b id="subset-text">—</b></p>
+
+    <hr class="soft" />
+
+    <div class="lab">
+      <div>
+        <div class="canvas-host">
+          <canvas id="ring" width="760" height="760" aria-label="Ring grid"></canvas>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="controls">
+        <div>
+          <h3 style="margin-top:0">Ideal axioms — live</h3>
+          <div class="axioms" id="axioms"></div>
+        </div>
+
+        <div id="mult-panel">
+          <h3>Multiply two cosets</h3>
+          <div class="selline" style="margin-bottom:8px">Pick coset <b>A</b> and coset <b>B</b>, then a representative from each.</div>
+          <div style="margin-bottom:9px">
+            <div class="muted" style="font-size:12.5px; margin-bottom:5px">Coset A</div>
+            <div class="btnrow" id="cosetA"></div>
+            <div class="btnrow" id="repA" style="margin-top:6px"></div>
+          </div>
+          <div style="margin-bottom:9px">
+            <div class="muted" style="font-size:12.5px; margin-bottom:5px">Coset B</div>
+            <div class="btnrow" id="cosetB"></div>
+            <div class="btnrow" id="repB" style="margin-top:6px"></div>
+          </div>
+          <div class="readout kx-target" id="readout">Choose representatives <span class="kx">a'</span> and <span class="kx">b'</span> above.</div>
+          <div class="btnrow" style="margin-top:10px">
+            <button id="test-all">Test all 9 representative pairs</button>
+            <button id="reset-land" class="ghost">Reset landings</button>
+          </div>
+          <div class="landing" id="landing"></div>
+          <div class="verdict" id="verdict" style="margin-top:12px">Landing cosets for the chosen <b>A·B</b> will appear here.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 : side by side -->
+  <section class="card">
+    <span class="step-tag">STEP 4 · THE CONTRAST</span>
+    <h2>Same ring, two subsets, opposite fates</h2>
+    <div class="two-col">
+      <div class="mini ideal">
+        <h4 style="color:#8bf3b0">Ideal &nbsp;<span class="kx">I=\{0\}\times\mathbb{Z}/3\mathbb{Z}</span></h4>
+        <p>Subgroup? <span class="tag-yes">yes</span> &nbsp;·&nbsp; Absorbs? <span class="tag-yes">yes</span> &nbsp;→&nbsp; <b>ideal</b>.</p>
+        <p><span class="kx">r\cdot(0,b)=(r_1\!\cdot\!0,\ r_2 b)=(0,\ r_2b)\in I</span>. Coset multiplication is unambiguous, so <span class="kx">R/I</span> is a genuine ring.</p>
+        <p><span class="kx">I</span> really is a kernel: the projection <span class="kx">\varphi(x,y)=x</span> has <span class="kx">\ker\varphi=I</span>, and</p>
+        <div class="kalg"><div class="row kx">R/I \;\cong\; \operatorname{im}\varphi = \mathbb{Z}/3\mathbb{Z}.</div></div>
+        <p class="foot">The theorem applies, exactly as advertised.</p>
+      </div>
+      <div class="mini subring">
+        <h4 style="color:#ff9d9d">Subring only &nbsp;<span class="kx">\Delta=\{(a,a)\}</span></h4>
+        <p>Subgroup? <span class="tag-yes">yes</span> &nbsp;·&nbsp; Closed under <span class="kx">\times</span>? <span class="tag-yes">yes</span> &nbsp;·&nbsp; Absorbs? <span class="tag-no">no</span>.</p>
+        <p>Witness: <span class="kx">(1,0)\cdot(1,1)=(1,0)\notin\Delta</span>. It is a bona-fide <b>subring</b> but not an ideal.</p>
+        <p>Coset multiplication is <b>ambiguous</b>: e.g. with the coset <span class="kx">[(0,1)]</span>,</p>
+        <div class="kalg">
+          <div class="row kx">(0,1)(0,1)=(0,1)\in[(0,1)],\quad (1,2)(1,2)=(1,1)\in[\Delta].</div>
+        </div>
+        <p class="foot">Two valid representatives, two different result cosets — <span class="kx">R/\Delta</span> is not a ring, and "<span class="kx">\cong\operatorname{im}\varphi</span>" is meaningless.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5 : punchline -->
+  <section class="card">
+    <span class="step-tag">STEP 5 · THE PUNCHLINE</span>
+    <h2>Why the theorem never trips over this</h2>
+    <p>You cannot hand the First Isomorphism Theorem a "bad" subring, because you never start from a subring — you start from a <b>homomorphism</b>. And every kernel absorbs products:</p>
+    <div class="kalg"><div class="row kx">x\in\ker\varphi \ \Rightarrow\ \varphi(rx)=\varphi(r)\varphi(x)=0 \ \Rightarrow\ rx\in\ker\varphi \quad(\text{and likewise } xr).</div></div>
+    <p>So <span class="kx">\ker\varphi</span> is always an ideal, coset multiplication is always well-defined, <span class="kx">R/\ker\varphi</span> is always a ring, and the induced map</p>
+    <div class="kalg"><div class="row kx">\bar\varphi: R/\ker\varphi \to \operatorname{im}\varphi,\qquad \bar\varphi(x+\ker\varphi)=\varphi(x)</div></div>
+    <p>is a well-defined ring isomorphism. The absorption you watched break for <span class="kx">\Delta</span> is the very thing a kernel guarantees for free.</p>
+    <p class="foot">Ideal ⇒ quotient is a ring. Subring-only ⇒ multiplication ambiguous. The theorem lives on the right side of that line.</p>
+  </section>
+
+</div>
+
+<script>
+/* ============================ RING MODEL ============================ */
+const N = 3;
+const add = (p,q)=>[(p[0]+q[0])%N,(p[1]+q[1])%N];
+const mul = (p,q)=>[(p[0]*q[0])%N,(p[1]*q[1])%N];
+const key = p=>p[0]+","+p[1];
+const eq  = (p,q)=>p[0]===q[0]&&p[1]===q[1];
+const R = [];
+for(let a=0;a<N;a++) for(let b=0;b<N;b++) R.push([a,b]);
+
+const PRESETS = {
+  ideal: [[0,0],[0,1],[0,2]],
+  diag:  [[0,0],[1,1],[2,2]]
+};
+const COSET_COLORS = ['#3b82f6','#f5a623','#a855f7']; // blue, amber, violet
+const IDENT = [0,0];
+
+/* state */
+let I = PRESETS.ideal.map(p=>p.slice());
+let editMode = false;
+let cosets = [];            // array of arrays of elements
+let cosetIndexOf = new Map();
+let selCosetA = 0, selCosetB = 0;
+let repA = null, repB = null;       // chosen representatives (elements)
+let product = null;                 // last computed product element
+let landings = new Map();           // cosetIndex -> {elem, fromA, fromB} for current A,B
+
+/* ============================ SET HELPERS ============================ */
+function inI(p){ return I.some(x=>eq(x,p)); }
+
+function isSubgroup(){
+  if(!inI(IDENT)) return {ok:false, why:'missing (0,0)'};
+  for(const x of I){
+    // additive inverse
+    if(!inI([(N-x[0])%N,(N-x[1])%N])) return {ok:false, why:'no inverse of ('+key(x)+')'};
+    for(const y of I){
+      const s=add(x,y);
+      if(!inI(s)) return {ok:false, x, y, res:s, why:'('+key(x)+')+('+key(y)+')=('+key(s)+')∉I'};
+    }
+  }
+  return {ok:true};
+}
+function closedMul(){
+  for(const x of I) for(const y of I){
+    const p=mul(x,y);
+    if(!inI(p)) return {ok:false, x,y,res:p, why:'('+key(x)+')·('+key(y)+')=('+key(p)+')∉I'};
+  }
+  return {ok:true};
+}
+function absorbs(){
+  for(const r of R) for(const x of I){
+    let p=mul(r,x);
+    if(!inI(p)) return {ok:false, r, x, res:p, side:'left', why:'r·x: ('+key(r)+')·('+key(x)+')=('+key(p)+')∉I'};
+    p=mul(x,r);
+    if(!inI(p)) return {ok:false, r, x, res:p, side:'right', why:'x·r: ('+key(x)+')·('+key(r)+')=('+key(p)+')∉I'};
+  }
+  return {ok:true};
+}
+function computeCosets(){
+  cosets=[]; cosetIndexOf=new Map();
+  const sg=isSubgroup();
+  if(!sg.ok || I.length===0){ return; }
+  const seen=new Set();
+  for(const r of R){
+    if(seen.has(key(r))) continue;
+    const c=I.map(x=>add(r,x));
+    // dedupe within coset (safe)
+    const uniq=[]; const s=new Set();
+    for(const e of c){ if(!s.has(key(e))){ s.add(key(e)); uniq.push(e);} }
+    uniq.forEach(e=>seen.add(key(e)));
+    cosets.push(uniq);
+  }
+  cosets.forEach((c,i)=>c.forEach(e=>cosetIndexOf.set(key(e),i)));
+}
+
+/* ============================ KaTeX ============================ */
+function renderMath(root){
+  root = root||document.body;
+  // inline .kx spans (raw TeX in textContent)
+  root.querySelectorAll('.kx').forEach(el=>{
+    if(el.dataset.done) return;
+    try{ katex.render(el.textContent, el, {throwOnError:false, displayMode:false}); el.dataset.done='1'; }
+    catch(e){}
+  });
+}
+
+/* ============================ CANVAS ============================ */
+const cv = document.getElementById('ring');
+const ctx = cv.getContext('2d');
+const DPR = Math.min(window.devicePixelRatio||1, 2);
+function fitCanvas(){
+  const cssW = cv.clientWidth || 380;
+  cv.width = Math.round(cssW*DPR);
+  cv.height = Math.round(cssW*DPR);
+  draw();
+}
+let pulse=0;
+function cellRect(a,b){
+  const S=cv.width;
+  const pad=S*0.11;
+  const inner=S-2*pad;
+  const cw=inner/N;
+  // row = a (top->bottom), col = b (left->right)
+  return {x:pad+b*cw, y:pad+a*cw, w:cw, h:cw, cx:pad+b*cw+cw/2, cy:pad+a*cw+cw/2};
+}
+function draw(){
+  const S=cv.width;
+  ctx.clearRect(0,0,S,S);
+  ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,S,S);
+  const pad=S*0.11;
+  // axis labels
+  ctx.fillStyle='#6f7f9c'; ctx.font=(S*0.028)+'px -apple-system,sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('second coordinate  b  →', S/2, pad*0.5);
+  ctx.save();
+  ctx.translate(pad*0.42, S/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('first coordinate  a  →', 0, 0);
+  ctx.restore();
+
+  for(let a=0;a<N;a++) for(let b=0;b<N;b++){
+    const p=[a,b]; const r=cellRect(a,b);
+    const ci = cosetIndexOf.has(key(p)) ? cosetIndexOf.get(key(p)) : -1;
+    const inset=S*0.008;
+    // fill by coset
+    let fill='#141b28';
+    if(ci>=0){ fill=hexA(COSET_COLORS[ci%3], 0.20); }
+    roundRect(r.x+inset, r.y+inset, r.w-2*inset, r.h-2*inset, S*0.02);
+    ctx.fillStyle=fill; ctx.fill();
+    ctx.lineWidth=Math.max(1,S*0.003);
+    ctx.strokeStyle= ci>=0 ? hexA(COSET_COLORS[ci%3],0.55) : '#243049';
+    ctx.stroke();
+
+    // subset membership: gold ring
+    if(inI(p)){
+      roundRect(r.x+inset*2.2, r.y+inset*2.2, r.w-4.4*inset, r.h-4.4*inset, S*0.018);
+      ctx.lineWidth=Math.max(2,S*0.008);
+      ctx.strokeStyle='#facc15'; ctx.stroke();
+    }
+    // label
+    ctx.fillStyle='#dfe7f3'; ctx.font='700 '+(S*0.045)+'px ui-monospace,Menlo,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('('+a+','+b+')', r.cx, r.cy - S*0.006);
+    if(inI(p)){
+      ctx.fillStyle='#facc15'; ctx.font='700 '+(S*0.024)+'px -apple-system,sans-serif';
+      ctx.fillText('∈ I', r.cx, r.cy + S*0.048);
+    }
+  }
+
+  // representative highlights
+  if(repA){ markRep(repA, '#38bdf8', "a'"); }
+  if(repB){ markRep(repB, '#c084fc', "b'"); }
+
+  // landings (all products found for current A,B)
+  landings.forEach((info, ci)=>{
+    const r=cellRect(info.elem[0], info.elem[1]);
+    ctx.save();
+    ctx.lineWidth=Math.max(2.5,S*0.011);
+    ctx.strokeStyle= landings.size>1 ? '#ef4444' : '#22c55e';
+    roundRect(r.x+S*0.006, r.y+S*0.006, r.w-S*0.012, r.h-S*0.012, S*0.02);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // product marker (pulsing)
+  if(product){
+    const r=cellRect(product[0], product[1]);
+    const ci=cosetIndexOf.get(key(product));
+    const amb = landings.size>1;
+    const col = amb ? '#ef4444' : '#22c55e';
+    const rad = (S*0.05) + Math.sin(pulse)*(S*0.008);
+    ctx.beginPath(); ctx.arc(r.cx, r.cy - S*0.006, rad, 0, 7);
+    ctx.lineWidth=Math.max(3,S*0.013); ctx.strokeStyle=col; ctx.stroke();
+    ctx.fillStyle=hexA(col,0.12); ctx.fill();
+    ctx.fillStyle=col; ctx.font='800 '+(S*0.03)+'px -apple-system,sans-serif';
+    ctx.fillText("a'·b'", r.cx, r.y + r.h - S*0.03);
+  }
+}
+function markRep(p, col, txt){
+  const S=cv.width; const r=cellRect(p[0],p[1]);
+  ctx.save();
+  ctx.lineWidth=Math.max(2.5,S*0.012); ctx.strokeStyle=col;
+  roundRect(r.x+S*0.012, r.y+S*0.012, r.w-S*0.024, r.h-S*0.024, S*0.02);
+  ctx.stroke();
+  ctx.fillStyle=col; ctx.font='800 '+(S*0.03)+'px -apple-system,sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText(txt, r.x+S*0.02, r.y+S*0.018);
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function hexA(hex,a){
+  const n=parseInt(hex.slice(1),16);
+  return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';
+}
+function animate(){ pulse+=0.14; if(product) draw(); requestAnimationFrame(animate); }
+
+/* canvas click: edit mode toggles membership */
+cv.addEventListener('click', e=>{
+  if(!editMode) return;
+  const rect=cv.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(cv.width/rect.width);
+  const y=(e.clientY-rect.top)*(cv.height/rect.height);
+  for(let a=0;a<N;a++) for(let b=0;b<N;b++){
+    const r=cellRect(a,b);
+    if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){
+      if(inI([a,b])) I=I.filter(p=>!eq(p,[a,b]));
+      else I.push([a,b]);
+      refreshAll();
+      return;
+    }
+  }
+});
+
+/* ============================ UI RENDER ============================ */
+const axiomsEl=document.getElementById('axioms');
+const subsetTextEl=document.getElementById('subset-text');
+const legendEl=document.getElementById('legend');
+
+function subsetLabel(){
+  if(I.length===0) return '\\varnothing';
+  const s=I.slice().sort((p,q)=>p[0]-q[0]||p[1]-q[1]).map(p=>'('+p[0]+','+p[1]+')').join(',\\ ');
+  return '\\{'+s+'\\}';
+}
+function renderAxioms(){
+  const sg=isSubgroup();
+  const cm=closedMul();
+  const ab=absorbs();
+  const rows=[];
+  rows.push(axiomRow('(A) Additive subgroup', sg.ok, sg.ok?'Closed under + and inverses, contains (0,0).':(sg.why||'not closed under +')));
+  rows.push(axiomRow('Closed under × (subring test)', cm.ok, cm.ok?'Products of members stay inside — it is a subring.':(cm.why)));
+  const abTxt = ab.ok
+    ? 'Every r·x and x·r lands back in I.'
+    : 'Absorption fails — '+ab.why;
+  rows.push(axiomRow('(B) Absorption  r·x, x·r ∈ I', ab.ok, abTxt, !ab.ok));
+  // overall
+  const isIdeal = sg.ok && ab.ok;
+  rows.push(
+    '<div class="axiom" style="border-color:'+(isIdeal?'rgba(34,197,94,.5)':'rgba(239,68,68,.5)')+
+    '"><span class="badge '+(isIdeal?'pass':'fail')+'">'+(isIdeal?'IDEAL':'NOT AN IDEAL')+
+    '</span><div class="txt"><b>'+(isIdeal
+        ? 'R/I is a ring — coset multiplication is well-defined.'
+        : (sg.ok ? 'Subgroup, but absorption fails — R/I has no consistent ×.'
+                 : 'Not even an additive subgroup — cosets do not partition R.'))+
+    '</b></div></div>'
+  );
+  axiomsEl.innerHTML=rows.join('');
+}
+function axiomRow(name, ok, detail, redDetail){
+  return '<div class="axiom"><span class="badge '+(ok?'pass':'fail')+'">'+(ok?'PASS':'FAIL')+
+    '</span><div class="txt"><b>'+name+'</b><div class="witness'+(redDetail?'':'')+'">'+
+    (ok?'<span class="muted">':'<code>')+detail+(ok?'</span>':'</code>')+'</div></div></div>';
+}
+
+function renderLegend(){
+  let h='';
+  if(cosets.length){
+    h+='<span class="muted" style="width:100%">Cosets of I (each is a color band):</span>';
+    cosets.forEach((c,i)=>{
+      h+='<span><span class="sw" style="background:'+COSET_COLORS[i%3]+'"></span>['+
+         c.map(e=>'('+e[0]+','+e[1]+')').join(' ')+']</span>';
+    });
+  } else {
+    h+='<span class="muted">Not an additive subgroup → no coset partition to color.</span>';
+  }
+  h+='<span style="width:100%"><span class="sw" style="border:2px solid #facc15; background:transparent"></span>gold ring = element of I</span>';
+  legendEl.innerHTML=h;
+}
+
+/* coset & rep selectors */
+const cosetAEl=document.getElementById('cosetA');
+const cosetBEl=document.getElementById('cosetB');
+const repAEl=document.getElementById('repA');
+const repBEl=document.getElementById('repB');
+const readoutEl=document.getElementById('readout');
+const landingEl=document.getElementById('landing');
+const verdictEl=document.getElementById('verdict');
+const multPanel=document.getElementById('mult-panel');
+
+function cosetName(i){ const rep=cosets[i][0]; return '['+'('+rep[0]+','+rep[1]+')'+']'; }
+
+function renderCosetSelectors(){
+  if(!cosets.length){
+    multPanel.style.opacity=.5;
+    cosetAEl.innerHTML=cosetBEl.innerHTML=repAEl.innerHTML=repBEl.innerHTML='';
+    readoutEl.textContent='Need an additive subgroup to form cosets.';
+    landingEl.innerHTML=''; verdictEl.className='verdict'; verdictEl.innerHTML='—';
+    return;
+  }
+  multPanel.style.opacity=1;
+  if(selCosetA>=cosets.length) selCosetA=0;
+  if(selCosetB>=cosets.length) selCosetB=0;
+  const chipHTML=(i,sel,cls)=>'<button class="chip '+cls+(i===sel?' active':'')+'" data-i="'+i+'" '+
+     'style="border-color:'+COSET_COLORS[i%3]+'">'+cosetName(i)+'</button>';
+  cosetAEl.innerHTML=cosets.map((c,i)=>chipHTML(i,selCosetA,'cA')).join('');
+  cosetBEl.innerHTML=cosets.map((c,i)=>chipHTML(i,selCosetB,'cB')).join('');
+  renderRepButtons();
+}
+function renderRepButtons(){
+  const A=cosets[selCosetA], B=cosets[selCosetB];
+  const rep=(c,cur,cls,col)=>c.map(e=>
+    '<button class="rep-chip '+cls+(cur&&eq(cur,e)?' sel':'')+'" data-e="'+e[0]+','+e[1]+'" '+
+    'style="border-color:'+col+'">('+e[0]+','+e[1]+')</button>').join('');
+  repAEl.innerHTML=rep(A, repA, 'rA', '#38bdf8');
+  repBEl.innerHTML=rep(B, repB, 'rB', '#c084fc');
+}
+
+function updateReadout(){
+  if(repA&&repB){
+    product=mul(repA,repB);
+    const ci=cosetIndexOf.get(key(product));
+    landings.set(ci, {elem:product, fromA:repA.slice(), fromB:repB.slice()});
+    const tex="\\; a'=("+repA[0]+","+repA[1]+"),\\ b'=("+repB[0]+","+repB[1]+
+      ")\\ \\Rightarrow\\ a'b'=("+product[0]+","+product[1]+")\\in "+cosetName(ci).replace('[','[').replace(']',']');
+    readoutEl.innerHTML='<span class="kx">'+tex+'</span>';
+    readoutEl.querySelectorAll('.kx').forEach(el=>el.dataset.done='');
+    renderMath(readoutEl);
+  }
+  renderLanding();
+  draw();
+}
+
+function renderLanding(){
+  if(landings.size===0){ landingEl.innerHTML=''; }
+  else {
+    let h='';
+    landings.forEach((info,ci)=>{
+      h+='<span class="land-pill"><span class="dot" style="background:'+COSET_COLORS[ci%3]+'"></span>'+
+         cosetName(ci)+' <span class="muted">via ('+info.fromA.join(',')+')·('+info.fromB.join(',')+')</span></span>';
+    });
+    landingEl.innerHTML=h;
+  }
+  // verdict
+  if(landings.size===0){
+    verdictEl.className='verdict'; verdictEl.innerHTML='Landing cosets for the chosen <b>A·B</b> will appear here.';
+  } else if(landings.size===1){
+    verdictEl.className='verdict good';
+    verdictEl.innerHTML='<span class="big">Consistent so far ✓</span>Every representative pair tried for '+
+      cosetName(selCosetA)+' · '+cosetName(selCosetB)+' landed in <b>the same coset</b>. '+
+      (absorbs().ok?'This subset absorbs — the product coset can never move.':'Keep trying reps, or hit “Test all”.');
+  } else {
+    verdictEl.className='verdict bad';
+    verdictEl.innerHTML='<span class="big">AMBIGUOUS — R/I is not a ring ✗</span>'+
+      'The same product <b>'+cosetName(selCosetA)+' · '+cosetName(selCosetB)+
+      '</b> landed in <b>'+landings.size+' different cosets</b> depending on representatives. '+
+      'Coset multiplication is ill-defined, so “≅ im φ” has no meaning here.';
+  }
+}
+
+function testAll(){
+  if(!cosets.length) return;
+  landings.clear();
+  const A=cosets[selCosetA], B=cosets[selCosetB];
+  for(const a of A) for(const b of B){
+    const p=mul(a,b); const ci=cosetIndexOf.get(key(p));
+    if(!landings.has(ci)) landings.set(ci,{elem:p, fromA:a.slice(), fromB:b.slice()});
+  }
+  // set product marker to last for visual
+  product=mul(A[0],B[0]);
+  repA=A[0].slice(); repB=B[0].slice();
+  renderRepButtons();
+  updateReadout();
+}
+
+/* ============================ EVENTS ============================ */
+document.addEventListener('click', e=>{
+  const cA=e.target.closest('.cA'); const cB=e.target.closest('.cB');
+  const rA=e.target.closest('.rA'); const rB=e.target.closest('.rB');
+  if(cA){ selCosetA=+cA.dataset.i; repA=null; landings.clear(); renderCosetSelectors(); updateReadout(); }
+  if(cB){ selCosetB=+cB.dataset.i; repB=null; landings.clear(); renderCosetSelectors(); updateReadout(); }
+  if(rA){ const[a,b]=rA.dataset.e.split(',').map(Number); repA=[a,b]; renderRepButtons(); updateReadout(); }
+  if(rB){ const[a,b]=rB.dataset.e.split(',').map(Number); repB=[a,b]; renderRepButtons(); updateReadout(); }
+});
+document.getElementById('test-all').addEventListener('click', testAll);
+document.getElementById('reset-land').addEventListener('click', ()=>{
+  landings.clear(); product=null; repA=repB=null; renderRepButtons(); updateReadout();
+});
+
+function setPreset(name){
+  I=PRESETS[name].map(p=>p.slice()); editMode=false;
+  document.querySelectorAll('#pre-ideal,#pre-diag,#pre-edit').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name==='ideal'?'pre-ideal':'pre-diag').classList.add('active');
+  resetSelections(); refreshAll();
+}
+document.getElementById('pre-ideal').onclick=()=>setPreset('ideal');
+document.getElementById('pre-diag').onclick=()=>setPreset('diag');
+document.getElementById('pre-edit').onclick=function(){
+  editMode=true;
+  document.querySelectorAll('#pre-ideal,#pre-diag').forEach(b=>b.classList.remove('active'));
+  this.classList.add('active');
+};
+document.getElementById('pre-clear').onclick=()=>{
+  I=[]; editMode=true;
+  document.querySelectorAll('#pre-ideal,#pre-diag').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pre-edit').classList.add('active');
+  resetSelections(); refreshAll();
+};
+
+function resetSelections(){ selCosetA=0; selCosetB=0; repA=repB=null; product=null; landings.clear(); }
+
+function refreshAll(){
+  computeCosets();
+  subsetTextEl.innerHTML='<span class="kx">'+subsetLabel()+'</span>';
+  subsetTextEl.querySelector('.kx').dataset.done='';
+  renderMath(subsetTextEl);
+  renderAxioms();
+  renderLegend();
+  renderCosetSelectors();
+  updateReadout();
+  renderMath(document.getElementById('axioms')); // (no kx there, safe)
+  draw();
+}
+
+/* ============================ BOOT ============================ */
+window.addEventListener('resize', fitCanvas);
+// script sits at end of <body>, so all nodes + the synchronously-loaded
+// katex global are already available. Boot once.
+renderMath(document.body);
+computeCosets();
+refreshAll();
+fitCanvas();
+animate();
+</script>
+</body>
+</html>

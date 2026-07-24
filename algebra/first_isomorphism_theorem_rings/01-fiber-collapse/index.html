@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>First Isomorphism Theorem — Fiber Collapse</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css" />
+<script src="lib/katex/katex.min.js"></script>
+<script src="lib/p5.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#161b22;
+    --panel2:#1c2330;
+    --ink:#e6edf3;
+    --ink-dim:#9aa7b4;
+    --line:#2b3440;
+    --accent:#f2b705;
+    --accent2:#58c4dc;
+    --good:#3fb950;
+    --domain:#2f3946;
+    --image:#243244;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    display:grid;
+    grid-template-columns:minmax(320px,380px) 1fr;
+    align-items:start;              /* don't stretch cells to the tallest one */
+    gap:0;
+    min-height:100vh;
+  }
+  /* ---------- side panel ---------- */
+  .side{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    padding:22px 22px 40px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  h1{
+    font-size:20px;
+    margin:0;
+    line-height:1.25;
+    letter-spacing:.2px;
+  }
+  h1 .sub{
+    display:block;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--accent2);
+    margin-top:4px;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+  }
+  .lead{
+    font-size:13.5px;
+    color:var(--ink-dim);
+    margin:0;
+  }
+  .card{
+    background:var(--panel2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+  }
+  .card h2{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    color:var(--ink-dim);
+    margin:0 0 10px;
+    font-weight:600;
+  }
+  .stage-title{
+    font-size:15.5px;
+    font-weight:700;
+    color:var(--accent);
+    margin:0 0 8px;
+  }
+  .stage-body{font-size:13.5px;color:var(--ink);}
+  .stage-math{margin:12px 0 4px;overflow-x:auto;overflow-y:hidden;}
+  .katex{font-size:1.02em;}
+
+  /* controls */
+  .controls{display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  label.ctl{font-size:12.5px;color:var(--ink-dim);min-width:74px;}
+  .nbtns{display:flex;gap:6px;flex-wrap:wrap;}
+  .nbtn{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--line);
+    background:#0f1520;color:var(--ink);
+    font-size:14px;cursor:pointer;font-weight:600;
+    transition:all .12s ease;
+  }
+  .nbtn:hover{border-color:var(--accent2);color:var(--accent2);}
+  .nbtn.active{background:var(--accent);color:#1a1300;border-color:var(--accent);}
+  .steprow{display:flex;gap:8px;}
+  .btn{
+    flex:1;
+    padding:10px 12px;border-radius:9px;
+    border:1px solid var(--line);
+    background:#0f1520;color:var(--ink);
+    font-size:13px;cursor:pointer;font-weight:600;
+    transition:all .12s ease;
+  }
+  .btn:hover:not(:disabled){border-color:var(--accent2);color:var(--accent2);}
+  .btn:disabled{opacity:.35;cursor:default;}
+  .btn.primary{background:var(--accent);color:#1a1300;border-color:var(--accent);}
+  .btn.primary:hover{filter:brightness(1.08);color:#1a1300;}
+  .steps-dots{display:flex;gap:6px;justify-content:center;margin-top:2px;}
+  .sdot{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .2s;}
+  .sdot.on{background:var(--accent);transform:scale(1.25);}
+
+  .hoverbox{min-height:70px;}
+  .hoverbox .empty{color:var(--ink-dim);font-size:12.5px;font-style:italic;}
+  .hoverline{margin:6px 0;font-size:13px;}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:middle;margin-right:6px;}
+
+  .caveats{font-size:12px;color:var(--ink-dim);}
+  .caveats li{margin:5px 0;}
+  .caveats b{color:var(--accent2);font-weight:600;}
+  .foot{font-size:11px;color:#5d6b78;margin-top:auto;}
+
+  /* ---------- stage / canvas ---------- */
+  .stage-wrap{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;min-width:0;}
+  #canvas-holder{flex:1;min-height:0;position:relative;}
+  canvas{display:block;}
+  .legend{
+    position:absolute;top:14px;left:16px;
+    font-size:11.5px;color:var(--ink-dim);
+    background:rgba(13,17,23,.72);
+    border:1px solid var(--line);
+    border-radius:8px;padding:8px 11px;
+    backdrop-filter:blur(3px);
+    max-width:min(46%,420px);
+  }
+  .legend b{color:var(--ink);}
+  .badge{
+    position:absolute;top:14px;right:16px;
+    font-size:12px;color:var(--ink);
+    background:rgba(13,17,23,.72);
+    border:1px solid var(--line);
+    border-radius:8px;padding:8px 12px;
+    backdrop-filter:blur(3px);
+  }
+  .badge .k{color:var(--accent2);font-weight:600;}
+
+  @media (max-width:880px){
+    .wrap{grid-template-columns:1fr;}
+    .side{border-right:none;border-bottom:1px solid var(--line);}
+    .stage-wrap{height:70vh;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ===================== SIDE PANEL ===================== -->
+  <aside class="side">
+    <div>
+      <h1>Fiber Collapse
+        <span class="sub">First Isomorphism Theorem · Rings</span>
+      </h1>
+    </div>
+    <p class="lead">A ring homomorphism squashes its domain onto its image. Everything landing on the same point is a <b style="color:var(--accent2)">fiber</b> — and the fibers are exactly the cosets of the kernel. Glue each fiber to a point and you rebuild the image.</p>
+
+    <!-- narration -->
+    <div class="card">
+      <h2>Argument · step <span id="stepNum">1</span> of 4</h2>
+      <div class="stage-title" id="stageTitle"></div>
+      <div class="stage-body" id="stageBody"></div>
+      <div class="stage-math" id="stageMath"></div>
+      <div class="steps-dots" id="stepsDots"></div>
+    </div>
+
+    <!-- controls -->
+    <div class="card controls">
+      <h2>Controls</h2>
+      <div class="row">
+        <label class="ctl">modulus n</label>
+        <div class="nbtns" id="nbtns"></div>
+      </div>
+      <div class="steprow">
+        <button class="btn" id="prevBtn">‹ Back</button>
+        <button class="btn primary" id="nextBtn">Next ›</button>
+      </div>
+      <div class="steprow">
+        <button class="btn" id="replayBtn">↻ Replay collapse</button>
+      </div>
+    </div>
+
+    <!-- hover info -->
+    <div class="card hoverbox">
+      <h2>Fiber under the cursor</h2>
+      <div id="hoverContent"><span class="empty">Hover a dot to highlight its fiber (a coset of&nbsp;ker&nbsp;φ).</span></div>
+    </div>
+
+    <!-- caveats -->
+    <div class="card">
+      <h2>Honest fine print</h2>
+      <ul class="caveats" style="margin:0;padding-left:18px;">
+        <li><b>ℤ is infinite.</b> We draw only a window −18…18. The three dots &hellip; at each end mean the pattern (and every fiber) continues forever.</li>
+        <li><b>ker φ is an ideal,</b> not just a subgroup. Absorbing multiplication (<span id="idealMath"></span>) is exactly what makes the quotient a <em>ring</em>, so the collapse respects + and ×.</li>
+      </ul>
+    </div>
+
+    <div class="foot">Built with p5.js (animation) + KaTeX (math), fully offline.</div>
+  </aside>
+
+  <!-- ===================== STAGE ===================== -->
+  <section class="stage-wrap">
+    <div id="canvas-holder">
+      <div class="legend" id="legend"></div>
+      <div class="badge" id="badge"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================================
+   MATH MODEL
+   phi : Z -> Z/nZ,  r |-> r mod n   (reduction mod n, a ring homomorphism)
+   ker phi = nZ.  Fibers of phi = cosets a + nZ = residue classes mod n.
+   R / ker phi = Z/nZ  ~=  im phi = Z/nZ    (phi is surjective).
+   ========================================================================= */
+const WIN_MIN = -18, WIN_MAX = 18;               // honest finite window of Z
+const DOMAIN = [];
+for (let v = WIN_MIN; v <= WIN_MAX; v++) DOMAIN.push(v);
+
+function residue(v, n){ return ((v % n) + n) % n; } // honest mod n, always in 0..n-1
+
+let N = 6;                 // current modulus (user-chosen)
+let stage = 0;             // 0=R, 1=cosets, 2=collapse, 3=im phi
+const STAGE_MAX = 3;
+
+// per-residue colour (semantic: colour == image point == coset)
+function residueColor(r, n){
+  const h = (r / n) * 360;
+  return { h, s: 68, l: 62 };
+}
+function hsl(c, a){ return `hsla(${c.h.toFixed(1)},${c.s}%,${c.l}%,${a===undefined?1:a})`; }
+
+/* ---------- dot data ---------- */
+let dots = [];   // {v, r, x,y, tx,ty, col, born}
+function buildDots(){
+  dots = DOMAIN.map(v => {
+    const r = residue(v, N);
+    return { v, r, x:0, y:0, tx:0, ty:0, col:residueColor(r,N) };
+  });
+}
+
+/* =========================================================================
+   LAYOUT — every dot gets a target (tx,ty) depending on the stage.
+   Stage 0: number line (the window of Z).
+   Stage 1: regroup into n horizontal rows, one per residue class (coset).
+   Stage 2/3: each coset row flies straight right into its image point.
+   Image points sit in a column whose y matches the coset rows -> straight flight.
+   ========================================================================= */
+let W = 900, H = 620;
+let layout = {};
+
+function computeLayout(){
+  const padL = 70, padR = 60, padT = 70, padB = 60;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  // image column near the right
+  const imgX = W - padR - 40;
+  const domainRight = imgX - 150;      // domain region ends before image col
+  const domainLeft  = padL;
+  const domainW = domainRight - domainLeft;
+
+  // rows for cosets / image points
+  const rowsTop = padT + 30;
+  const rowsBot = H - padB - 20;
+  const rowY = r => N === 1 ? (rowsTop+rowsBot)/2 : rowsTop + (rowsBot - rowsTop) * (r/(N-1));
+
+  layout = { padL, padR, padT, padB, imgX, domainLeft, domainRight, domainW,
+             rowsTop, rowsBot, rowY, lineY: padT + innerH*0.42 };
+
+  // group members by residue, sorted by value
+  const groups = [];
+  for (let r=0;r<N;r++) groups.push([]);
+  dots.forEach(d => groups[d.r].push(d));
+  groups.forEach(g => g.sort((a,b)=>a.v-b.v));
+  layout.groups = groups;
+
+  for (const d of dots){
+    if (stage === 0){
+      // number line across full domain width
+      const t = (d.v - WIN_MIN) / (WIN_MAX - WIN_MIN);
+      d.tx = domainLeft + t * (domainRight - domainLeft);
+      d.ty = layout.lineY;
+    } else {
+      // grouped into coset rows
+      const g = groups[d.r];
+      const idx = g.indexOf(d);
+      const m = g.length;
+      const spread = Math.min(domainW, m*26);
+      const startX = domainLeft + (domainW - spread)/2;
+      const gx = m===1 ? domainLeft+domainW/2 : startX + spread * (idx/(m-1));
+      const gy = rowY(d.r);
+      if (stage === 1){
+        d.tx = gx; d.ty = gy;
+      } else {
+        // collapse / merged: fly to the image point of residue r
+        d.tx = imgX; d.ty = gy;
+      }
+      d._rowY = gy;
+    }
+  }
+}
+
+/* =========================================================================
+   p5 SKETCH  (instance mode, keeps globals clean)
+   ========================================================================= */
+let collapseT = 0;            // 0..1 eased progress used for visual merge
+let hoverR = -1;             // residue currently hovered (-1 none)
+
+const sketch = (p) => {
+  p.setup = function(){
+    const holder = document.getElementById('canvas-holder');
+    W = holder.clientWidth; H = holder.clientHeight;
+    const c = p.createCanvas(W, H);
+    c.parent(holder);
+    buildDots();
+    computeLayout();
+    // start dots at their targets so first frame is clean
+    dots.forEach(d => { d.x = d.tx; d.y = d.ty; });
+    p.textFont('-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif');
+  };
+
+  p.windowResized = function(){
+    const holder = document.getElementById('canvas-holder');
+    W = holder.clientWidth; H = holder.clientHeight;
+    p.resizeCanvas(W, H);
+    computeLayout();
+  };
+
+  p.draw = function(){
+    p.clear();
+    p.background(13,17,23);
+
+    // ease dots toward targets
+    const ease = 0.14;
+    for (const d of dots){
+      d.x += (d.tx - d.x) * ease;
+      d.y += (d.ty - d.y) * ease;
+    }
+    // collapse progress (how merged the current stage looks)
+    const target = (stage >= 2) ? 1 : 0;
+    collapseT += (target - collapseT) * 0.10;
+
+    // hover detection
+    hoverR = -1;
+    let hx = p.mouseX, hy = p.mouseY;
+    if (hx>=0 && hx<=W && hy>=0 && hy<=H){
+      let best=1e9, bestR=-1;
+      for (const d of dots){
+        const dd=(d.x-hx)**2+(d.y-hy)**2;
+        if (dd<best){best=dd;bestR=d.r;}
+      }
+      if (best < 26*26) hoverR = bestR;
+      // also hover an image point
+      if (stage>=1){
+        for (let r=0;r<N;r++){
+          const iy=layout.rowY(r);
+          const dd=(layout.imgX-hx)**2+(iy-hy)**2;
+          if (dd<24*24) hoverR=r;
+        }
+      }
+    }
+
+    drawRegions(p);
+    if (stage===0) drawNumberLine(p);
+    if (stage>=1) drawCosetLabels(p);
+    if (stage>=2) drawFlightLines(p);
+    drawImagePoints(p);
+    drawDots(p);
+    drawTitles(p);
+
+    syncHoverPanel();
+  };
+
+  /* background regions ------------------------------------------------ */
+  function drawRegions(p){
+    // domain plate
+    p.noStroke();
+    p.fill(32,40,55, stage===0?60:80);
+    roundRect(p, layout.domainLeft-26, layout.padT-6,
+              (layout.domainRight-layout.domainLeft)+52, H-layout.padT-layout.padB+12, 16);
+    // image plate
+    if (stage>=1){
+      const iw = 96;
+      p.fill(36,50,68, 90);
+      roundRect(p, layout.imgX-iw/2, layout.padT-6, iw, H-layout.padT-layout.padB+12, 16);
+    }
+  }
+
+  function drawNumberLine(p){
+    const y = layout.lineY;
+    p.stroke(70,84,100); p.strokeWeight(2);
+    p.line(layout.domainLeft-14, y, layout.domainRight+14, y);
+    // ellipses at ends showing Z continues
+    p.noStroke(); p.fill(120,134,150);
+    for (let i=1;i<=3;i++){
+      p.circle(layout.domainLeft-14-i*10, y, 3);
+      p.circle(layout.domainRight+14+i*10, y, 3);
+    }
+    // tick labels (sparse)
+    p.fill(120,134,150); p.textAlign(p.CENTER,p.TOP); p.textSize(10);
+    for (const d of dots){
+      if (d.v%6===0){
+        p.text(d.v, d.x, y+13);
+      }
+    }
+  }
+
+  function drawCosetLabels(p){
+    // row labels: residue-class name at far left of each coset row
+    for (let r=0;r<N;r++){
+      const y=layout.rowY(r);
+      const col=residueColor(r,N);
+      const on=(hoverR===-1||hoverR===r);
+      setFill(p,col, on?0.95:0.30);
+      p.textAlign(p.RIGHT,p.CENTER); p.textSize(12.5);
+      p.text('['+r+']', layout.domainLeft-34, y);
+    }
+  }
+
+  function drawFlightLines(p){
+    for (let r=0;r<N;r++){
+      if (hoverR!==-1 && hoverR!==r) continue;
+      const y=layout.rowY(r);
+      const col=residueColor(r,N);
+      setStroke(p,col,0.22*(1)); p.strokeWeight(1);
+      p.line(layout.domainLeft, y, layout.imgX, y);
+    }
+  }
+
+  function drawImagePoints(p){
+    if (stage<1) return;
+    for (let r=0;r<N;r++){
+      const x=layout.imgX, y=layout.rowY(r);
+      const col=residueColor(r,N);
+      const on=(hoverR===-1||hoverR===r);
+      // how many dots have "arrived" -> grow
+      const grow = stage>=2 ? collapseT : 0;
+      const baseR = 9 + grow*6;
+      // glow
+      if (on){
+        setFill(p,col,0.16*(0.5+0.5*collapseT));
+        p.noStroke();
+        p.circle(x,y, baseR*2.6 + 8*Math.sin(p.frameCount*0.05));
+      }
+      setFill(p,col,on?1:0.35); p.noStroke();
+      p.circle(x,y, baseR*2);
+      // ring
+      setStroke(p,col,on?0.9:0.3); p.strokeWeight(2); p.noFill();
+      p.circle(x,y, baseR*2+6);
+      // label = element of Z/nZ
+      p.noStroke(); setFill(p,{h:0,s:0,l:8},1);
+      p.textAlign(p.CENTER,p.CENTER); p.textSize(baseR<12?11:13); p.textStyle(p.BOLD);
+      p.fill(20,15,0); p.text(r, x, y+0.5);
+      p.textStyle(p.NORMAL);
+    }
+    // label the image column (below it, clear of the top overlays)
+    setFill(p,{h:200,s:22,l:74},0.9);
+    p.textAlign(p.CENTER,p.TOP); p.textSize(12.5); p.textStyle(p.BOLD);
+    p.text('im φ = ℤ/'+N+'ℤ', layout.imgX, layout.rowsBot+22);
+    p.textStyle(p.NORMAL);
+  }
+
+  function drawDots(p){
+    // draw non-hovered first, hovered on top
+    const order = dots.slice().sort((a,b)=>{
+      const ah=(hoverR===a.r)?1:0, bh=(hoverR===b.r)?1:0; return ah-bh;
+    });
+    for (const d of order){
+      const on = (hoverR===-1 || hoverR===d.r);
+      // fade dots as they merge into the image point
+      let a = 1;
+      if (stage>=2){
+        const distToImg = Math.abs(d.x - layout.imgX);
+        a = Math.min(1, 0.25 + distToImg/160);   // faint when landed
+      }
+      if (!on) a *= 0.32;
+      const rad = on ? 6.5 : 5.5;
+      // soft halo on hover
+      if (on && hoverR===d.r && stage>=1){
+        setFill(p,d.col,0.14); p.noStroke();
+        p.circle(d.x,d.y,rad*3.2);
+      }
+      setFill(p,d.col,a); p.noStroke();
+      p.circle(d.x,d.y,rad*2);
+      // value label when spread out enough (stages 0 & 1)
+      if (stage<=1 && on){
+        p.fill(230,237,243, a*210);
+        p.textAlign(p.CENTER,p.CENTER); p.textSize(9);
+        p.text(d.v, d.x, d.y-0.5);
+      }
+    }
+  }
+
+  function drawTitles(p){
+    // caption UNDER the domain region, clear of the top-left legend overlay
+    setFill(p,{h:200,s:16,l:78},0.9);
+    const cx = (layout.domainLeft + layout.domainRight)/2;
+    p.textAlign(p.CENTER,p.TOP); p.textSize(12.5);
+    const label = stage===0 ? 'R = ℤ   (window −18 … 18)'
+                : stage===1 ? 'R  partitioned into fibers = cosets of ker φ'
+                : stage===2 ? 'each fiber collapses to a point → forming ℤ/ker φ'
+                : 'ℤ/ker φ   glued, ready to match  im φ';
+    p.text(label, cx, stage===0 ? layout.lineY+34 : layout.rowsBot+22);
+  }
+
+};
+
+/* colour helpers: interpret our {h,s,l} object via p5 HSL colour mode,
+   then always restore RGB so the rest of the drawing code is unaffected. */
+function setFill(p,c,a){ p.colorMode(p.HSL,360,100,100,1); p.fill(c.h,c.s,c.l,a===undefined?1:a); p.colorMode(p.RGB,255,255,255,255);}
+function setStroke(p,c,a){ p.colorMode(p.HSL,360,100,100,1); p.stroke(c.h,c.s,c.l,a===undefined?1:a); p.colorMode(p.RGB,255,255,255,255);}
+function roundRect(p,x,y,w,h,r){ p.rect(x,y,w,h,r); }
+
+let P5APP = new p5(sketch);
+
+/* =========================================================================
+   NARRATION + UI
+   ========================================================================= */
+function km(el, tex, display){
+  katex.render(tex, el, {throwOnError:false, displayMode:!!display});
+}
+
+function stageContent(){
+  return [
+    {
+      title:'The map  φ : ℤ → ℤ/nℤ',
+      body:'Reduction mod n sends every integer to its remainder. It is a ring homomorphism: it respects both + and ×. Here R = ℤ, drawn as a finite window of the number line.',
+      math:'\\varphi:\\mathbb{Z}\\to\\mathbb{Z}/'+N+'\\mathbb{Z},\\qquad \\varphi(r)=r \\bmod '+N
+    },
+    {
+      title:'Fibers = cosets of ker φ',
+      body:'Two integers hit the same point exactly when their difference is killed. So each fiber φ⁻¹(r) is a coset a + ker φ. Here ker φ = '+N+'ℤ, and the fibers are the residue classes — one coloured row each.',
+      math:'\\varphi(a)=\\varphi(b)\\iff a-b\\in\\ker\\varphi='+N+'\\mathbb{Z}'
+    },
+    {
+      title:'Collapse = quotient',
+      body:'Gluing every fiber to a single point IS the construction of the quotient ring R/ker φ. Watch each coloured coset fly together and merge into one node.',
+      math:'\\mathbb{Z}/\\ker\\varphi \\;=\\; \\{\\,a+'+N+'\\mathbb{Z}\\,\\}'
+    },
+    {
+      title:'Result:  ℤ/ker φ  ≅  im φ',
+      body:'The merged nodes are precisely im φ = ℤ/nℤ, and the gluing map is a ring isomorphism. That is the First Isomorphism Theorem — realised as a collapse.',
+      math:'\\mathbb{Z}/\\ker\\varphi \\;\\cong\\; \\operatorname{im}\\varphi,\\qquad a+'+N+'\\mathbb{Z}\\mapsto \\varphi(a)'
+    }
+  ];
+}
+
+function renderStage(){
+  const sc = stageContent()[stage];
+  document.getElementById('stageTitle').textContent = sc.title;
+  document.getElementById('stageBody').textContent = sc.body;
+  km(document.getElementById('stageMath'), sc.math, true);
+  document.getElementById('stepNum').textContent = stage+1;
+
+  // step dots
+  const sd = document.getElementById('stepsDots'); sd.innerHTML='';
+  for (let i=0;i<=STAGE_MAX;i++){
+    const e=document.createElement('div'); e.className='sdot'+(i===stage?' on':''); sd.appendChild(e);
+  }
+  document.getElementById('prevBtn').disabled = (stage===0);
+  document.getElementById('nextBtn').disabled = (stage===STAGE_MAX);
+  document.getElementById('replayBtn').style.display = (stage>=2)?'block':'none';
+
+  // legend + badge
+  const legend = document.getElementById('legend');
+  legend.innerHTML = [
+    '<b>Left:</b> R = ℤ (finite window).  <b>Right:</b> im φ = ℤ/'+N+'ℤ.',
+    'Colour = residue class = fiber = coset of ker φ.',
+    stage===0 ? 'Step 1 · the domain as a number line.'
+    : stage===1 ? 'Step 2 · sorted into '+N+' fibers (cosets).'
+    : stage===2 ? 'Step 3 · fibers collapsing onto image points.'
+    : 'Step 4 · one node per element of ℤ/'+N+'ℤ.'
+  ].join('<br>');
+
+  const badge=document.getElementById('badge');
+  badge.innerHTML = '<span class="k">n = '+N+'</span> &nbsp;·&nbsp; ker φ = '+N+'ℤ &nbsp;·&nbsp; '+N+' fibers';
+}
+
+function syncHoverPanel(){
+  const box=document.getElementById('hoverContent');
+  if (hoverR<0){
+    if (box.dataset.state!=='empty'){
+      box.innerHTML='<span class="empty">Hover a dot to highlight its fiber (a coset of&nbsp;ker&nbsp;φ).</span>';
+      box.dataset.state='empty';
+    }
+    return;
+  }
+  if (box.dataset.state===('r'+hoverR)) return;
+  box.dataset.state='r'+hoverR;
+  const col=residueColor(hoverR,N);
+  const members = layout.groups[hoverR].map(d=>d.v);
+  const rep = members.find(v=>v>=0);
+  // build a short coset listing with the honest ...
+  const shown = members.join(',\\,');
+  box.innerHTML =
+    '<div class="hoverline"><span class="swatch" style="background:'+hsl(col)+'"></span>'
+      +'fiber over image point <b style="color:'+hsl(col)+'">'+hoverR+'</b></div>'
+    +'<div class="hoverline" id="hv1"></div>'
+    +'<div class="hoverline" id="hv2"></div>';
+  km(document.getElementById('hv1'), '\\varphi^{-1}('+hoverR+')='+rep+'+'+N+'\\mathbb{Z}', false);
+  km(document.getElementById('hv2'), '\\{\\dots,\\,'+shown+',\\,\\dots\\}', false);
+}
+
+/* ---------- interaction wiring ---------- */
+function goStage(s){
+  stage = Math.max(0, Math.min(STAGE_MAX, s));
+  if (stage>=2) collapseT = 0; // restart merge visual on entering collapse
+  computeLayout();
+  renderStage();
+}
+
+document.getElementById('nextBtn').onclick = ()=>goStage(stage+1);
+document.getElementById('prevBtn').onclick = ()=>goStage(stage-1);
+document.getElementById('replayBtn').onclick = ()=>{
+  // pop dots back to their coset rows, then re-collapse
+  const keep=stage; stage=1; computeLayout();
+  dots.forEach(d=>{}); // targets already set to rows
+  setTimeout(()=>{ stage=keep; collapseT=0; computeLayout(); }, 520);
+};
+
+function buildNButtons(){
+  const box=document.getElementById('nbtns'); box.innerHTML='';
+  [2,3,4,5,6,7,8].forEach(n=>{
+    const b=document.createElement('button');
+    b.className='nbtn'+(n===N?' active':'');
+    b.textContent=n;
+    b.onclick=()=>{
+      N=n; buildDots(); computeLayout();
+      dots.forEach(d=>{ d.x=d.tx; d.y=d.ty; }); // snap so new dots don't fly from origin
+      [...box.children].forEach(c=>c.classList.toggle('active', +c.textContent===N));
+      document.getElementById('hoverContent').dataset.state='';
+      renderStage();
+      km(document.getElementById('idealMath'), 's\\cdot('+N+'k)\\in '+N+'\\mathbb{Z}', false);
+    };
+    box.appendChild(b);
+  });
+}
+
+buildNButtons();
+renderStage();
+km(document.getElementById('idealMath'), 's\\cdot(6k)\\in 6\\mathbb{Z}', false);
+</script>
+</body>
+</html>

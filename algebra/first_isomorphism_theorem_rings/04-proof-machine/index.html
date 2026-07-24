@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Proof Machine · First Isomorphism Theorem for Rings</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<style>
+  :root{
+    --bg:#0d1017; --panel:#151b26; --panel2:#1b2330; --line:#2a3444;
+    --ink:#e8ecf3; --muted:#96a0b4; --dim:#6b7688;
+    --gold:#f5b642; --gold2:#ffd479;
+    --pi:#34d399;      /* projection  */
+    --phibar:#f472b6;  /* induced iso */
+    --phi:#60a5fa;     /* original map */
+    --rNode:#38bdf8; --qNode:#c084fc; --imNode:#fbbf24;
+    --ok:#4ade80;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  body{padding:20px 20px 48px;}
+  a{color:var(--phi)}
+  .wrap{max-width:1180px;margin:0 auto;}
+  header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:20px;}
+  header.top h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px;}
+  header.top h1 .accent{color:var(--gold);}
+  header.top .sub{color:var(--muted);font-size:13px;}
+  header.top .iso{margin-left:auto;color:var(--muted);font-size:14px;}
+  header.top .iso .katex{color:var(--gold2);}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:22px;align-items:start;}
+  @media (max-width:1000px){.grid{grid-template-columns:1fr;}}
+
+  /* ---- diagram ---- */
+  .stage-card{background:linear-gradient(180deg,#121824,#0f141d);
+    border:1px solid var(--line);border-radius:16px;padding:10px;position:relative;}
+  .stage-wrap{position:relative;width:100%;max-width:620px;margin:0 auto;}
+  #stage{position:relative;width:620px;height:470px;max-width:100%;}
+  #stage svg{display:block;}
+  .lbl{position:absolute;transform:translate(-50%,-50%);pointer-events:none;
+    text-align:center;line-height:1.15;white-space:nowrap;z-index:3;}
+  .lbl .main{font-size:20px;}
+  .lbl .concrete{font-size:12px;color:var(--muted);margin-top:3px;}
+  .elbl{position:absolute;transform:translate(-50%,-50%);pointer-events:none;
+    font-size:19px;z-index:3;padding:1px 5px;border-radius:6px;
+    background:rgba(13,16,23,.55);}
+  #lblPi .katex{color:var(--pi);}
+  #lblPhibar .katex{color:var(--phibar);}
+  #lblPhi .katex{color:var(--phi);}
+  #travelTag{position:absolute;transform:translate(-50%,-140%);z-index:4;
+    font-size:13px;padding:2px 8px;border-radius:8px;font-weight:600;
+    background:#0b0e14;border:1px solid var(--gold);color:var(--gold2);
+    white-space:nowrap;opacity:0;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.5);}
+  .legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+    margin-top:6px;font-size:12px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:22px;height:0;border-top:3px solid;border-radius:2px;display:inline-block;}
+
+  /* ---- side panel ---- */
+  .side{display:flex;flex-direction:column;gap:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .beatnav{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .beatnav button{flex:1;min-width:0;font-size:11px;padding:7px 4px;border-radius:8px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;
+    transition:.15s;font-weight:600;letter-spacing:.2px;}
+  .beatnav button.active{background:var(--gold);color:#1a1205;border-color:var(--gold);}
+  .beatnav button:hover{color:var(--ink);}
+  .beatnav button.active:hover{color:#1a1205;}
+
+  .beat-kicker{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  .beat-title{font-size:18px;font-weight:650;margin:4px 0 12px;}
+  .beat-math{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;}
+  .beat-math .row{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;overflow-x:auto;}
+  .beat-math .row .katex{font-size:15.5px;}
+  .gloss{font-size:13.5px;line-height:1.5;color:var(--muted);border-left:3px solid var(--gold);
+    padding-left:11px;}
+  .gloss b{color:var(--ink);font-weight:600;}
+
+  .controls{display:flex;gap:8px;margin-top:14px;}
+  .controls button{flex:1;padding:10px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--ink);cursor:pointer;font-weight:600;font-size:13px;transition:.15s;}
+  .controls button:hover{border-color:var(--gold);color:var(--gold2);}
+  .controls button:disabled{opacity:.35;cursor:not-allowed;}
+  .controls button.play{background:var(--gold);color:#1a1205;border-color:var(--gold);}
+  .controls .idx{align-self:center;color:var(--dim);font-size:12px;min-width:34px;text-align:center;}
+
+  /* ---- example ---- */
+  .card h3{margin:0 0 4px;font-size:14px;font-weight:650;}
+  .card h3 .k{color:var(--phibar);}
+  .card .hint{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45;}
+  .poly-in{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;}
+  .poly-in label{color:var(--muted);}
+  .poly-in .cf{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .poly-in .cf input{width:44px;padding:6px 4px;text-align:center;border-radius:7px;
+    border:1px solid var(--line);background:#0c1017;color:var(--ink);font-size:14px;}
+  .poly-in .cf input:focus{outline:none;border-color:var(--gold);}
+  .poly-in .cf span{font-size:10px;color:var(--dim);}
+  .ex-btns{display:flex;gap:8px;margin-bottom:12px;}
+  .ex-btns button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--ink);cursor:pointer;font-weight:600;font-size:12.5px;transition:.15s;}
+  .ex-btns button.run{background:var(--phibar);color:#2a0c1c;border-color:var(--phibar);}
+  .ex-btns button:hover{filter:brightness(1.08);}
+  .readout{font-size:13px;line-height:1.7;}
+  .readout .r{display:flex;gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px dashed var(--line);}
+  .readout .r:last-child{border-bottom:none;}
+  .readout .r .tag{color:var(--muted);min-width:96px;flex-shrink:0;}
+  .readout .r .val{color:var(--ink);}
+  .readout .r .val .katex{font-size:15px;}
+  .verdict{margin-top:10px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;
+    display:none;align-items:center;gap:8px;}
+  .verdict.show{display:flex;}
+  .verdict.ok{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);color:var(--ok);}
+  .repbox{margin-top:11px;padding:10px 12px;border-radius:9px;background:var(--panel2);
+    border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.6;display:none;}
+  .repbox.show{display:block;}
+  .repbox b{color:var(--phibar);}
+  .footnote{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1><span class="accent">Proof Machine</span> — First Isomorphism Theorem for Rings</h1>
+    <span class="sub">the proof as one commuting triangle</span>
+    <span class="iso" id="isoTag"></span>
+  </header>
+
+  <div class="grid">
+    <!-- ============ DIAGRAM ============ -->
+    <div class="stage-card">
+      <div class="stage-wrap">
+        <div id="stage">
+          <!-- Two.js SVG injected here; KaTeX overlays below -->
+          <div class="lbl" id="lblR"></div>
+          <div class="lbl" id="lblQ"></div>
+          <div class="lbl" id="lblIm"></div>
+          <div class="elbl" id="lblPhi"></div>
+          <div class="elbl" id="lblPi"></div>
+          <div class="elbl" id="lblPhibar"></div>
+          <div id="travelTag"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="border-color:var(--phi)"></i> <span id="legPhi"></span></span>
+        <span><i style="border-color:var(--pi)"></i> <span id="legPi"></span></span>
+        <span><i style="border-color:var(--phibar)"></i> <span id="legPhibar"></span></span>
+      </div>
+    </div>
+
+    <!-- ============ SIDE PANEL ============ -->
+    <div class="side">
+      <div class="card">
+        <div class="beatnav" id="beatnav"></div>
+        <div class="beat-kicker" id="beatKicker"></div>
+        <div class="beat-title" id="beatTitle"></div>
+        <div class="beat-math" id="beatMath"></div>
+        <div class="gloss" id="beatGloss"></div>
+        <div class="controls">
+          <button id="prevBtn">‹ Prev</button>
+          <span class="idx" id="idxLabel"></span>
+          <button id="nextBtn">Next ›</button>
+          <button id="playBtn" class="play">▶ Play</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Watch it flow: <span class="k">&#8477;[x] &#8594; &#8450;</span>, &nbsp;x &#8614; i</h3>
+        <p class="hint">A concrete instance. Type a real polynomial <span id="hintP"></span>.
+          Its image, coset, and the commuting check are all <em>computed</em>, not faked.</p>
+        <div class="poly-in" id="polyIn"></div>
+        <div class="ex-btns">
+          <button class="run" id="runBtn">▶ Send it around the triangle</button>
+          <button id="repBtn">Other representative</button>
+        </div>
+        <div class="readout" id="readout"></div>
+        <div class="verdict ok" id="verdict"></div>
+        <div class="repbox" id="repbox"></div>
+        <p class="footnote" id="footnote"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="lib/two.min.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+/* =========================================================================
+   First Isomorphism Theorem for Rings — animated proof as a commuting triangle
+   Two.js = diagram shapes/arrows · GSAP = timeline · KaTeX = every statement
+   ========================================================================= */
+"use strict";
+
+/* -------- KaTeX helpers -------- */
+function K(tex, el, display){
+  katex.render(tex, el, {throwOnError:false, displayMode:!!display});
+}
+function kHTML(tex, display){
+  return katex.renderToString(tex, {throwOnError:false, displayMode:!!display});
+}
+
+/* -------- geometry of the triangle -------- */
+const NODE = {
+  R : {x:120, y:80 , w:150, h:64, color:'var(--rNode)', accent:'#38bdf8'},
+  Q : {x:120, y:390, w:210, h:70, color:'var(--qNode)', accent:'#c084fc'},
+  Im: {x:500, y:80 , w:150, h:64, color:'var(--imNode)',accent:'#fbbf24'},
+};
+// edges as trimmed segments (endpoints sit on node borders)
+const EDGE = {
+  phi   : {a:[205,80],  b:[425,80],  color:'#60a5fa', label:[315,54]},
+  pi    : {a:[120,115], b:[120,353], color:'#34d399', label:[95,235]},
+  phibar: {a:[190,338], b:[433,131], color:'#f472b6', label:[350,208]},
+};
+
+/* -------- Two.js setup -------- */
+const stageEl = document.getElementById('stage');
+const two = new Two({width:620, height:470, type:Two.Types.svg}).appendTo(stageEl);
+
+// ---- edges (drawn first so nodes sit on top) ----
+const edgeShapes = {};
+function makeArrow(p, colorVar){
+  const [x1,y1]=p.a, [x2,y2]=p.b;
+  const line = two.makeLine(x1,y1,x2,y2);
+  line.stroke = colorVar; line.linewidth = 2.5; line.opacity = 0.42; line.cap='round';
+  const ang = Math.atan2(y2-y1, x2-x1);
+  const head = two.makePolygon(x2, y2, 9, 3);
+  head.fill = colorVar; head.noStroke(); head.rotation = ang + Math.PI/2; head.opacity=0.5;
+  return {line, head, base:{lw:2.5}};
+}
+edgeShapes.phi    = makeArrow(EDGE.phi,    EDGE.phi.color);
+edgeShapes.pi     = makeArrow(EDGE.pi,     EDGE.pi.color);
+edgeShapes.phibar = makeArrow(EDGE.phibar, EDGE.phibar.color);
+
+// ---- nodes (glow behind + main rounded rect) ----
+const nodeShapes = {};
+for(const key in NODE){
+  const n = NODE[key];
+  const glow = two.makeRoundedRectangle(n.x, n.y, n.w+18, n.h+18, 18);
+  glow.fill = n.accent; glow.noStroke(); glow.opacity = 0;
+  const main = two.makeRoundedRectangle(n.x, n.y, n.w, n.h, 14);
+  main.fill = '#111722'; main.stroke = n.accent; main.linewidth = 2; main.opacity = 1;
+  nodeShapes[key] = {glow, main};
+}
+
+// ---- travelers (main dot on π·φ̄ route, ghost on φ) ----
+const traveler = two.makeCircle(NODE.R.x, NODE.R.y, 8);
+traveler.fill = 'var(--gold)'; traveler.stroke = '#fff2d6'; traveler.linewidth=2; traveler.opacity=0;
+const ghost = two.makeCircle(NODE.R.x, NODE.R.y, 6);
+ghost.fill = EDGE.phi.color; ghost.noStroke(); ghost.opacity=0;
+
+two.update();
+
+/* keep Two.js re-rendering as GSAP mutates shape props */
+gsap.ticker.add(function(){ two.update(); });
+
+/* -------- overlay labels (KaTeX) -------- */
+function placeLabel(el, x, y){ el.style.left=x+'px'; el.style.top=y+'px'; }
+function nodeLabel(el, main, concrete){
+  el.innerHTML = '<div class="main">'+kHTML(main)+'</div>'+
+                 '<div class="concrete">'+kHTML(concrete)+'</div>';
+}
+placeLabel(document.getElementById('lblR'),  NODE.R.x,  NODE.R.y);
+placeLabel(document.getElementById('lblQ'),  NODE.Q.x,  NODE.Q.y);
+placeLabel(document.getElementById('lblIm'), NODE.Im.x, NODE.Im.y);
+nodeLabel(document.getElementById('lblR'),  'R',                  '\\mathbb{R}[x]');
+nodeLabel(document.getElementById('lblQ'),  'R/\\ker\\varphi',    '\\mathbb{R}[x]/(x^2+1)');
+nodeLabel(document.getElementById('lblIm'), '\\operatorname{im}\\varphi', '\\mathbb{C}');
+
+placeLabel(document.getElementById('lblPhi'),    EDGE.phi.label[0],    EDGE.phi.label[1]);
+placeLabel(document.getElementById('lblPi'),     EDGE.pi.label[0],     EDGE.pi.label[1]);
+placeLabel(document.getElementById('lblPhibar'), EDGE.phibar.label[0], EDGE.phibar.label[1]);
+K('\\varphi',      document.getElementById('lblPhi'));
+K('\\pi',          document.getElementById('lblPi'));
+K('\\bar\\varphi', document.getElementById('lblPhibar'));
+
+// header + legend
+document.getElementById('isoTag').innerHTML = kHTML('R/\\ker\\varphi \\;\\cong\\; \\operatorname{im}\\varphi');
+document.getElementById('legPhi').innerHTML     = kHTML('\\varphi:R\\to S');
+document.getElementById('legPi').innerHTML      = kHTML('\\pi:R\\to R/\\ker\\varphi');
+document.getElementById('legPhibar').innerHTML  = kHTML('\\bar\\varphi:R/\\ker\\varphi\\to\\operatorname{im}\\varphi');
+document.getElementById('hintP').innerHTML      = kHTML('p(x)');
+
+/* =========================================================================
+   BEATS — the four-part proof + setup + conclusion
+   ========================================================================= */
+const beats = [
+  {
+    tab:'Setup', kicker:'The construction', title:'One map out of the quotient',
+    nodes:['R','Q','Im'], edges:['phi','pi','phibar'],
+    math:[
+      '\\varphi:R\\to S \\text{ a ring hom},\\quad K=\\ker\\varphi \\text{ (an ideal of } R).',
+      '\\pi:R\\to R/K,\\qquad r\\mapsto r+K \\quad(\\text{surjective}).',
+      '\\bar\\varphi:R/K\\to\\operatorname{im}\\varphi,\\qquad \\bar\\varphi(r+K)=\\varphi(r).'
+    ],
+    gloss:'We define <b>&phi;&#772;</b> on cosets by picking a representative <b>r</b> and applying <b>&phi;</b>. Then we verify four things: it is <b>well-defined</b>, a <b>homomorphism</b>, <b>injective</b>, and <b>surjective</b>.'
+  },
+  {
+    tab:'1. Well-def', kicker:'Beat 1 · Well-defined', title:'Independent of representative',
+    nodes:['Q','Im'], edges:['pi','phi'],
+    math:[
+      'r+K = r\'+K \\;\\Longrightarrow\\; r-r\'\\in K=\\ker\\varphi',
+      '\\Longrightarrow\\; \\varphi(r-r\')=0 \\;\\Longrightarrow\\; \\varphi(r)=\\varphi(r\').',
+      '\\therefore\\ \\bar\\varphi(r+K)=\\varphi(r)\\ \\text{is unambiguous.}'
+    ],
+    gloss:'A coset has many names. Any two names <b>r</b>, <b>r&prime;</b> differ by something in the kernel, so <b>&phi;</b> sends them to the <b>same</b> value. The rule doesn\u2019t depend on the choice.'
+  },
+  {
+    tab:'2. Hom', kicker:'Beat 2 · Homomorphism', title:'Preserves + and \u00d7',
+    nodes:['Q','Im'], edges:['phibar'],
+    math:[
+      '\\bar\\varphi\\big((r{+}K)+(s{+}K)\\big)=\\varphi(r{+}s)=\\varphi(r)+\\varphi(s).',
+      '\\bar\\varphi\\big((r{+}K)(s{+}K)\\big)=\\varphi(rs)=\\varphi(r)\\varphi(s).',
+      '\\bar\\varphi(1+K)=\\varphi(1)=1.'
+    ],
+    gloss:'Addition and multiplication of cosets are defined through representatives, and <b>&phi;</b> already respects them \u2014 so <b>&phi;&#772;</b> inherits the structure. It carries the identity to the identity.'
+  },
+  {
+    tab:'3. Inj', kicker:'Beat 3 · Injective', title:'The kernel is trivial',
+    nodes:['Q','Im'], edges:['phibar'],
+    math:[
+      '\\bar\\varphi(r+K)=0 \\;\\Longrightarrow\\; \\varphi(r)=0',
+      '\\Longrightarrow\\; r\\in\\ker\\varphi=K \\;\\Longrightarrow\\; r+K=0_{R/K}.',
+      '\\therefore\\ \\ker\\bar\\varphi=\\{\\,0_{R/K}\\,\\}.'
+    ],
+    gloss:'This is what quotienting <em>by the kernel</em> buys you: you kill <b>exactly</b> the ambiguity. Only the zero coset maps to zero, so <b>&phi;&#772;</b> is one-to-one.'
+  },
+  {
+    tab:'4. Surj', kicker:'Beat 4 · Surjective', title:'Onto the image',
+    nodes:['Im'], edges:['phibar'],
+    math:[
+      'y\\in\\operatorname{im}\\varphi \\;\\Longrightarrow\\; y=\\varphi(r) \\text{ for some } r',
+      '\\Longrightarrow\\; y=\\bar\\varphi(r+K).',
+      '\\therefore\\ \\bar\\varphi \\text{ maps onto } \\operatorname{im}\\varphi.'
+    ],
+    gloss:'By construction the codomain <b>is</b> the image. Every value <b>&phi;(r)</b> is hit \u2014 by the coset <b>r+K</b>. Nothing in the target is missed.'
+  },
+  {
+    tab:'\u2605 Iso', kicker:'Conclusion', title:'A bijective homomorphism = isomorphism',
+    nodes:['R','Q','Im'], edges:['pi','phibar'],
+    math:[
+      '\\bar\\varphi \\text{ is a bijective ring homomorphism:}',
+      '\\boxed{\\,R/\\ker\\varphi \\;\\cong\\; \\operatorname{im}\\varphi\\,}',
+      '\\varphi = \\bar\\varphi\\circ\\pi \\quad(\\text{and } \\bar\\varphi \\text{ is the } \\textit{unique} \\text{ such map}).'
+    ],
+    gloss:'Well-defined + homomorphism + injective + surjective. The triangle <b>commutes</b>: going <b>&phi;</b> directly equals going <b>&pi;</b> then <b>&phi;&#772;</b>. Run the example below to see it.'
+  }
+];
+
+/* -------- beat rendering + highlighting -------- */
+let current = 0;
+
+function applyHighlight(beat){
+  for(const key in nodeShapes){
+    const on = beat.nodes.includes(key);
+    gsap.to(nodeShapes[key].glow, {opacity: on?0.42:0, duration:.5, ease:'power2.out'});
+    gsap.to(nodeShapes[key].main, {scale: on?1.05:1.0, duration:.5, ease:'back.out(2)'});
+    gsap.to(nodeShapes[key].main, {linewidth: on?3.2:2, duration:.5});
+  }
+  for(const key in edgeShapes){
+    const on = beat.edges.includes(key);
+    const e = edgeShapes[key];
+    gsap.to(e.line, {opacity: on?1:0.32, linewidth: on?5.5:2.5, duration:.5, ease:'power2.out'});
+    gsap.to(e.head, {opacity: on?1:0.4, scale: on?1.35:1.0, duration:.5, ease:'back.out(2)'});
+  }
+}
+
+function renderBeat(i){
+  current = i;
+  const b = beats[i];
+  document.getElementById('beatKicker').textContent = b.kicker;
+  document.getElementById('beatTitle').textContent  = b.title;
+  const mathEl = document.getElementById('beatMath');
+  mathEl.innerHTML='';
+  b.math.forEach(function(tex){
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML=kHTML(tex, true); mathEl.appendChild(row);
+  });
+  document.getElementById('beatGloss').innerHTML = b.gloss;
+  document.getElementById('idxLabel').textContent = (i+1)+' / '+beats.length;
+  // tabs
+  Array.from(document.querySelectorAll('.beatnav button')).forEach(function(btn,k){
+    btn.classList.toggle('active', k===i);
+  });
+  document.getElementById('prevBtn').disabled = (i===0);
+  document.getElementById('nextBtn').disabled = (i===beats.length-1);
+  applyHighlight(b);
+}
+
+// build tab buttons
+const beatnav = document.getElementById('beatnav');
+beats.forEach(function(b,i){
+  const btn=document.createElement('button');
+  btn.textContent=b.tab;
+  btn.addEventListener('click', function(){ stopPlay(); renderBeat(i); });
+  beatnav.appendChild(btn);
+});
+
+/* -------- controls -------- */
+document.getElementById('prevBtn').addEventListener('click', function(){
+  stopPlay(); if(current>0) renderBeat(current-1);
+});
+document.getElementById('nextBtn').addEventListener('click', function(){
+  stopPlay(); if(current<beats.length-1) renderBeat(current+1);
+});
+
+let playing=false, playCall=null;
+function stopPlay(){
+  playing=false;
+  if(playCall){ playCall.kill(); playCall=null; }
+  document.getElementById('playBtn').textContent='\u25B6 Play';
+}
+function playStep(){
+  if(!playing) return;
+  if(current < beats.length-1){
+    renderBeat(current+1);
+    playCall = gsap.delayedCall(3.0, playStep);
+  } else { stopPlay(); }
+}
+document.getElementById('playBtn').addEventListener('click', function(){
+  if(playing){ stopPlay(); return; }
+  playing=true;
+  document.getElementById('playBtn').textContent='\u2759\u2759 Pause';
+  if(current===beats.length-1) renderBeat(0);
+  playCall = gsap.delayedCall(2.4, playStep);
+});
+
+/* =========================================================================
+   CONCRETE EXAMPLE:  phi: R[x] -> C,  x |-> i.  ker = (x^2+1),  im = C.
+   Everything below is COMPUTED honestly.
+   ========================================================================= */
+
+// evaluate real polynomial (coeffs[k] * x^k) at x = i  ->  {re, im}
+// x^k mod (x^2+1):  1, x, -1, -x, ...   (period 4)
+const CY_RE = [1,0,-1,0];   // contribution of x^k to constant / real part
+const CY_IM = [0,1,0,-1];   // contribution of x^k to x-coeff / imaginary part
+function reduce(coeffs){
+  let re=0, im=0;
+  for(let k=0;k<coeffs.length;k++){
+    const c = coeffs[k]||0;
+    re += c*CY_RE[k%4];
+    im += c*CY_IM[k%4];
+  }
+  return {re, im};   // coset = re + im*x ;  image = re + im*i  (identical data!)
+}
+
+// ---- number / polynomial / complex formatting to KaTeX ----
+function fmtNum(v){
+  if(Math.abs(v-Math.round(v))<1e-9) v=Math.round(v);
+  return (''+v);
+}
+function fmtPoly(coeffs){
+  const parts=[];
+  for(let k=coeffs.length-1;k>=0;k--){
+    let c=coeffs[k]||0;
+    if(Math.abs(c)<1e-9) continue;
+    const sign = c<0 ? '-' : (parts.length?'+':'');
+    let mag=Math.abs(c);
+    let magStr = (Math.abs(mag-1)<1e-9 && k>0) ? '' : fmtNum(mag);
+    let xpart = k===0 ? '' : (k===1 ? 'x' : 'x^{'+k+'}');
+    parts.push(sign+magStr+xpart);
+  }
+  return parts.length? parts.join('') : '0';
+}
+// a + b x  (linear coset representative)
+function fmtLinear(re,im,xsym){
+  xsym = xsym||'x';
+  const A=fmtNum(re), Bmag=fmtNum(Math.abs(im));
+  let s='';
+  const hasA = Math.abs(re)>1e-9, hasB=Math.abs(im)>1e-9;
+  if(hasA) s+=A;
+  if(hasB){
+    const sign = im<0 ? '-' : (hasA?'+':'');
+    const bstr = (Math.abs(Math.abs(im)-1)<1e-9)?'':Bmag;
+    s += sign + bstr + xsym;
+  }
+  if(!hasA && !hasB) s='0';
+  return s;
+}
+
+/* -------- polynomial input UI -------- */
+const DEG=4;
+const DEFAULT=[3,0,2,1,0];   // 3 + 2x^2 + x^3  ->  p(i)=1-i
+const polyIn=document.getElementById('polyIn');
+const inputs=[];
+polyIn.appendChild(Object.assign(document.createElement('label'),{textContent:'p(x) ='}));
+for(let k=0;k<=DEG;k++){
+  const cell=document.createElement('div'); cell.className='cf';
+  const inp=document.createElement('input');
+  inp.type='number'; inp.step='1'; inp.value=DEFAULT[k];
+  inp.addEventListener('input', updateReadout);
+  const sp=document.createElement('span');
+  sp.innerHTML = k===0? kHTML('c_0') : kHTML('c_'+k+(k===1?'\\,x':'\\,x^{'+k+'}'));
+  cell.appendChild(inp); cell.appendChild(sp);
+  inputs.push(inp); polyIn.appendChild(cell);
+}
+function readCoeffs(){ return inputs.map(function(i){ const v=parseFloat(i.value); return isFinite(v)?v:0; }); }
+
+/* -------- readout -------- */
+function updateReadout(){
+  const c=readCoeffs();
+  const {re,im}=reduce(c);
+  const rd=document.getElementById('readout');
+  rd.innerHTML =
+    row('p(x)',                 fmtPoly(c)) +
+    row('\\pi:\\ p\\mapsto p+K', '\\underbrace{'+fmtLinear(re,im,'x')+'}_{\\text{coset in }R/(x^2+1)}') +
+    row('\\bar\\varphi:\\ \\text{coset}\\mapsto', fmtLinear(re,im,'i')) +
+    row('\\varphi:\\ p\\mapsto p(i)', fmtLinear(re,im,'i'));
+  document.getElementById('verdict').classList.remove('show');
+  document.getElementById('repbox').classList.remove('show');
+}
+function row(tag, val){
+  return '<div class="r"><span class="tag">'+kHTML(tag)+'</span>'+
+         '<span class="val">'+kHTML(val)+'</span></div>';
+}
+
+/* -------- animated run around the triangle -------- */
+const tag=document.getElementById('travelTag');
+function setTag(x,y,html){ tag.style.left=x+'px'; tag.style.top=y+'px'; tag.innerHTML=html; }
+
+let runTL=null;
+function runExample(){
+  if(runTL) runTL.kill();
+  stopPlay();
+  const c=readCoeffs();
+  const {re,im}=reduce(c);
+  const pStr = fmtPoly(c);
+  const cosetStr = fmtLinear(re,im,'x');
+  const imgStr   = fmtLinear(re,im,'i');
+
+  // reset dots
+  gsap.set(traveler.translation, {x:NODE.R.x, y:NODE.R.y});
+  gsap.set(ghost.translation,    {x:NODE.R.x, y:NODE.R.y});
+  gsap.set([traveler, ghost], {opacity:0});
+  document.getElementById('verdict').classList.remove('show');
+
+  const st={x:NODE.R.x,y:NODE.R.y};   // proxy for tag following traveler
+  function follow(){ setTag(traveler.translation.x, traveler.translation.y, ''); }
+
+  runTL = gsap.timeline({onUpdate:follow});
+  // appear at R
+  runTL.set(tag,{opacity:1});
+  runTL.add(function(){ setTag(NODE.R.x,NODE.R.y, kHTML(pStr)); });
+  runTL.to([traveler,ghost],{opacity:1, duration:.3});
+  runTL.to({},{duration:.5});
+  // travel: main dot down pi  +  ghost across phi (simultaneously)
+  runTL.add('move');
+  runTL.to(traveler.translation,{x:NODE.Q.x, y:NODE.Q.y, duration:1.1, ease:'power1.inOut'},'move');
+  runTL.to(ghost.translation,   {x:NODE.Im.x,y:NODE.Im.y,duration:2.3, ease:'power1.inOut'},'move');
+  // arrived at quotient -> show coset
+  runTL.add(function(){ setTag(NODE.Q.x,NODE.Q.y, kHTML(cosetStr+'\\;\\in R/K')); });
+  runTL.fromTo(nodeShapes.Q.glow,{opacity:0.42},{opacity:0.9,duration:.3,yoyo:true,repeat:1});
+  runTL.to({},{duration:.45});
+  // travel along phibar to im
+  runTL.to(traveler.translation,{x:NODE.Im.x,y:NODE.Im.y,duration:1.2,ease:'power1.inOut'});
+  runTL.add(function(){ setTag(NODE.Im.x,NODE.Im.y, kHTML(imgStr+'\\;\\in\\mathbb{C}')); });
+  runTL.fromTo(nodeShapes.Im.glow,{opacity:0.42},{opacity:0.95,duration:.3,yoyo:true,repeat:1});
+  // verdict
+  runTL.add(function(){
+    const v=document.getElementById('verdict');
+    v.innerHTML='&#10003; &nbsp;'+kHTML('\\bar\\varphi(\\pi(p)) = '+imgStr+' = \\varphi(p)')+
+                '&nbsp; the triangle commutes.';
+    v.classList.add('show');
+  });
+  runTL.to({},{duration:.2});
+
+  // highlight the route
+  applyHighlight({nodes:['R','Q','Im'], edges:['pi','phibar','phi']});
+}
+document.getElementById('runBtn').addEventListener('click', runExample);
+
+/* -------- representative independence -------- */
+document.getElementById('repBtn').addEventListener('click', function(){
+  const c=readCoeffs();
+  const c2=c.slice(); c2[0]=(c2[0]||0)+1; c2[2]=(c2[2]||0)+1;  // + (x^2+1)
+  const r1=reduce(c), r2=reduce(c2);
+  const box=document.getElementById('repbox');
+  box.innerHTML =
+    'Two names for the same coset (they differ by a multiple of '+kHTML('x^2+1')+', i.e. by an element of the kernel):<br>'+
+    '&bull; '+kHTML(fmtPoly(c))+' &nbsp;&#8614;&nbsp; coset <b>'+kHTML(fmtLinear(r1.re,r1.im,'x'))+'</b> &#8614; '+kHTML(fmtLinear(r1.re,r1.im,'i'))+'<br>'+
+    '&bull; '+kHTML(fmtPoly(c2))+' &nbsp;&#8614;&nbsp; coset <b>'+kHTML(fmtLinear(r2.re,r2.im,'x'))+'</b> &#8614; '+kHTML(fmtLinear(r2.re,r2.im,'i'))+'<br>'+
+    'Same coset &#8594; same image. That is <b>well-definedness</b> (Beat 1), live.';
+  box.classList.add('show');
+});
+
+document.getElementById('footnote').innerHTML =
+  'Here &phi;(p)=p(i), so &phi;(x&sup2;+1)=i&sup2;+1=0: the kernel is exactly (x&sup2;+1). '+
+  'Reducing p mod (x&sup2;+1) replaces x&sup2; by \u22121, leaving a coset a+bx; then &phi;&#772;(a+bx)=a+bi. '+
+  'Since every complex number a+bi arises, &#8477;[x]/(x&sup2;+1) \u2245 &#8450;.';
+
+/* -------- boot -------- */
+renderBeat(0);
+updateReadout();
+</script>
+</body>
+</html>

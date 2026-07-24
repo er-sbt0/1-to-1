@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>R / ker φ — The Quotient Ring, Built From Cosets</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<script src="lib/d3.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<style>
+  :root {
+    --bg:        #0e1117;
+    --panel:     #161b24;
+    --panel-2:   #1c2330;
+    --ink:       #e7ecf3;
+    --ink-dim:   #9aa7b8;
+    --ink-faint: #6b7688;
+    --line:      #2a3342;
+    --accent:    #e2b13c;
+
+    /* one semantic color per coset of ker φ */
+    --c0: #4a90e2;  /* 0 + I  = {0,4,8}   */
+    --c1: #2fbf87;  /* 1 + I  = {1,5,9}   */
+    --c2: #e8913a;  /* 2 + I  = {2,6,10}  */
+    --c3: #b26fe0;  /* 3 + I  = {3,7,11}  */
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 700px at 50% -10%, #182234 0%, var(--bg) 60%);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    padding: 0 18px 120px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+
+  header.hero {
+    text-align: center;
+    padding: 54px 10px 26px;
+  }
+  header.hero .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  header.hero h1 {
+    font-size: clamp(26px, 4.6vw, 44px);
+    margin: 12px 0 6px;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  header.hero .sub {
+    color: var(--ink-dim);
+    max-width: 640px;
+    margin: 10px auto 0;
+    font-size: 16px;
+  }
+
+  section.panel {
+    background: linear-gradient(180deg, var(--panel) 0%, #131822 100%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 26px 28px;
+    margin: 22px 0;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.28);
+  }
+  .stepno {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(226,177,60,0.14);
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 15px;
+    margin-right: 12px;
+    border: 1px solid rgba(226,177,60,0.35);
+  }
+  section.panel h2 {
+    font-size: 21px;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+  }
+  section.panel h2 .htext { flex: 1; }
+  section.panel p { color: var(--ink-dim); margin: 10px 0; }
+  section.panel p.lead { color: var(--ink); }
+  .fineprint { font-size: 13.5px; color: var(--ink-faint); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(226,177,60,0.06);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    color: var(--ink-dim);
+  }
+  .callout.warn { border-left-color: #e0685f; background: rgba(224,104,95,0.07); }
+  .callout b, .callout strong { color: var(--ink); }
+
+  .katex { font-size: 1.04em; }
+  .kbig { text-align:center; margin: 18px 0; }
+
+  /* ---- coset colour helpers ---- */
+  .cchip {
+    display:inline-block; padding: 1px 8px; border-radius: 6px;
+    font-weight: 700; font-variant-numeric: tabular-nums;
+    border: 1px solid transparent;
+  }
+
+  /* ---- partition strip & rows ---- */
+  .viz-label { font-size: 13px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; margin: 18px 0 8px; }
+  svg { display:block; width:100%; height:auto; overflow:visible; }
+  .cell-num { font: 700 15px/1 "SF Mono", ui-monospace, Menlo, Consolas, monospace; fill: #0e1117; }
+  .cell-num.lite { fill: #f4f8ff; }
+  .cellrect { rx: 8px; stroke: rgba(0,0,0,0.25); stroke-width: 1; cursor: default; transition: opacity .18s; }
+  .rowlabel { fill: var(--ink-dim); font: 600 14px/1 -apple-system, sans-serif; }
+  .rowlabel .kh { font-weight: 700; }
+
+  /* ---- controls ---- */
+  .controls {
+    display:flex; flex-wrap:wrap; gap: 22px;
+    align-items:flex-start;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 18px 0;
+  }
+  .ctl-group { min-width: 140px; }
+  .ctl-group .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 8px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius: 9px; overflow:hidden; }
+  .seg button {
+    appearance:none; border:none; background: transparent; color: var(--ink-dim);
+    padding: 6px 12px; font: 700 14px/1 ui-monospace, monospace; cursor: pointer;
+    border-right: 1px solid var(--line); transition: background .12s, color .12s;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.active { color: #0e1117; }
+  .seg button:hover:not(.active) { background: rgba(255,255,255,0.05); color: var(--ink); }
+
+  .switch { display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
+  .switch .track {
+    width: 46px; height: 26px; border-radius: 999px; background: #2a3342;
+    position: relative; transition: background .18s; border: 1px solid var(--line);
+  }
+  .switch .knob {
+    position:absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+    background: #cdd6e2; transition: transform .18s;
+  }
+  .switch.on .track { background: var(--accent); }
+  .switch.on .knob { transform: translateX(20px); background: #0e1117; }
+  .switch .sw-text { font-weight: 700; font-size: 14px; color: var(--ink); }
+
+  /* ---- operation tables ---- */
+  .tables-row { display:flex; flex-wrap:wrap; gap: 26px; margin-top: 6px; align-items:flex-start; }
+  .tblbox { flex: 1 1 320px; }
+  .tblcap { text-align:center; font-weight:700; margin-bottom: 10px; color: var(--ink); }
+  table.op { border-collapse: separate; border-spacing: 4px; margin: 0 auto; }
+  table.op th, table.op td {
+    width: 62px; height: 46px; text-align:center; border-radius: 8px;
+    font: 700 15px/1 ui-monospace, monospace; font-variant-numeric: tabular-nums;
+    padding: 0;
+  }
+  table.op th.corner {
+    background: var(--panel-2); color: var(--accent); font-size: 20px; border: 1px solid var(--line);
+  }
+  table.op th.hdr { color: #0e1117; cursor: default; }
+  table.op td.cell { color: #0e1117; cursor: pointer; position: relative; transition: transform .1s, box-shadow .12s; }
+  table.op td.cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+  table.op td.cell.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(0,0,0,0.4); z-index: 2; }
+  .hdr-mini { font-size: 11px; opacity: 0.85; }
+
+  .trace {
+    margin-top: 18px; padding: 16px 18px; border-radius: 12px;
+    background: var(--panel-2); border: 1px solid var(--line); min-height: 64px;
+    display:flex; align-items:center; flex-wrap:wrap; gap: 14px; justify-content:center;
+  }
+  .trace .hint { color: var(--ink-faint); font-size: 14.5px; }
+
+  .match-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 8px 14px; border-radius: 999px; font-weight:700; font-size: 14px;
+    background: rgba(47,191,135,0.12); color: #47d69c; border:1px solid rgba(47,191,135,0.4);
+  }
+  .match-badge.off { background: rgba(226,177,60,0.1); color: var(--accent); border-color: rgba(226,177,60,0.4); }
+
+  .legend { display:flex; flex-wrap:wrap; gap: 10px 18px; margin: 6px 0 2px; font-size: 14px; }
+  .legend .item { display:inline-flex; align-items:center; gap:8px; color: var(--ink-dim); }
+  .legend .sw { width:16px; height:16px; border-radius:5px; display:inline-block; }
+
+  .wd-status { margin-top: 14px; font-size: 14.5px; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px){ .grid2 { grid-template-columns: 1fr; } table.op th, table.op td { width: 50px; height: 42px; } }
+
+  footer { text-align:center; color: var(--ink-faint); font-size: 13px; padding: 30px 0 0; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">First Isomorphism Theorem · Rings</div>
+    <h1>The quotient ring is not glue.<br/>It is a table you can build.</h1>
+    <p class="sub">Take a ring homomorphism <span id="hero-phi"></span>. Its kernel slices the ring into
+      parallel <b>cosets</b>. Those cosets are the elements of <span id="hero-qr"></span> — and they add and
+      multiply by a rule you can compute, tile, and check. Watch the coset table become the image table.</p>
+  </header>
+
+  <!-- STEP 1 : the map -->
+  <section class="panel">
+    <h2><span class="stepno">1</span><span class="htext">One concrete map</span></h2>
+    <p class="lead">We work entirely inside a finite example so every table fits on screen. Let</p>
+    <div class="kbig" id="m-map"></div>
+    <p>This is a ring homomorphism: it respects both <span id="m-add"></span> and <span id="m-mul"></span>.
+      Its <b>kernel</b> — everything sent to <span id="m-zero"></span> — is</p>
+    <div class="kbig" id="m-ker"></div>
+    <p>and its <b>image</b> is all of <span id="m-im"></span>. The theorem promises a precise identity:</p>
+    <div class="kbig" id="m-thm"></div>
+    <p class="fineprint">Read it as a work order. The left side is something we must <i>construct</i> — a ring whose
+      elements are cosets of <span id="m-i"></span>. The right side is something we already understand. The rest
+      of this page earns the <span id="m-cong"></span>.</p>
+  </section>
+
+  <!-- STEP 2 : partition -->
+  <section class="panel">
+    <h2><span class="stepno">2</span><span class="htext">The kernel tiles R into cosets</span></h2>
+    <p>A coset <span id="p-cos"></span> is the kernel shifted by <span id="p-r"></span>. Since
+      <span id="p-i"></span> has 3 elements and <span id="p-r12"></span> has 12, we get exactly
+      <span id="p-4"></span> cosets, and they <b>partition</b> the ring — no overlaps, nothing left out.</p>
+
+    <div class="viz-label">R = ℤ/12ℤ, each element painted by the coset it belongs to</div>
+    <svg id="strip" viewBox="0 0 720 88" role="img" aria-label="the ring Z/12Z coloured by coset"></svg>
+    <p class="fineprint">The four colors interleave through the ring — coset <span id="p-c1"></span> lives at
+      positions 1, 5, 9. Regroup by color and the partition into four parallel copies of the kernel appears:</p>
+
+    <div class="viz-label">The same 12 elements, regrouped into the four cosets</div>
+    <svg id="rows" viewBox="0 0 720 250" role="img" aria-label="the four cosets as rows"></svg>
+
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <!-- STEP 3 : operation tables -->
+  <section class="panel">
+    <h2><span class="stepno">3</span><span class="htext">Cosets add and multiply</span></h2>
+    <p class="lead">Here is the definition that makes <span id="t-qr"></span> a <i>ring</i>. Add or multiply cosets
+      by adding or multiplying any representatives, then asking which coset you land in:</p>
+    <div class="kbig" id="t-def"></div>
+
+    <div class="controls">
+      <div class="ctl-group">
+        <div class="lbl">Representative of each coset</div>
+        <div id="rep-controls" style="display:flex; gap:14px; flex-wrap:wrap;"></div>
+      </div>
+      <div class="ctl-group">
+        <div class="lbl">Header labels</div>
+        <label class="switch" id="relabel-sw">
+          <span class="track"><span class="knob"></span></span>
+          <span class="sw-text">Relabel by φ</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="tables-row">
+      <div class="tblbox">
+        <div class="tblcap" id="cap-add">Addition in R / ker φ</div>
+        <table class="op" id="tbl-add"></table>
+      </div>
+      <div class="tblbox">
+        <div class="tblcap" id="cap-mul">Multiplication in R / ker φ</div>
+        <table class="op" id="tbl-mul"></table>
+      </div>
+    </div>
+
+    <div class="trace" id="trace"><span class="hint">Click any cell to trace the coset arithmetic step by step.</span></div>
+
+    <div class="callout"><b>What to notice while you fiddle.</b> Change the representatives above. The
+      <i>numbers</i> printed in the cells change — but every cell keeps its <i>color</i>. The color is the
+      answer coset, and it never moves. That invariance is the whole game, and it has a name.</div>
+  </section>
+
+  <!-- STEP 4 : well-definedness -->
+  <section class="panel">
+    <h2><span class="stepno">4</span><span class="htext">Why this is even allowed: well-definedness</span></h2>
+    <p>The rule reaches <i>inside</i> a coset, grabs a representative, and computes. For the answer to be a
+      property of the <b>cosets</b> and not of our arbitrary pick, different representatives must give the same
+      answer coset. They do:</p>
+    <div class="kbig" id="wd-eq"></div>
+    <p>because if <span id="wd1"></span> and <span id="wd2"></span> then their difference sums lie in
+      <span id="wd-i"></span>. For addition this needs only that <span id="wd-i2"></span> is a subgroup. For
+      <b>multiplication</b> it needs more:</p>
+    <div class="kbig" id="wd-mul"></div>
+    <div class="callout warn"><b>The crux (and the trap).</b> Those cross terms
+      <span id="wd-cross"></span> land back in <span id="wd-i3"></span> only because the kernel <i>absorbs</i>
+      products with anything in the ring — that is exactly what makes it an <b>ideal</b>, not merely a subring.
+      Pick a subgroup that is <i>not</i> an ideal and coset multiplication collapses: the answer would depend on
+      which representative you grabbed. Here <span id="wd-gen"></span> is the ideal generated by
+      <span id="wd-4"></span>, so we are safe.</div>
+
+    <div class="wd-status" id="wd-status"></div>
+  </section>
+
+  <!-- STEP 5 : the isomorphism -->
+  <section class="panel">
+    <h2><span class="stepno">5</span><span class="htext">The isomorphism, made visible</span></h2>
+    <p class="lead">The map <span id="i-map"></span> is a bijection from cosets to image elements. Flip the
+      <b>Relabel by φ</b> switch in Step 3 and watch the coset headers <span id="i-h1"></span> turn into plain
+      elements <span id="i-h2"></span>. When they do, the R/ker φ tables become — cell for cell — the ordinary
+      tables of <span id="i-im"></span>:</p>
+
+    <div class="grid2">
+      <div class="tblbox">
+        <div class="tblcap">Addition in ℤ/4ℤ &nbsp;(= im φ)</div>
+        <table class="op" id="ref-add"></table>
+      </div>
+      <div class="tblbox">
+        <div class="tblcap">Multiplication in ℤ/4ℤ &nbsp;(= im φ)</div>
+        <table class="op" id="ref-mul"></table>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+      <span class="match-badge off" id="match-badge">Relabel is OFF — headers still read “r + I”</span>
+    </div>
+
+    <p style="margin-top:18px;">That table-for-table sameness <i>is</i> the theorem. The bijection carries the
+      <span id="i-plus"></span> of cosets to the <span id="i-plus2"></span> of images and the
+      <span id="i-times"></span> to the <span id="i-times2"></span>. Structure preserved on both operations:</p>
+    <div class="kbig" id="i-final"></div>
+  </section>
+
+  <section class="panel" style="background:linear-gradient(180deg,#12161f,#0f131b);">
+    <h2><span class="stepno">✓</span><span class="htext">The one-paragraph recap</span></h2>
+    <p><span id="r-1"></span> is a genuine ring: its elements are the cosets of the kernel, and it inherits
+      <span id="r-2"></span> and <span id="r-3"></span> from representatives — legitimately, because the kernel
+      is an ideal. Relabelling each coset <span id="r-4"></span> by <span id="r-5"></span> matches those tables
+      exactly onto <span id="r-6"></span>. That relabelling is the isomorphism
+      <span id="r-7"></span>. Nothing was glued; everything was computed.</p>
+  </section>
+
+  <footer>
+    Built with D3 (data-driven tiling &amp; tables) and KaTeX (typesetting). No build step, no network —
+    open <code>index.html</code> from <code>file://</code>.
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   MODEL  —  phi : Z/12Z -> Z/4Z ,  r |-> r mod 4
+   kernel = {0,4,8}.  Cosets indexed by phi-value 0..3.
+   ============================================================ */
+const N = 12;                 // R = Z/N Z
+const M = 4;                  // image ring Z/M Z
+const R = d3.range(N);        // [0..11]
+const phi = r => ((r % M) + M) % M;
+
+// cosets[k] = sorted list of ring elements with phi = k
+const cosets = d3.range(M).map(k => R.filter(r => phi(r) === k));
+// kernel is cosets[0]
+const KER = cosets[0];        // [0,4,8]
+
+const COSET_COLORS = ['var(--c0)','var(--c1)','var(--c2)','var(--c3)'];
+const COSET_HEX    = ['#4a90e2','#2fbf87','#e8913a','#b26fe0'];
+// whether to draw the number in light (dark backgrounds)
+const LITE = [true, false, false, true];
+
+/* ---- interaction state ---- */
+const state = {
+  reps: [0,1,2,3].map((_,k)=>cosets[k][0]),  // chosen representative per coset
+  relabel: false,
+  sel: null,                                  // {op, i, j}
+};
+
+/* ============================================================
+   KaTeX helpers
+   ============================================================ */
+function kstr(tex, display=false){
+  return katex.renderToString(tex, {throwOnError:false, displayMode:display});
+}
+function setK(id, tex, display=false){
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = kstr(tex, display);
+}
+// coloured coset chip label like  \color..{2}+I
+function cosetTex(k, rep){
+  const label = (rep===undefined) ? `${k}` : `${rep}`;
+  return `${label}+I`;
+}
+
+/* ============================================================
+   STATIC MATH  (fill the prose)
+   ============================================================ */
+function fillStaticMath(){
+  setK('hero-phi', '\\varphi\\colon R\\to S');
+  setK('hero-qr',  'R/\\ker\\varphi');
+
+  setK('m-map', '\\varphi\\colon \\mathbb{Z}/12\\mathbb{Z}\\;\\longrightarrow\\;\\mathbb{Z}/4\\mathbb{Z},\\qquad \\varphi(r)=r \\bmod 4', true);
+  setK('m-add', '\\varphi(a+b)=\\varphi(a)+\\varphi(b)');
+  setK('m-mul', '\\varphi(ab)=\\varphi(a)\\,\\varphi(b)');
+  setK('m-zero','0');
+  setK('m-ker', '\\ker\\varphi=\\{\\,r:\\varphi(r)=0\\,\\}=\\{0,4,8\\}=:I', true);
+  setK('m-im',  '\\mathbb{Z}/4\\mathbb{Z}');
+  setK('m-thm', '\\mathbb{Z}/12\\mathbb{Z}\\,/\\,\\ker\\varphi\\;\\;\\cong\\;\\;\\operatorname{im}\\varphi=\\mathbb{Z}/4\\mathbb{Z}', true);
+  setK('m-i',   'I=\\ker\\varphi');
+  setK('m-cong','\\cong');
+
+  setK('p-cos', 'r+I');
+  setK('p-r',   'r');
+  setK('p-i',   'I');
+  setK('p-r12', 'R');
+  setK('p-4',   '12/3=4');
+  setK('p-c1',  '1+I');
+
+  setK('t-qr',  'R/I');
+  setK('t-def', '(a+I)+(b+I)=(a+b)+I,\\qquad (a+I)\\cdot(b+I)=(ab)+I', true);
+
+  setK('wd-eq', "a+I=a'+I \\ \\text{ and }\\ b+I=b'+I \\;\\Longrightarrow\\; (a+b)+I=(a'+b')+I", true);
+  setK('wd1',  "a'-a\\in I");
+  setK('wd2',  "b'-b\\in I");
+  setK('wd-i', 'I');
+  setK('wd-i2','I');
+  setK('wd-mul', "a'b' - ab = \\underbrace{(a'-a)}_{\\in I}\\,b' \\;+\\; a\\,\\underbrace{(b'-b)}_{\\in I}\\;\\in\\; I", true);
+  setK('wd-cross', "(a'-a)b',\\; a(b'-b)");
+  setK('wd-i3','I');
+  setK('wd-gen', 'I=(4)');
+  setK('wd-4', '4');
+
+  setK('i-map', '\\Phi\\colon R/I\\to\\operatorname{im}\\varphi,\\quad r+I\\mapsto\\varphi(r)');
+  setK('i-h1',  'r+I');
+  setK('i-h2',  '\\varphi(r)');
+  setK('i-im',  '\\mathbb{Z}/4\\mathbb{Z}');
+  setK('i-plus','+');
+  setK('i-plus2','+');
+  setK('i-times','\\cdot');
+  setK('i-times2','\\cdot');
+  setK('i-final', '\\Phi\\big((a+I)+(b+I)\\big)=\\varphi(a)+\\varphi(b),\\qquad \\Phi\\big((a+I)(b+I)\\big)=\\varphi(a)\\varphi(b)', true);
+
+  setK('r-1','R/\\ker\\varphi');
+  setK('r-2','+');
+  setK('r-3','\\cdot');
+  setK('r-4','r+I');
+  setK('r-5','\\varphi(r)');
+  setK('r-6','\\mathbb{Z}/4\\mathbb{Z}');
+  setK('r-7','R/\\ker\\varphi\\;\\cong\\;\\operatorname{im}\\varphi');
+}
+
+/* ============================================================
+   STEP 2 : partition visuals (D3)
+   ============================================================ */
+function drawStrip(){
+  const svg = d3.select('#strip');
+  const W = 720, n = N, gap = 6, pad = 2;
+  const cw = (W - gap*(n-1) - pad*2) / n;
+  const g = svg.selectAll('g.cell').data(R).join('g').attr('class','cell')
+    .attr('transform', (d,i)=>`translate(${pad + i*(cw+gap)},18)`);
+  g.selectAll('rect').data(d=>[d]).join('rect')
+    .attr('class','cellrect')
+    .attr('width', cw).attr('height', cw).attr('rx',8)
+    .attr('fill', d=>COSET_HEX[phi(d)]);
+  g.selectAll('text.n').data(d=>[d]).join('text')
+    .attr('class', d=>'cell-num n'+(LITE[phi(d)]?' lite':''))
+    .attr('x', cw/2).attr('y', cw/2+1)
+    .attr('text-anchor','middle').attr('dominant-baseline','central')
+    .text(d=>d);
+  // position ticks
+  g.selectAll('text.t').data(d=>[d]).join('text')
+    .attr('class','t').attr('x', cw/2).attr('y', cw+16)
+    .attr('text-anchor','middle').attr('fill','var(--ink-faint)')
+    .attr('font-size','11px').text((d,i)=>i);
+}
+
+function drawRows(){
+  const svg = d3.select('#rows');
+  const W = 720, labelW = 150, gap = 10, rowH = 54, rowGap = 8;
+  const per = KER.length; // 3
+  const cw = 46;
+  const rows = svg.selectAll('g.crow').data(cosets).join('g').attr('class','crow')
+    .attr('transform',(d,k)=>`translate(0,${8 + k*(rowH+rowGap)})`);
+
+  // row label  (rendered KaTeX as foreignObject-free: use tspans)
+  rows.selectAll('text.rl').data((d,k)=>[k]).join('text')
+    .attr('class','rowlabel rl')
+    .attr('x', 0).attr('y', rowH/2)
+    .attr('dominant-baseline','central')
+    .html(k=>`<tspan font-weight="700" fill="${COSET_HEX[k]}">${k} + I</tspan>` +
+             `<tspan fill="var(--ink-faint)" dx="8">=  ker φ + ${k}</tspan>`);
+
+  // element chips
+  rows.each(function(coset, k){
+    const gg = d3.select(this);
+    const cells = gg.selectAll('g.ch').data(coset).join('g').attr('class','ch')
+      .attr('transform',(d,i)=>`translate(${labelW + i*(cw+gap)},${(rowH-cw)/2})`);
+    cells.selectAll('rect').data(d=>[d]).join('rect')
+      .attr('class','cellrect').attr('width',cw).attr('height',cw).attr('rx',8)
+      .attr('fill', COSET_HEX[k]);
+    cells.selectAll('text').data(d=>[d]).join('text')
+      .attr('class','cell-num'+(LITE[k]?' lite':''))
+      .attr('x',cw/2).attr('y',cw/2+1)
+      .attr('text-anchor','middle').attr('dominant-baseline','central')
+      .text(d=>d);
+  });
+}
+
+function drawLegend(){
+  const el = d3.select('#legend');
+  el.selectAll('span.item').data(cosets).join(
+    enter => {
+      const s = enter.append('span').attr('class','item');
+      s.append('span').attr('class','sw');
+      s.append('span').attr('class','lg-txt');
+      return s;
+    }
+  ).each(function(coset,k){
+    d3.select(this).select('.sw').style('background', COSET_HEX[k]);
+    d3.select(this).select('.lg-txt')
+      .html(kstr(`${k}+I=\\{${coset.join(',')}\\}\\,,\\ \\varphi=${k}`));
+  });
+}
+
+/* ============================================================
+   STEP 3 : representative controls
+   ============================================================ */
+function buildRepControls(){
+  const wrap = d3.select('#rep-controls');
+  const groups = wrap.selectAll('div.repg').data(cosets).join('div').attr('class','repg');
+  groups.each(function(coset, k){
+    const g = d3.select(this);
+    g.selectAll('*').remove();
+    const seg = g.append('div').attr('class','seg')
+      .style('border-color', COSET_HEX[k]);
+    seg.selectAll('button').data(coset).join('button')
+      .text(d=>d)
+      .style('background', d => d===state.reps[k] ? COSET_HEX[k] : 'transparent')
+      .style('color', d => d===state.reps[k] ? '#0e1117' : COSET_HEX[k])
+      .on('click', (ev,d)=>{ state.reps[k]=d; refreshDynamic(); });
+  });
+}
+
+/* ============================================================
+   STEP 3 : operation tables
+   ============================================================ */
+// value in each cell (representative-level), and its answer-coset
+function cellValue(op, i, j){
+  const a = state.reps[i], b = state.reps[j];
+  const raw = op==='add' ? (a+b) : (a*b);
+  return ((raw % N) + N) % N;         // element of R
+}
+function answerCoset(op, i, j){
+  return op==='add' ? (i+j)%M : (i*j)%M;   // depends only on cosets — the point!
+}
+
+function buildOpTable(tableId, op, symbol){
+  const tbl = d3.select('#'+tableId);
+  tbl.selectAll('*').remove();
+
+  // header row
+  const thead = tbl.append('tr');
+  thead.append('th').attr('class','corner').html(symbol);
+  for (let j=0;j<M;j++){
+    thead.append('th').attr('class','hdr')
+      .style('background', COSET_HEX[j])
+      .style('color', LITE[j] ? '#f4f8ff' : '#0e1117')
+      .html(headerLabel(j));
+  }
+
+  for (let i=0;i<M;i++){
+    const tr = tbl.append('tr');
+    tr.append('th').attr('class','hdr')
+      .style('background', COSET_HEX[i])
+      .style('color', LITE[i] ? '#f4f8ff' : '#0e1117')
+      .html(headerLabel(i));
+    for (let j=0;j<M;j++){
+      const ck = answerCoset(op,i,j);
+      const val = cellValue(op,i,j);
+      const td = tr.append('td').attr('class','cell')
+        .style('background', COSET_HEX[ck])
+        .style('color', LITE[ck] ? '#f4f8ff' : '#0e1117')
+        .html(cellLabel(op,i,j,val,ck))
+        .on('click', ()=>{ state.sel={op,i,j}; refreshDynamic(); });
+      if (state.sel && state.sel.op===op && state.sel.i===i && state.sel.j===j)
+        td.classed('sel', true);
+    }
+  }
+}
+function headerLabel(k){
+  if (state.relabel) return `${k}`;                 // phi(rep) = k
+  return `<span>${state.reps[k]}<span class="hdr-mini"> +I</span></span>`;
+}
+function cellLabel(op,i,j,val,ck){
+  if (state.relabel) return `${ck}`;                // phi(value) = answer coset index
+  return `${val}`;                                  // representative-level element of R
+}
+
+/* ============================================================
+   STEP 3 : trace panel
+   ============================================================ */
+function renderTrace(){
+  const box = d3.select('#trace');
+  box.selectAll('*').remove();
+  if (!state.sel){
+    box.append('span').attr('class','hint')
+       .text('Click any cell to trace the coset arithmetic step by step.');
+    return;
+  }
+  const {op,i,j} = state.sel;
+  const a = state.reps[i], b = state.reps[j];
+  const val = cellValue(op,i,j);
+  const ck  = answerCoset(op,i,j);
+  const sym = op==='add' ? '+' : '\\cdot';
+  const rawSym = op==='add' ? '+' : '\\times';
+  const raw = op==='add' ? (a+b) : (a*b);
+
+  const tex =
+    `(\\,${a}+I\\,)${sym}(\\,${b}+I\\,)`
+    + `=(\\,${a}${rawSym}${b}\\,)+I`
+    + `=${raw}+I`
+    + `=${val}+I`
+    + `=\\mathbf{${ck}+I}`;
+
+  box.append('span').html(kstr(tex, false));
+
+  // colour swatch of the answer coset + membership
+  const badge = box.append('span').style('display','inline-flex')
+    .style('align-items','center').style('gap','8px');
+  badge.append('span').style('width','16px').style('height','16px')
+    .style('border-radius','5px').style('background',COSET_HEX[ck]);
+  badge.append('span').style('color','var(--ink-dim)').style('font-size','14px')
+    .html(kstr(`${val}\\in\\{${cosets[ck].join(',')}\\}=\\varphi^{-1}(${ck})`));
+
+  highlightCosetInStrip(ck);
+}
+
+let stripHighlight = null;
+function highlightCosetInStrip(k){
+  stripHighlight = k;
+  d3.select('#strip').selectAll('g.cell')
+    .style('opacity', d => (k===null || phi(d)===k) ? 1 : 0.22);
+}
+
+/* ============================================================
+   STEP 4 : well-definedness live check
+   ============================================================ */
+function renderWDStatus(){
+  const el = d3.select('#wd-status');
+  el.selectAll('*').remove();
+  // Show that current reps give same answer-coset pattern as canonical reps.
+  const canonical = [0,1,2,3];
+  let allMatch = true;
+  ['add','mul'].forEach(op=>{
+    for(let i=0;i<M;i++) for(let j=0;j<M;j++){
+      // answer coset is defined structurally, identical regardless of reps:
+      const c1 = answerCoset(op,i,j);
+      // recompute using actual chosen reps to CONFIRM empirically:
+      const a=state.reps[i], b=state.reps[j];
+      const raw = op==='add' ? (a+b) : (a*b);
+      const c2 = phi(((raw%N)+N)%N);
+      if (c1!==c2) allMatch=false;
+    }
+  });
+  const repsTxt = state.reps.map((r,k)=>`${r}\\in ${k}+I`).join(',\\ ');
+  el.append('div').html(kstr(`\\text{Your representatives: }\\quad ${repsTxt}`));
+  const badge = el.append('div').style('margin-top','10px')
+    .attr('class','match-badge'+(allMatch?'':' off'));
+  badge.html(allMatch
+    ? '&#10003;&nbsp; Every one of the 32 cells lands in the same coset as with reps 0,1,2,3 — well-defined.'
+    : '&#9888;&nbsp; mismatch (should never happen)');
+}
+
+/* ============================================================
+   STEP 5 : reference tables for im phi = Z/4Z
+   ============================================================ */
+function buildRefTable(tableId, op, symbol){
+  const tbl = d3.select('#'+tableId);
+  tbl.selectAll('*').remove();
+  const thead = tbl.append('tr');
+  thead.append('th').attr('class','corner').html(symbol);
+  for(let j=0;j<M;j++){
+    thead.append('th').attr('class','hdr')
+      .style('background', COSET_HEX[j])
+      .style('color', LITE[j]?'#f4f8ff':'#0e1117').text(j);
+  }
+  for(let i=0;i<M;i++){
+    const tr = tbl.append('tr');
+    tr.append('th').attr('class','hdr')
+      .style('background', COSET_HEX[i])
+      .style('color', LITE[i]?'#f4f8ff':'#0e1117').text(i);
+    for(let j=0;j<M;j++){
+      const v = op==='add' ? (i+j)%M : (i*j)%M;
+      tr.append('td').attr('class','cell')
+        .style('background', COSET_HEX[v])
+        .style('color', LITE[v]?'#f4f8ff':'#0e1117')
+        .style('cursor','default')
+        .text(v);
+    }
+  }
+}
+
+/* ============================================================
+   relabel switch + match badge
+   ============================================================ */
+function bindRelabel(){
+  const sw = document.getElementById('relabel-sw');
+  sw.addEventListener('click', ()=>{
+    state.relabel = !state.relabel;
+    sw.classList.toggle('on', state.relabel);
+    refreshDynamic();
+  });
+}
+function renderMatchBadge(){
+  const b = document.getElementById('match-badge');
+  if (state.relabel){
+    b.className = 'match-badge';
+    b.innerHTML = '&#10003;&nbsp; Relabel is ON — the R/ker φ tables now read identically to these ℤ/4ℤ tables.';
+  } else {
+    b.className = 'match-badge off';
+    b.innerHTML = 'Relabel is OFF — headers still read “r + I”. Flip the switch in Step 3.';
+  }
+}
+
+/* ============================================================
+   refresh everything dynamic
+   ============================================================ */
+function refreshDynamic(){
+  buildRepControls();
+  buildOpTable('tbl-add','add','+');
+  buildOpTable('tbl-mul','mul','\\times');
+  renderTrace();
+  renderWDStatus();
+  renderMatchBadge();
+  // dim caption to reflect relabel
+  document.getElementById('cap-add').innerHTML =
+    state.relabel ? 'Addition — relabelled as ℤ/4ℤ' : 'Addition in R / ker φ';
+  document.getElementById('cap-mul').innerHTML =
+    state.relabel ? 'Multiplication — relabelled as ℤ/4ℤ' : 'Multiplication in R / ker φ';
+}
+
+/* ============================================================
+   init
+   ============================================================ */
+function init(){
+  fillStaticMath();
+  drawStrip();
+  drawRows();
+  drawLegend();
+  buildRefTable('ref-add','add','+');
+  buildRefTable('ref-mul','mul','\\times');
+  bindRelabel();
+  refreshDynamic();
+  highlightCosetInStrip(null);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
