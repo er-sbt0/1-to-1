@@ -120,26 +120,92 @@ YOUR JOB — think from first principles, then implement:
      statement at each step.
   Then build it.
 
-LIBRARY PALETTE (reference — choose per scene):
-  - Math-native diagrams / presentation: MathBox (on Three.js), JSXGraph, Mafs (React), CindyJS
-  - Structured / relational (trees, graphs, sets, covers, morphs): D3.js
-  - Free-form 2D animation (particles, custom metaphors): p5.js
-  - 3D / spatial (product spaces, projections, camera): Three.js (UMD/global build), MathBox
-  - Fast 2D at scale (thousands of points, shaders): Pixi.js, regl, raw WebGL/GLSL
-  - Notation: KaTeX (fast, sync, no runtime network dep — default), MathJax (heavy AMS macros)
-  - Choreography (step-by-step narration): GSAP (timelines), anime.js
-  - Controls (sliders/toggles): lil-gui, Tweakpane
-  - Numerics (if needed): mathjs, ml-matrix
-  Overlap rule: D3 / JSXGraph / p5 / CindyJS all cover 2D — pick by scene type
-  (relational→D3, draggable-geometry→JSXGraph, free-form→p5) and drop the rest for that scene.
-  KaTeX/GSAP are fine to reuse as shared supporting libs across concepts.
+LIBRARY PALETTE (a MENU, not a mandate — reason from the scene to the tool, don't reach for
+the first row). Pick the fewest libraries that do the job; never run two that do the same job.
+
+  Math / numerical:
+    - math.js — expressions, matrices, complex, units, numerics · https://github.com/josdejong/mathjs
+    - decimal.js — arbitrary-precision decimals · https://github.com/MikeMcl/decimal.js
+    - big.js — small arbitrary-precision decimals · https://github.com/MikeMcl/big.js
+    - fraction.js — exact rationals/fractions · https://github.com/rawify/Fraction.js
+    - ml-matrix — matrix ops, decompositions, solvers · https://github.com/mljs/matrix
+    - ndarray — n-dimensional arrays · https://github.com/scijs/ndarray
+    - gl-matrix — fast vec/mat/quat for 3D · https://github.com/toji/gl-matrix
+    - numeric.js — linalg, optimization, interpolation, ODEs · https://github.com/sloisel/numeric
+    - jStat — distributions & statistics · https://github.com/jstat/jstat
+    - simple-statistics — descriptive stats, regression, clustering · https://github.com/simple-statistics/simple-statistics
+  Symbolic / CAS:
+    - Nerdamer — symbolic algebra, calculus, solving · https://github.com/jiggzson/nerdamer
+    - Algebrite — CAS: symbolic calc/algebra, exact · https://github.com/davidedc/Algebrite
+    - Cortex Compute Engine — MathJSON symbolic engine · https://github.com/cortex-js/compute-engine
+  Visualization / plotting:
+    - D3.js — low-level data-driven, relational (trees/graphs/sets/covers/morphs) · https://github.com/d3/d3
+    - Plotly.js — scientific: lines, scatter, contours, surfaces, 3D · https://github.com/plotly/plotly.js
+    - Observable Plot — concise high-level statistical charts · https://github.com/observablehq/plot
+    - Vega / Vega-Lite — declarative visualization grammar · https://github.com/vega/vega · https://github.com/vega/vega-lite
+    - Apache ECharts — feature-rich interactive charts · https://github.com/apache/echarts
+    - Chart.js — simple responsive charts · https://github.com/chartjs/Chart.js
+  Interactive / creative graphics:
+    - p5.js — creative coding, free-form 2D, simulations, particles · https://github.com/processing/p5.js
+    - PixiJS — GPU 2D at scale (sprites, thousands of points) · https://github.com/pixijs/pixijs
+    - Paper.js — vector paths, curves, geometry · https://github.com/paperjs/paper.js
+    - Two.js — lightweight animated 2D shapes (SVG/Canvas/WebGL) · https://github.com/jonobr1/two.js
+    - regl — functional WebGL, custom GPU/shader rendering · https://github.com/regl-project/regl
+  3D / WebGL / WebGPU:
+    - Three.js — general 3D: scenes, meshes, cameras, shaders (use UMD/global build) · https://github.com/mrdoob/three.js
+    - Babylon.js — full WebGL/WebGPU engine · https://github.com/BabylonJS/Babylon.js
+    - PlayCanvas Engine — web 3D/game engine · https://github.com/playcanvas/engine
+    - three-mesh-bvh — fast Three.js raycast/collision/geometry · https://github.com/gkjohnson/three-mesh-bvh
+  Physics / dynamics:
+    - Matter.js — accessible 2D rigid-body · https://github.com/liabru/matter-js
+    - Rapier.js — WASM 2D/3D rigid-body (vendor the .wasm) · https://github.com/dimforge/rapier.js
+    - cannon-es — light 3D rigid-body, pairs with Three · https://github.com/pmndrs/cannon-es
+    - Planck.js — Box2D-style accurate 2D · https://github.com/piqnt/planck.js
+    - Ammo.js — Bullet port, 3D (WASM) · https://github.com/kripken/ammo.js
+    - Oimo.js — lightweight 3D rigid-body · https://github.com/lo-th/Oimo.js
+  Animation / choreography (step-by-step narration):
+    - GSAP — timeline-based, precise synchronized · https://github.com/greensock/GSAP
+    - Anime.js — light DOM/SVG/CSS/JS values · https://github.com/juliangarnier/anime
+    - Motion — modern UI/DOM/gesture/layout · https://github.com/motiondivision/motion
+    - Popmotion — springs, inertia, interpolation · https://github.com/Popmotion/popmotion
+  Interaction (drag/toggle/step controls):
+    - interact.js — drag, resize, gesture, snap · https://github.com/taye/interact.js
+    - Moveable — drag/resize/rotate/scale handles · https://github.com/daybrush/moveable
+    - dnd-kit — drag-and-drop toolkit (React) · https://github.com/clauderic/dnd-kit
+    - Hammer.js — touch gestures (pinch/swipe/pan/rotate) · https://github.com/hammerjs/hammer.js
+  Graphs / networks:
+    - Cytoscape.js — graph viz + graph algorithms · https://github.com/cytoscape/cytoscape.js
+    - Sigma.js — GPU renderer for large graphs · https://github.com/jacomyal/sigma.js
+    - Graphology — graph data structures/algorithms (pairs with Sigma) · https://github.com/graphology/graphology
+    - vis-network — node-edge diagrams, physics layouts · https://github.com/visjs/vis-network
+  Computational geometry:
+    - flatten-js — 2D geometry: points, lines, circles, polygons, intersections · https://github.com/alexbol99/flatten-js
+    - polygon-clipping — polygon boolean ops (union/intersect/diff/xor) · https://github.com/mfogel/polygon-clipping
+    - Delaunator — fast 2D Delaunay triangulation · https://github.com/mapbox/delaunator
+    - Earcut — fast polygon triangulation · https://github.com/mapbox/earcut
+  Notation (mandatory for any statement on screen): KaTeX — fast, sync, no runtime network
+    dep (default); MathJax only if you need heavy AMS macros.
+
+  Overlap rule: many rows overlap (D3 / p5 / Paper / Two all cover 2D; Three / Babylon /
+  PlayCanvas all cover 3D; the physics and CAS rows are interchangeable). Pick ONE per job by
+  scene type and drop the rest. KaTeX and one animation lib (e.g. GSAP) are fine to reuse as
+  shared supporting libs across concepts.
+
+  Offline check BEFORE you commit to a lib: it must load from `file://` via a classic
+  <script> tag — a plain global/UMD/IIFE build. ESM-only packages (Cortex, Motion, dnd-kit,
+  three-mesh-bvh, and Three's default `three.module.js`) FAIL from file:// unless you use their
+  UMD/global build. WASM engines (Rapier, Ammo) need their `.wasm` vendored into lib/ too, and
+  some resolve it via a path you must point at the local file. If a lib has no usable non-ESM
+  build, pick a neighbor from the same row instead of fighting the loader.
 
 DELIVERY REQUIREMENTS (strict):
   - A single `index.html` that opens directly in a browser with NO build step and NO
     internet at view time. Start with `<!DOCTYPE html>` + `<head>`/`<body>` (KaTeX refuses
     to render in quirks mode).
   - Vendor ALL libraries LOCALLY into a `lib/` subfolder (download with curl/wget; include
-    KaTeX's .woff2 fonts and .css). Reference with relative paths only.
+    KaTeX's .woff2 fonts and .css). Reference with relative paths only. The palette URLs are
+    GitHub repos — fetch the actual built bundle from a CDN mirror (jsDelivr
+    `https://cdn.jsdelivr.net/npm/<pkg>` or unpkg), not the repo source tree.
   - For Three.js: use a UMD/global build (e.g. r149) + a globalized OrbitControls — ES-module
     + importmap FAILS from file:// (CORS origin: null). Confirm classic <script> loading.
   - Polished, legible design: good typography, semantic color, responsive layout.
