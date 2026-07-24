@@ -11,13 +11,56 @@ Fourier transform"*, *"Bayes' rule"*, *"eigenvectors"*, *"the Central Limit Theo
 a different conceptual angle + tool stack, each opening offline by double-click, plus a
 comparison writeup.
 
-The orchestrating agent (you) does the light-touch work inline: understand the math (Phase 0)
-and generate the **general** concept ideas (Phase 1), record the plan (Phase 2), then
-**immediately** launch subagents **one at a time** (Phase 3) — each subagent chooses its
-own libraries, designs the build from first principles, and implements the artifact. You
-compare the artifacts in Phase 4.
+The work is split by strength. A **Fable 5 subagent** does the *mathematical reasoning* —
+it finds the essence, the non-trivial insight, the decomposition, and proposes the N general
+concept angles (Phase 0 + Phase 1), returning a structured brief. The orchestrating agent
+(you) records that plan (Phase 2), then **immediately** launches **Opus coding subagents**
+**one at a time** (Phase 3), relaying the relevant essence from Fable's brief **inline** into
+each coder's spec — each coder chooses its own libraries, designs the build from first
+principles, and implements the artifact. You compare the artifacts in Phase 4.
+
+**Why the split:** Fable 5 is the reasoning model — it reasons about *what the math means*
+and *why it is true*. The Opus coders are the builders — they turn that meaning into working,
+offline, interactive artifacts (libraries, computation, HTML). Keep the two roles distinct:
+Fable does not write code; the coders do not re-derive the math, they serve the essence Fable
+handed them.
 
 ---
+
+## Phases 0 + 1 run inside one Fable 5 subagent
+
+Phase 0 (understand the math) and Phase 1 (generate concepts) are done by a **single Fable 5
+subagent**, not inline by you. Launch it with the Agent tool using `subagent_type:
+"general-purpose"` and `model: "fable"`. Give it the theorem and the two phase specs below,
+and require it to **return a structured brief** (the essence, the non-trivial insight, the
+decomposition table, and the N concept angles with slugs) as its final output — it writes no
+files and no code. You then use that returned brief for Phases 2–4.
+
+**Fable subagent brief (fill the theorem):**
+```
+You are a mathematician. Reason from first principles about the theorem/statement below and
+return a STRUCTURED BRIEF (text only — write no files, no code). Downstream, separate coding
+agents will turn your brief into interactive visual explainers, so your job is to nail the
+MEANING they must convey, not how to draw it.
+
+THEOREM: [statement]
+AUDIENCE: [level — default: motivated student who has seen the basics of the field]
+N: [number of concept angles to propose — default 5]
+
+Do Phase 0 (understand) then Phase 1 (concepts) exactly as specified below, and return:
+  1. The precise + plain-language statement, and the discipline.
+  2. THE ESSENCE (1–2 sentences) — the "aha" that survives once the notation is gone.
+  3. THE NON-TRIVIAL INSIGHT — the surprising / counterintuitive / easy-to-get-wrong thing
+     that separates real understanding from symbol-pushing.
+  4. The decomposition table: `piece | why it's hard | candidate visual metaphor`.
+  5. N distinct concept angles, each: `name · piece it conveys · key interaction/visual (in
+     general terms) · zero-padded index + slug`, plus the exact math facts/proof-steps and the
+     honesty caveats each angle depends on (so its coder gets correct content).
+  6. A coverage check confirming the facets are varied AND at least one angle goes straight at
+     the essence + non-trivial insight.
+```
+
+The two phase specs Fable follows:
 
 ## Phase 0 — Understand the statement from first principles
 
@@ -81,21 +124,26 @@ concept only illustrating mechanics. A varied-but-shallow spread is a failure.
 
 ## Phase 2 — Record the outline (no approval gate)
 
-Note the plan for the record: the Phase 1 concept table + the assumptions (delivery target,
-audience, N, and the `<topic>/<theorem>` slugs). **Do not wait for approval** — this is a
-checkpoint, not a stop. Proceed directly to Phase 3 and start launching subagents.
+Take Fable 5's returned brief and note the plan for the record: the essence + non-trivial
+insight, the concept table, and the assumptions (delivery target, audience, N, and the
+`<topic>/<theorem>` slugs). **Do not wait for approval** — this is a checkpoint, not a stop.
+Proceed directly to Phase 3 and start launching coding subagents.
 
 ---
 
-## Phase 3 — Build the artifacts, one subagent at a time
+## Phase 3 — Build the artifacts, one Opus subagent at a time
 
-Launch subagents **sequentially — one at a time, waiting for each to finish before starting
-the next** (not in parallel). Running them in sequence is deliberate: you can tell each new
-subagent what the previous ones built (angle + stack) so it stays distinct.
+Launch **Opus coding subagents** (`subagent_type: "general-purpose"`, default/session model —
+do **not** set `model: "fable"` here; Fable already did the thinking). Launch them
+**sequentially — one at a time, waiting for each to finish before starting the next** (not in
+parallel). Running them in sequence is deliberate: you can tell each new subagent what the
+previous ones built (angle + stack) so it stays distinct.
 
-Give each subagent only the **general** idea plus the offline delivery requirements. The
-subagent decides everything else from first principles — which libraries fit the scene, what
-the object on screen is, how the interaction works — and then implements it.
+Give each coder the **general** concept angle plus the offline delivery requirements — and,
+**inline in the spec**, the essence + non-trivial insight + the exact math facts/caveats for
+that angle, copied from Fable's brief. The coder does not re-derive the math; it decides
+everything else from first principles — which libraries fit the scene, what the object on
+screen is, how the interaction works — and then implements it in service of that essence.
 
 **Directory layout** — write products to `./<topic>/<theorem>/<idx>/`:
 ```
@@ -247,8 +295,9 @@ Work autonomously. Do not ask questions. When done, briefly report what you buil
 chose your stack.
 ```
 
-Use the `general-purpose` subagent type. Tell each agent it is one of N so it optimizes for
-being distinct.
+Use the `general-purpose` subagent type on the default/session (Opus) model — the essence and
+math-content brackets in the template above are filled **from Fable 5's brief**, not
+re-derived here. Tell each agent it is one of N so it optimizes for being distinct.
 
 ---
 
@@ -264,6 +313,9 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 
 ## Hard-won lessons (bake these into every subagent brief)
 
+- **Split reasoning from building.** Fable 5 reasons about the math (essence, insight,
+  concepts); Opus coders build the artifacts. Fable writes no code and the coders re-derive no
+  math — they serve the essence they were handed. This keeps each role on its strength.
 - **Essence over decoration.** The win condition is a viewer *understanding the deep idea and
   the non-trivial insight* — not a tidy animation of the formula. Every visual, artifact, and
   interaction must earn its place by moving that needle; cut the merely pretty.
@@ -289,6 +341,7 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
 > Use N = [5]. Delivery = standalone offline dirs under `./<topic>/<theorem>/<idx>/`.
-> Audience = [level]. Run the whole procedure end to end with no approval stops: outline the
-> general concepts, then spin up subagents automatically (one at a time), and compare the
-> artifacts when they're built.
+> Audience = [level]. Run the whole procedure end to end with no approval stops: first launch
+> a **Fable 5** subagent to reason out the essence + concepts (Phases 0–1), then spin up
+> **Opus** coding subagents automatically (one at a time), relaying Fable's essence inline into
+> each, and compare the artifacts when they're built.
