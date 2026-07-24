@@ -12,8 +12,8 @@ a different conceptual angle + tool stack, each opening offline by double-click,
 comparison writeup.
 
 The orchestrating agent (you) does the light-touch work inline: understand the math (Phase 0)
-and generate the **general** concept ideas (Phase 1), then **pause for approval** (Phase 2).
-After approval you launch subagents **one at a time** (Phase 3) — each subagent chooses its
+and generate the **general** concept ideas (Phase 1), record the plan (Phase 2), then
+**immediately** launch subagents **one at a time** (Phase 3) — each subagent chooses its
 own libraries, designs the build from first principles, and implements the artifact. A
 **reviewer subagent then opens and judges every artifact** (Phase 4); anything below the bar
 loops back to Phase 3 with more tries and a sharper brief. You compare the survivors in
@@ -66,12 +66,11 @@ Run a **coverage check**: confirm the facets are genuinely varied before present
 
 ---
 
-## Phase 2 — Outline and get approval  ⏸️
+## Phase 2 — Record the outline (no approval gate)
 
-Present to the user: the Phase 1 concept table + the assumptions (delivery target, audience,
-N, and the `<topic>/<theorem>` slugs). **Wait for explicit approval.** Let them swap
-concepts or change N before spending subagent budget. Do not spin up subagents until
-approved.
+Note the plan for the record: the Phase 1 concept table + the assumptions (delivery target,
+audience, N, and the `<topic>/<theorem>` slugs). **Do not wait for approval** — this is a
+checkpoint, not a stop. Proceed directly to Phase 3 and start launching subagents.
 
 ---
 
@@ -261,8 +260,9 @@ lines as evidence, and the 2–3 concrete, transferable lessons to feed back int
   - Give those rebuilds **more attempts / more budget** than the first pass.
   - **Sharpen the brief** — fold the reviewer's concrete lessons and the per-artifact fix
     directly into the subagent spec template, so the next build can't repeat the same miss.
-  - Re-review the rebuilt artifacts. Keep looping until the reviewer ships them — or until you
-    and the user agree a concept isn't worth more budget and cut it.
+  - Re-review the rebuilt artifacts. Keep looping autonomously until the reviewer ships them —
+    or, after a reasonable number of rebuild passes with no progress, cut the concept on your
+    own judgment and note it in the Phase 5 comparison. Do not stop to ask.
 
 ---
 
@@ -302,6 +302,7 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
 > Use N = [5]. Delivery = standalone offline dirs under `./<topic>/<theorem>/<idx>/`.
-> Audience = [level]. Outline the general concepts and wait for my approval before
-> spinning up subagents (one at a time). After building, run a reviewer subagent that opens
-> and judges each artifact, and iterate on any that don't clear the bar.
+> Audience = [level]. Run the whole procedure end to end with no approval stops: outline the
+> general concepts, then spin up subagents automatically (one at a time). After building, run
+> a reviewer subagent that opens and judges each artifact, and iterate on any that don't clear
+> the bar.
