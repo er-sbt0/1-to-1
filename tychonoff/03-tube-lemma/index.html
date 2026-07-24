@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tychonoff via the Tube Lemma</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<style>
+
+  :root{
+    --bg0:#0a0e1a; --bg1:#131a2e;
+    --panel:rgba(18,24,42,0.82); --panel-brd:rgba(120,160,255,0.18);
+    --ink:#e8edff; --ink-dim:#9aa6c8; --accent:#5ad1ff; --gold:#ffcf5a;
+    --good:#57e3a0; --warn:#ff7b9c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg0);
+    color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+
+  /* ---- Title ---- */
+  #title{position:absolute;top:16px;left:18px;z-index:5;pointer-events:none}
+  #title h1{margin:0;font-size:17px;font-weight:650;letter-spacing:.2px}
+  #title .sub{font-size:12px;color:var(--ink-dim);margin-top:2px}
+
+  /* ---- Narration panel ---- */
+  #panel{position:absolute;top:14px;right:14px;width:340px;max-width:calc(100vw - 28px);
+    background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--panel-brd);border-radius:16px;padding:16px 16px 12px;z-index:6;
+    box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .dots{display:flex;gap:7px;margin-bottom:12px}
+  .dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.16);
+    transition:all .3s;cursor:pointer}
+  .dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent);transform:scale(1.15)}
+  .dot.done{background:rgba(90,209,255,.45)}
+  #stepno{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  #steptitle{font-size:17px;font-weight:650;margin:3px 0 8px}
+  #steptext{font-size:13.5px;line-height:1.55;color:#d3daf2}
+  #steptext b{color:#fff}
+  .kx{margin:12px 0 4px;padding:11px 12px;background:rgba(8,12,26,.6);
+    border:1px solid rgba(120,160,255,.13);border-radius:10px;overflow-x:auto;font-size:14px}
+  .note{font-size:11.5px;color:var(--ink-dim);margin-top:9px;line-height:1.45}
+
+  /* ---- Controls ---- */
+  #controls{display:flex;gap:8px;align-items:center;margin-top:14px}
+  button{font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;
+    background:rgba(90,209,255,.10);border:1px solid rgba(90,209,255,.32);
+    padding:8px 14px;border-radius:9px;transition:.15s}
+  button:hover{background:rgba(90,209,255,.22)}
+  button:disabled{opacity:.35;cursor:default}
+  button.primary{background:linear-gradient(180deg,#3aa8ff,#2b7fe0);border-color:transparent;flex:1}
+  button.primary:hover{filter:brightness(1.1)}
+  #play{padding:8px 12px}
+
+  /* ---- Legend ---- */
+  #legend{position:absolute;left:18px;bottom:16px;z-index:5;font-size:12px;
+    background:var(--panel);border:1px solid var(--panel-brd);border-radius:12px;
+    padding:11px 13px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #legend .row{display:flex;align-items:center;gap:8px;margin:4px 0;color:var(--ink-dim)}
+  .sw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid rgba(255,255,255,.2)}
+  #hint{position:absolute;right:14px;bottom:14px;z-index:5;font-size:11px;color:var(--ink-dim);
+    background:rgba(10,14,26,.5);padding:6px 10px;border-radius:8px}
+  @media (max-width:720px){
+    #legend{display:none}
+    #panel{top:auto;bottom:10px;right:10px;left:10px;width:auto}
+    #title{right:10px}
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<div id="title">
+  <h1>Tychonoff's Theorem &mdash; the Tube Lemma</h1>
+  <div class="sub">Finite case: <span id="tk"></span> is compact, made spatial</div>
+</div>
+
+<div id="panel">
+  <div class="dots" id="dots"></div>
+  <div id="stepno">Step 1 / 6</div>
+  <div id="steptitle">&nbsp;</div>
+  <div id="steptext"></div>
+  <div class="kx" id="kx"></div>
+  <div class="note" id="note"></div>
+  <div id="controls">
+    <button id="prev">&larr; Prev</button>
+    <button class="primary" id="next">Next &rarr;</button>
+    <button id="play" title="Autoplay">&#9654;</button>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="row"><span class="sw" style="background:#5ad1ff"></span>Open cover of X&times;Y</div>
+  <div class="row"><span class="sw" style="background:#ffcf5a"></span>Finite subcover of a slice</div>
+  <div class="row"><span class="sw" style="background:#ff6ea9"></span>Slice {x&#8320;}&times;Y (&#8776; Y, compact)</div>
+  <div class="row"><span class="sw" style="background:#57e3a0"></span>Tube W&times;Y &sube; union</div>
+</div>
+<div id="hint">drag to orbit &middot; scroll to zoom</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+/* ============================================================
+   Tychonoff (finite) via open cover -> finite subcover -> Tube Lemma
+   Product space X x Y = [0,1] x [0,1] rendered in 3D.
+   world-X  = the factor X   (data x in [0,1])
+   world-Z  = the compact factor Y (data y in [0,1])
+   world-Y  = height, used only to make boxes/tubes visible.
+   ============================================================ */
+
+// ---------- scene ----------
+const S = 6;                       // world extent of the unit square
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0a0e1a');
+scene.fog = new THREE.Fog('#0a0e1a', 16, 40);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(7.5, 6.2, 8.6);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+app.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 5;
+controls.maxDistance = 24;
+controls.maxPolarAngle = Math.PI*0.49;
+controls.target.set(0, 0.6, 0);
+
+// ---------- lights ----------
+scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0a0e1a, 0.75));
+const key = new THREE.DirectionalLight(0xffffff, 0.9);
+key.position.set(6, 12, 8); scene.add(key);
+const rim = new THREE.DirectionalLight(0x6aa0ff, 0.5);
+rim.position.set(-8, 5, -6); scene.add(rim);
+
+// ---------- coordinate maps ----------
+const fx = x => (x - 0.5)*S;       // data x -> world X
+const fz = y => (y - 0.5)*S;       // data y -> world Z
+
+// ---------- floor: the unit square X x Y ----------
+const floorMat = new THREE.MeshStandardMaterial({
+  color:0x1a2240, roughness:0.9, metalness:0.0,
+  transparent:true, opacity:0.9, side:THREE.DoubleSide});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(S,S), floorMat);
+floor.rotation.x = -Math.PI/2; floor.position.y = 0; scene.add(floor);
+
+const grid = new THREE.GridHelper(S, 10, 0x3a4a80, 0x223056);
+grid.position.y = 0.005; scene.add(grid);
+
+// bright border around the square
+(function(){
+  const h = S/2, y = 0.012;
+  const pts = [[-h,y,-h],[h,y,-h],[h,y,h],[-h,y,h],[-h,y,-h]].map(p=>new THREE.Vector3(...p));
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({color:0x6f8cff})));
+})();
+
+// ---------- text sprite labels ----------
+function makeLabel(text, color='#e8edff', scale=1){
+  const pad=24, fs=64;
+  const c=document.createElement('canvas'), x=c.getContext('2d');
+  x.font=`600 ${fs}px -apple-system,Segoe UI,Roboto,sans-serif`;
+  const w=x.measureText(text).width;
+  c.width=w+pad*2; c.height=fs+pad*2;
+  x.font=`600 ${fs}px -apple-system,Segoe UI,Roboto,sans-serif`;
+  x.fillStyle=color; x.textBaseline='middle'; x.textAlign='center';
+  x.shadowColor='rgba(0,0,0,.85)'; x.shadowBlur=10;
+  x.fillText(text, c.width/2, c.height/2);
+  const t=new THREE.CanvasTexture(c); t.anisotropy=8;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t, transparent:true, depthTest:false}));
+  s.scale.set(c.width/c.height*scale, scale, 1);
+  return s;
+}
+function addLabel(text, wx, wy, wz, color, scale){
+  const l=makeLabel(text,color,scale); l.position.set(wx,wy,wz); scene.add(l); return l;
+}
+addLabel('X  (compact factor)', 0, 0.15, fz(1)+0.9, '#9fc4ff', 0.7);
+addLabel('Y  (compact factor)', fx(1)+1.35, 0.15, 0, '#9fc4ff', 0.7);
+addLabel('0', fx(0)-0.35, 0.05, fz(0)-0.35, '#8ea0cc', 0.5);
+addLabel('1', fx(1)+0.35, 0.05, fz(0)-0.35, '#8ea0cc', 0.5);
+addLabel('1', fx(0)-0.35, 0.05, fz(1)+0.35, '#8ea0cc', 0.5);
+
+// axis arrows
+function axis(a,b,color){
+  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]);
+  scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color})));
+}
+axis([fx(0),0.02,fz(0)-0.15],[fx(1)+0.4,0.02,fz(0)-0.15],0x6f8cff); // X axis
+axis([fx(0)-0.15,0.02,fz(0)],[fx(0)-0.15,0.02,fz(1)+0.4],0x6f8cff); // Y axis
+
+// ============================================================
+//  THE OPEN COVER  (overlapping open rectangles in 3 y-bands)
+// ============================================================
+const bands = [
+  { yr:[0.00,0.42], xs:[[-0.05,0.30],[0.25,0.58],[0.53,0.82],[0.78,1.05]] },
+  { yr:[0.33,0.70], xs:[[-0.05,0.24],[0.19,0.52],[0.47,0.74],[0.70,1.05]] },
+  { yr:[0.60,1.05], xs:[[-0.05,0.40],[0.35,0.68],[0.63,1.05]] },
+];
+const palette = [0x5ad1ff,0x7c9cff,0x9d7bff,0x5affc9,0x63b4ff,0x8f8cff,0xff9ad1,0x6ad6e8,0x86a6ff];
+
+// flatten to a cover list; each element records its band + x-range
+const cover = [];
+bands.forEach((b,bi)=>{
+  b.xs.forEach((xr)=>{
+    cover.push({ bi, xr:[Math.max(0,xr[0]),Math.min(1,xr[1])], rawx:xr, yr:b.yr, });
+  });
+});
+
+const COVER_H = 0.5;
+const coverGroup = new THREE.Group(); scene.add(coverGroup);
+cover.forEach((c,i)=>{
+  const col = palette[i % palette.length];
+  const mat = new THREE.MeshStandardMaterial({color:col, transparent:true, opacity:0.24,
+    roughness:0.4, metalness:0.1, depthWrite:false});
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), mat);
+  setBox(mesh, c.xr[0], c.xr[1], Math.max(0,c.yr[0]), Math.min(1,c.yr[1]), COVER_H, 0.03);
+  mesh.userData = {base:0.24, col};
+  // wire edges
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry),
+     new THREE.LineBasicMaterial({color:col, transparent:true, opacity:0.5}));
+  mesh.add(edges);
+  coverGroup.add(mesh);
+  c.mesh = mesh;
+});
+
+// place a box mesh over data-rect (dx0,dx1,dy0,dy1) with given height, y-lift
+function setBox(mesh, dx0,dx1,dy0,dy1, h, lift=0){
+  const wx0=fx(dx0),wx1=fx(dx1),wz0=fz(dy0),wz1=fz(dy1);
+  mesh.scale.set(Math.max(0.001,wx1-wx0), h, Math.max(0.001,wz1-wz0));
+  mesh.position.set((wx0+wx1)/2, lift+h/2, (wz0+wz1)/2);
+}
+
+// ---------- slice wall {x0} x Y ----------
+const sliceMat = new THREE.MeshStandardMaterial({color:0xff6ea9, transparent:true, opacity:0.0,
+  emissive:0xff2f74, emissiveIntensity:0.35, roughness:0.5, depthWrite:false});
+const slice = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), sliceMat);
+scene.add(slice);
+const sliceLabel = makeLabel('x₀', '#ff9ac4', 0.6); sliceLabel.visible=false; scene.add(sliceLabel);
+function placeSlice(x0){
+  const wx=fx(x0);
+  slice.scale.set(0.07, 2.0, S);
+  slice.position.set(wx, 1.0, 0);
+  sliceLabel.position.set(wx, 0.15, fz(0)-0.7);
+}
+
+// ---------- the tube W x Y (a slab) ----------
+const tubeMat = new THREE.MeshStandardMaterial({color:0x57e3a0, transparent:true, opacity:0.0,
+  emissive:0x1f9d68, emissiveIntensity:0.4, roughness:0.35, metalness:0.15, depthWrite:false});
+const tube = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), tubeMat);
+scene.add(tube);
+const tubeEdges = new THREE.LineSegments(new THREE.EdgesGeometry(tube.geometry),
+   new THREE.LineBasicMaterial({color:0x9dffcf, transparent:true, opacity:0}));
+tube.add(tubeEdges);
+const TUBE_H = 1.5;
+const wLabel = makeLabel('W', '#9dffcf', 0.6); wLabel.visible=false; scene.add(wLabel);
+// W bracket on the X axis
+const wBracket = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+   new THREE.MeshBasicMaterial({color:0x57e3a0, transparent:true, opacity:0}));
+scene.add(wBracket);
+
+// ============================================================
+//  SUBCOVER SELECTION  (finite subcover of the slice {x0} x Y)
+// ============================================================
+// In each band pick the box whose x-range most centrally contains x0.
+// The intersection of those x-ranges is W (an open nbhd of x0), and the
+// tube W x Y sits inside the union of those finitely many chosen boxes.
+function subcoverOf(x0){
+  const chosen=[];
+  bands.forEach((b,bi)=>{
+    let best=null,bestC=-Infinity;
+    b.xs.forEach(xr=>{
+      const c=Math.min(x0-xr[0], xr[1]-x0);   // centrality
+      if(c>bestC){bestC=c;best=xr;}
+    });
+    chosen.push({bi, xr:best});
+  });
+  const w0=Math.max(...chosen.map(c=>c.xr[0]));
+  const w1=Math.min(...chosen.map(c=>c.xr[1]));
+  // map chosen back to cover indices
+  const idx=chosen.map(c=>cover.findIndex(cc=>cc.bi===c.bi && cc.rawx===c.xr));
+  return {idx, W:[Math.max(0,w0),Math.min(1,w1)], chosen};
+}
+
+// greedy sweep -> finitely many tubes covering [0,1]
+function greedyTubes(){
+  const out=[]; let x=0.0, guard=0;
+  while(x < 1.0 - 1e-4 && guard++ < 40){
+    const s=subcoverOf(Math.min(x+0.001,0.999));
+    const W=s.W;
+    out.push({x0:Math.min(x+0.001,0.999), W, idx:s.idx});
+    if(W[1] <= x + 1e-4){ x += 0.03; } else { x = W[1]; }
+  }
+  return out;
+}
+
+// ============================================================
+//  ANIMATION HELPERS
+// ============================================================
+function fade(mat, to, dur=0.6){ gsap.to(mat,{opacity:to,duration:dur,ease:'power2.out'}); }
+
+function resetCover(op=0.24){
+  cover.forEach(c=>{ gsap.to(c.mesh.material,{opacity:op,duration:0.5}); });
+}
+function highlightSubcover(idx){
+  cover.forEach((c,i)=>{
+    const on = idx.includes(i);
+    gsap.to(c.mesh.material,{opacity: on?0.62:0.06, duration:0.6});
+    if(on){ c.mesh.material.color.setHex(0xffcf5a); }
+    else  { c.mesh.material.color.setHex(c.mesh.userData.col); }
+  });
+}
+function clearHighlight(){
+  cover.forEach(c=>c.mesh.material.color.setHex(c.mesh.userData.col));
+}
+
+const DEMO_X0 = 0.5;
+
+function showSlice(on){
+  if(on){ placeSlice(DEMO_X0); sliceLabel.visible=true; fade(sliceMat,0.55); }
+  else  { fade(sliceMat,0.0); sliceLabel.visible=false; }
+}
+
+function showTube(on){
+  if(on){
+    const s=subcoverOf(DEMO_X0), W=s.W;
+    setBox(tube, W[0], W[1], 0, 1, TUBE_H, 0.02);
+    setBox(wBracket, W[0], W[1], -0.06, 0.0, 0.12, 0.0); // thin bar just outside square on -Y side of data
+    wBracket.position.z = fz(0)-0.45; wBracket.scale.z = 0.14;
+    wLabel.position.set(fx((W[0]+W[1])/2), TUBE_H+0.5, 0); wLabel.visible=true;
+    tube.scale.y = 0.001;
+    gsap.to(tube.scale,{y:TUBE_H,duration:0.9,ease:'back.out(1.4)'});
+    fade(tubeMat,0.34,0.9); fade(tubeEdges.material,0.9,0.9);
+    fade(wBracket.material,0.85,0.6);
+  } else {
+    fade(tubeMat,0.0); fade(tubeEdges.material,0); fade(wBracket.material,0);
+    wLabel.visible=false;
+  }
+}
+
+// ---- sweep tubes group ----
+const sweepGroup = new THREE.Group(); scene.add(sweepGroup);
+let sweepTL=null;
+function clearSweep(){
+  if(sweepTL){sweepTL.kill();sweepTL=null;}
+  sweepGroup.clear();
+}
+function runSweep(){
+  clearSweep();
+  const tubes = greedyTubes();
+  document.getElementById('sweepcount') && (document.getElementById('sweepcount').textContent = tubes.length);
+  const meshes = tubes.map((t,i)=>{
+    const hue = new THREE.Color().setHSL(0.42 - 0.05*(i%3), 0.7, 0.6);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+      new THREE.MeshStandardMaterial({color:hue, transparent:true, opacity:0.32,
+        emissive:hue.clone().multiplyScalar(0.3), roughness:0.4, depthWrite:false}));
+    setBox(m, t.W[0], t.W[1], 0, 1, TUBE_H, 0.02);
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry),
+        new THREE.LineBasicMaterial({color:0xbfffe4, transparent:true, opacity:0.55})));
+    m.scale.y=0.001; m.visible=false; sweepGroup.add(m);
+    return m;
+  });
+  sweepTL = gsap.timeline();
+  meshes.forEach((m,i)=>{
+    sweepTL.add(()=>{ m.visible=true; }, i*0.42);
+    sweepTL.to(m.scale,{y:TUBE_H,duration:0.4,ease:'back.out(1.5)'}, i*0.42);
+    sweepTL.add(()=>{ placeSlice(tubes[i].x0); }, i*0.42);
+  });
+  return tubes.length;
+}
+
+// ============================================================
+//  STEPS  /  NARRATION
+// ============================================================
+const kdef = {throwOnError:false, displayMode:false};
+katex.render("X\\times Y", document.getElementById('tk'), kdef);
+
+const steps = [
+  {
+    no:'Setup', title:'An open cover of X × Y',
+    text:`The product space here is the compact square <b>[0,1] × [0,1]</b>. `+
+         `Every point lies in at least one translucent open set &mdash; together they form an `+
+         `<b>open cover</b> of X×Y. Compactness asks: can we always keep just <b>finitely many</b>?`,
+    kx:"\\text{Compact}\\iff\\text{every open cover has a finite subcover.}",
+    note:'Drag to orbit the square. The colored slabs are the open cover.',
+    enter(){ resetCover(0.26); clearHighlight(); showSlice(false); showTube(false); clearSweep();
+      gsap.to(camera.position,{x:7.5,y:6.2,z:8.6,duration:1.1,ease:'power2.inOut',onUpdate:()=>controls.update()}); }
+  },
+  {
+    no:'Step 1', title:'Fix x₀ and look at its slice',
+    text:`Pick a point <b>x₀ ∈ X</b>. The vertical <b>slice {x₀}×Y</b> (pink) is a copy of Y. `+
+         `Since <b>Y is compact</b>, this slice is compact too.`,
+    kx:"\\{x_0\\}\\times Y \\;\\cong\\; Y \\quad(\\text{compact})",
+    note:'The whole proof pivots on this slice being compact.',
+    enter(){ resetCover(0.16); clearHighlight(); showTube(false); clearSweep(); showSlice(true);
+      gsap.to(camera.position,{x:6.4,y:5.4,z:9.2,duration:1.0,ease:'power2.inOut',onUpdate:()=>controls.update()});
+      gsap.to(controls.target,{x:fx(DEMO_X0),y:0.7,z:0,duration:1.0,onUpdate:()=>controls.update()}); }
+  },
+  {
+    no:'Step 2', title:'A finite subcover of the slice',
+    text:`The cover restricts to a cover of the slice. Because the slice is <b>compact</b>, `+
+         `finitely many sets already cover it &mdash; here just <b>3</b> (gold). `+
+         `The rest are irrelevant to x₀.`,
+    kx:"\\{x_0\\}\\times Y \\subseteq N_1\\cup N_2\\cup N_3",
+    note:'A finite subcover of a single vertical line — the payoff of Y being compact.',
+    enter(){ const s=subcoverOf(DEMO_X0); showSlice(true); showTube(false); clearSweep();
+      highlightSubcover(s.idx);
+      gsap.to(controls.target,{x:fx(DEMO_X0),y:0.7,z:0,duration:0.8,onUpdate:()=>controls.update()}); }
+  },
+  {
+    no:'Step 3', title:'The Tube Lemma — build the tube',
+    text:`Intersect the <b>X-parts</b> of those finitely many sets to get an open interval `+
+         `<b>W ∋ x₀</b>. The whole <b>tube W×Y</b> (green slab) then fits inside their union. `+
+         `A neighborhood of x₀ whose entire vertical column is covered by finitely many sets.`,
+    kx:"\\exists\\,W\\ni x_0 \\text{ open}:\\quad W\\times Y \\subseteq N_1\\cup N_2\\cup N_3",
+    note:'This is the Tube Lemma: a covered slice fattens to a covered tube (needs Y compact).',
+    enter(){ const s=subcoverOf(DEMO_X0); highlightSubcover(s.idx); showSlice(true); clearSweep();
+      showTube(true);
+      gsap.to(camera.position,{x:6.9,y:5.0,z:9.0,duration:1.0,ease:'power2.inOut',onUpdate:()=>controls.update()}); }
+  },
+  {
+    no:'Step 4', title:'Sweep x₀ across X',
+    text:`Do this for every x₀. Each gives a tube. The tubes are an open cover of the `+
+         `<b>compact</b> factor X, so <b>finitely many tubes</b> &mdash; <b><span id="sweepcount">?</span></b> here &mdash; `+
+         `already cover all of X×Y.`,
+    kx:"X \\subseteq W_1\\cup\\dots\\cup W_n \\;\\Rightarrow\\; X\\times Y \\subseteq \\bigcup_{k} W_k\\times Y",
+    note:'Compactness of X turns infinitely many tubes into finitely many.',
+    enter(){ resetCover(0.12); clearHighlight(); showSlice(false); showTube(false);
+      const n=runSweep();
+      gsap.to(camera.position,{x:0.5,y:8.5,z:10.5,duration:1.2,ease:'power2.inOut',onUpdate:()=>controls.update()});
+      gsap.to(controls.target,{x:0,y:0.6,z:0,duration:1.2,onUpdate:()=>controls.update()}); }
+  },
+  {
+    no:'Done', title:'X × Y is compact',
+    text:`Each of the finitely many tubes is covered by finitely many original sets. `+
+         `Union those finite collections: <b>finitely many open sets cover X×Y</b>. `+
+         `That is exactly compactness &mdash; the finite Tychonoff theorem. ∎`,
+    kx:"\\underbrace{n}_{\\text{tubes}}\\times\\underbrace{m}_{\\text{per tube}}\\;<\\;\\infty \\;\\Rightarrow\\; X\\times Y \\text{ compact}",
+    note:'Induction extends this to any finite product X₁×···×Xₙ.',
+    enter(){ showSlice(false); showTube(false);
+      gsap.to(camera.position,{x:6,y:9,z:9,duration:1.3,ease:'power2.inOut',onUpdate:()=>controls.update()});
+      gsap.to(controls.target,{x:0,y:0.6,z:0,duration:1.3,onUpdate:()=>controls.update()}); }
+  },
+];
+
+// ---------- step machinery ----------
+let cur = -1;
+const dotsEl=document.getElementById('dots');
+steps.forEach((s,i)=>{
+  const d=document.createElement('div'); d.className='dot';
+  d.onclick=()=>go(i); dotsEl.appendChild(d);
+});
+function go(n){
+  if(n<0||n>=steps.length) return;
+  cur=n;
+  const s=steps[n];
+  document.getElementById('stepno').textContent = `${s.no} · ${n+1} / ${steps.length}`;
+  document.getElementById('steptitle').innerHTML = s.title;
+  document.getElementById('steptext').innerHTML = s.text;
+  document.getElementById('note').textContent = s.note;
+  katex.render(s.kx, document.getElementById('kx'), {throwOnError:false, displayMode:true});
+  s.enter();
+  // dots
+  [...dotsEl.children].forEach((d,i)=>{
+    d.className='dot'+(i===n?' on':(i<n?' done':''));
+  });
+  document.getElementById('prev').disabled = n===0;
+  document.getElementById('next').disabled = n===steps.length-1;
+  // sweepcount may have been re-created
+  if(n===3){ const c=document.getElementById('sweepcount'); if(c) c.textContent=greedyTubes().length; }
+}
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.getElementById('dots');
+
+// autoplay
+let playing=false, timer=null;
+const playBtn=document.getElementById('play');
+function stopPlay(){ playing=false; playBtn.innerHTML='&#9654;'; if(timer)clearTimeout(timer); }
+function tick(){
+  if(!playing) return;
+  if(cur>=steps.length-1){ stopPlay(); return; }
+  go(cur+1);
+  timer=setTimeout(tick, 5200);
+}
+playBtn.onclick=()=>{
+  if(playing){ stopPlay(); }
+  else{ playing=true; playBtn.innerHTML='&#10073;&#10073;';
+    if(cur>=steps.length-1) go(0); timer=setTimeout(tick,600); }
+};
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){stopPlay();go(cur+1);}
+  if(e.key==='ArrowLeft'){stopPlay();go(cur-1);}
+});
+
+// ---------- render loop ----------
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+go(0);
+</script>
+</body>
+</html>

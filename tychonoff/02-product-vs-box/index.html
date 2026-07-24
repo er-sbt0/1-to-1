@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Product vs Box Topology — Why Tychonoff Works</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<link rel="stylesheet" href="lib/jsxgraph.css" />
+<style>
+  :root{
+    --prod:#16a34a; --prod-soft:#dcfce7; --prod-line:#86efac;
+    --box:#dc2626;  --box-soft:#fee2e2;  --box-line:#fca5a5;
+    --ink:#0f172a; --muted:#475569; --faint:#94a3b8;
+    --bg:#f1f5f9; --card:#ffffff; --edge:#e2e8f0;
+    --accent:#4f46e5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:22px 20px 60px;}
+  header.hero{
+    background:linear-gradient(135deg,#0f172a 0%, #1e293b 55%, #334155 100%);
+    color:#fff; border-radius:18px; padding:30px 32px; margin-bottom:22px;
+    box-shadow:0 12px 30px -12px rgba(15,23,42,.55);
+  }
+  header.hero h1{margin:0 0 8px; font-size:clamp(22px,3.4vw,34px); letter-spacing:-.5px;}
+  header.hero p{margin:0; color:#cbd5e1; font-size:clamp(14px,1.6vw,17px); max-width:80ch;}
+  .tag{display:inline-block; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+    color:#e2e8f0; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; margin-bottom:14px;}
+
+  .grid{display:grid; grid-template-columns:1.15fr .85fr; gap:20px;}
+  @media(max-width:920px){ .grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--card); border:1px solid var(--edge); border-radius:16px;
+    padding:20px 22px; box-shadow:0 4px 14px -10px rgba(15,23,42,.3);}
+  .card h2{margin:0 0 6px; font-size:19px; letter-spacing:-.3px;}
+  .card h3{margin:18px 0 6px; font-size:15px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em;}
+  .lead{color:var(--muted); font-size:14.5px; margin:0 0 4px;}
+
+  /* Mode toggle */
+  .modebar{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:4px 0 20px;}
+  .switch{display:inline-flex; background:#e2e8f0; border-radius:12px; padding:5px; gap:5px; border:1px solid var(--edge);}
+  .switch button{
+    border:0; cursor:pointer; font-size:15px; font-weight:650; padding:10px 20px; border-radius:9px;
+    background:transparent; color:var(--muted); transition:all .18s ease; font-family:inherit;
+  }
+  .switch button .sub{display:block; font-weight:500; font-size:11px; opacity:.8; letter-spacing:.02em;}
+  .switch button[data-active="product"][aria-pressed="true"]{background:var(--prod); color:#fff; box-shadow:0 4px 12px -4px var(--prod);}
+  .switch button[data-active="box"][aria-pressed="true"]{background:var(--box); color:#fff; box-shadow:0 4px 12px -4px var(--box);}
+  .modepill{font-size:13px; font-weight:650; padding:6px 12px; border-radius:999px;}
+  .modepill.product{background:var(--prod-soft); color:#166534; border:1px solid var(--prod-line);}
+  .modepill.box{background:var(--box-soft); color:#991b1b; border:1px solid var(--box-line);}
+
+  /* Board */
+  #board{width:100%; height:430px; border-radius:12px; border:1px solid var(--edge); background:#fff; touch-action:none;}
+  .board-hint{font-size:12.5px; color:var(--faint); margin:8px 2px 0; text-align:center;}
+
+  /* Counter + tail */
+  .statusrow{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px;}
+  .metric{flex:1 1 180px; background:#f8fafc; border:1px solid var(--edge); border-radius:12px; padding:12px 14px;}
+  .metric .k{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em;}
+  .metric .v{font-size:26px; font-weight:750; letter-spacing:-.5px; margin-top:2px;}
+  .metric .v small{font-size:14px; font-weight:600; color:var(--muted);}
+
+  .tailctl{margin-top:16px; border:1px dashed var(--edge); border-radius:12px; padding:14px 16px; background:#fbfcfe;}
+  .tailctl .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .tailctl label{display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; font-size:14.5px;}
+  .tailctl input[type=checkbox]{width:20px; height:20px; accent-color:var(--box); cursor:pointer;}
+  .tailctl label.locked{cursor:not-allowed; color:var(--faint);}
+  .tailviz{display:flex; align-items:center; gap:6px; margin-top:12px; flex-wrap:wrap;}
+  .tailviz .axis{width:52px; height:12px; border-radius:6px; background:#e2e8f0; position:relative; overflow:hidden;}
+  .tailviz .axis i{position:absolute; top:0; bottom:0; border-radius:6px; background:var(--faint); transition:all .3s;}
+  .tailviz .dots{font-size:22px; letter-spacing:2px; color:var(--faint); font-weight:700; padding:0 4px;}
+  .lock-msg{font-size:13px; color:var(--muted); margin-top:8px;}
+
+  /* Verdict / explanation panel */
+  .verdict{border-radius:14px; padding:16px 18px; border:1px solid var(--edge); transition:all .25s;}
+  .verdict.good{background:var(--prod-soft); border-color:var(--prod-line);}
+  .verdict.bad{background:var(--box-soft); border-color:var(--box-line);}
+  .verdict .big{font-size:19px; font-weight:750; display:flex; align-items:center; gap:9px;}
+  .verdict .big .em{font-size:24px;}
+  .verdict p{margin:8px 0 0; font-size:14px; color:#334155;}
+
+  .note{font-size:14px; color:#334155; background:#f8fafc; border-left:4px solid var(--accent);
+    padding:10px 14px; border-radius:0 8px 8px 0; margin-top:14px;}
+  .note.warn{border-left-color:#d97706; background:#fffbeb;}
+  .note b{color:var(--ink);}
+
+  .formula{background:#f8fafc; border:1px solid var(--edge); border-radius:10px; padding:12px 14px; margin:10px 0; overflow-x:auto;}
+  .formula .cap{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;}
+
+  /* Compactness section */
+  .compact-sec{margin-top:22px;}
+  .comp-head{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+  .btn{font-family:inherit; font-size:14.5px; font-weight:650; border:0; border-radius:10px; padding:11px 18px;
+    cursor:pointer; color:#fff; background:var(--accent); box-shadow:0 4px 12px -5px var(--accent); transition:transform .1s, filter .15s;}
+  .btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
+  .btn[disabled]{opacity:.5; cursor:not-allowed; box-shadow:none;}
+
+  .stage{margin-top:16px; border:1px solid var(--edge); border-radius:14px; background:#fff; padding:18px; min-height:220px;}
+  .stage-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:20px; align-items:center;}
+  @media(max-width:760px){ .stage-grid{grid-template-columns:1fr;} }
+  #anim{width:100%; height:230px;}
+  .coverline{font-size:14px; color:#334155;}
+  .setcount{font-size:15px; font-weight:700;}
+  .setcount b{font-size:26px;}
+
+  .takeaway{margin-top:22px; background:#0f172a; color:#e2e8f0; border-radius:16px; padding:22px 24px;}
+  .takeaway h2{margin:0 0 10px; color:#fff;}
+  .takeaway p{margin:8px 0; font-size:14.5px; color:#cbd5e1;}
+  .takeaway .hl-prod{color:#86efac; font-weight:700;}
+  .takeaway .hl-box{color:#fca5a5; font-weight:700;}
+
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:12px;}
+  .legend span{display:inline-flex; align-items:center; gap:7px;}
+  .swatch{width:16px; height:16px; border-radius:4px; display:inline-block;}
+
+  code.k{background:#eef2ff; color:#3730a3; padding:1px 6px; border-radius:5px; font-size:.92em;}
+  footer.foot{margin-top:26px; font-size:13px; color:var(--faint); text-align:center;}
+  a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">Tychonoff&nbsp;·&nbsp;Approach 02</span>
+    <h1>Product vs. Box Topology</h1>
+    <p>A product of compact spaces is compact — <b>Tychonoff&rsquo;s theorem</b> — but only for the
+    <b style="color:#86efac">product topology</b>. Switch to the <b style="color:#fca5a5">box topology</b> and
+    compactness collapses. The whole story is one word: <b>finitely</b>. Build a basic open set below and watch why.</p>
+  </header>
+
+  <!-- INTRO / DEFINITIONS -->
+  <div class="card" style="margin-bottom:20px;">
+    <h2>The one difference that changes everything</h2>
+    <p class="lead">A point of the product <span class="math" data-tex="\prod_{i} X_i"></span> is an infinite tuple
+      <span class="math" data-tex="(x_1,x_2,x_3,\dots)"></span>. A <em>basic open set</em> is a product of open pieces
+      <span class="math" data-tex="\prod_i U_i"></span>, one constraint per coordinate. The two topologies disagree on
+      how many coordinates you are allowed to constrain:</p>
+    <div class="grid" style="grid-template-columns:1fr 1fr; gap:16px; margin-top:6px;">
+      <div class="formula" style="border-color:var(--prod-line); background:var(--prod-soft);">
+        <div class="cap" style="color:#166534;">Product topology ✅ Tychonoff</div>
+        <div class="math" data-tex="\textstyle\prod_i U_i,\quad U_i=X_i\ \text{for all but } \textbf{finitely many } i"></div>
+      </div>
+      <div class="formula" style="border-color:var(--box-line); background:var(--box-soft);">
+        <div class="cap" style="color:#991b1b;">Box topology ❌ Tychonoff fails</div>
+        <div class="math" data-tex="\textstyle\prod_i U_i,\quad U_i\subseteq X_i\ \text{open, in } \textbf{every } i"></div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:12px;">
+      <b>Product topology = you may only pin down finitely many coordinates at once.</b>
+      That finiteness is exactly the hypothesis a finite-subcover argument needs — so Tychonoff goes through.
+      The box topology drops it, and the theorem dies.</p>
+  </div>
+
+  <!-- MODE BAR -->
+  <div class="modebar">
+    <div class="switch" role="group" aria-label="Choose topology">
+      <button id="btnProduct" data-active="product" aria-pressed="true" onclick="setMode('product')">
+        Product topology <span class="sub">finitely many pins</span></button>
+      <button id="btnBox" data-active="box" aria-pressed="false" onclick="setMode('box')">
+        Box topology <span class="sub">pin every coordinate</span></button>
+    </div>
+    <span id="modePill" class="modepill product">Currently: product topology</span>
+  </div>
+
+  <!-- MAIN INTERACTIVE -->
+  <div class="grid">
+    <!-- LEFT: builder -->
+    <div class="card">
+      <h2>Build a basic open set</h2>
+      <p class="lead">Each row is a coordinate axis <span class="math" data-tex="X_i=[0,1]"></span>. Drag the two round
+        handles to shrink a coordinate to an open interval <span class="math" data-tex="U_i"></span>. A full-width bar
+        means &ldquo;free&rdquo; (<span class="math" data-tex="U_i=X_i"></span>); a shrunken bar means that coordinate is
+        <em>pinned</em>. The dark diamond is the point <span class="math" data-tex="x"></span> we are enclosing.</p>
+
+      <div id="board" aria-label="Coordinate axes for eight coordinates"></div>
+      <div class="board-hint">Coordinates 1&ndash;8 shown · the &ldquo;⋯&rdquo; tail below stands for the infinitely many remaining coordinates</div>
+
+      <div class="statusrow">
+        <div class="metric">
+          <div class="k">Pinned (shown 1&ndash;8)</div>
+          <div class="v" id="mShown">0 <small>/ 8</small></div>
+        </div>
+        <div class="metric">
+          <div class="k">Total pinned coordinates</div>
+          <div class="v" id="mTotal">0 <small>(finite)</small></div>
+        </div>
+      </div>
+
+      <!-- TAIL CONTROL -->
+      <div class="tailctl" id="tailCtl">
+        <div class="row">
+          <label id="tailLabel">
+            <input type="checkbox" id="tailChk" onchange="onTailToggle()" />
+            <span id="tailText">Constrain the infinite tail (coordinates <span class="math" data-tex="i\ge 9"></span>)</span>
+          </label>
+        </div>
+        <div class="tailviz" id="tailViz" aria-hidden="true"></div>
+        <div class="lock-msg" id="tailMsg"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: verdict + explanation -->
+    <div class="card">
+      <h2>Is this a legal open set?</h2>
+      <div class="verdict good" id="verdict" role="status">
+        <div class="big"><span class="em" id="vEm">✅</span><span id="vTitle">Valid product-open set</span></div>
+        <p id="vBody">Nothing pinned yet — the whole space. Drag some handles to start constraining coordinates.</p>
+      </div>
+
+      <div class="note" id="explain">
+        In the <b>product topology</b>, no matter how many of the eight visible coordinates you pin, you are still pinning
+        only <b>finitely many</b>. The infinite tail must stay free. That is the rule.
+      </div>
+
+      <h3>Why finiteness matters</h3>
+      <p class="lead">A basic product-open set fixes only finitely many coordinates, so it always contains an entire
+        <em>cylinder</em>: infinitely many coordinates are still free to be anything. Cylinders are &ldquo;fat.&rdquo;
+        A handful of fat cylinders can blanket the whole space — which is what a finite subcover needs.</p>
+
+      <div class="formula">
+        <div class="cap">Tychonoff&rsquo;s theorem (product topology)</div>
+        <div class="math" data-tex="\Big(\textstyle\prod_i X_i\ \text{compact}\Big)\iff \big(\text{every } X_i \text{ compact}\big)"></div>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--prod)"></span> product accent</span>
+        <span><span class="swatch" style="background:var(--box)"></span> box accent</span>
+        <span><span class="swatch" style="background:#cbd5e1"></span> free coordinate</span>
+        <span><span class="swatch" style="background:#0f172a; border-radius:50%"></span> the point x</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPACTNESS SECTION -->
+  <div class="card compact-sec">
+    <div class="comp-head">
+      <div>
+        <h2 style="margin-bottom:2px;">Compactness verdict for <span class="math" data-tex="\{0,1\}^{\mathbb N}"></span></h2>
+        <p class="lead">The Cantor space <span class="math" data-tex="\{0,1\}^{\mathbb N}"></span> — countably many copies of the
+          two-point compact space — sits inside the cube <span class="math" data-tex="[0,1]^{\mathbb N}"></span>. Does an open cover
+          always have a finite subcover?</p>
+      </div>
+      <button class="btn" id="playBtn" onclick="playAnim()">▶ Animate the open cover</button>
+    </div>
+
+    <div class="stage">
+      <div class="stage-grid">
+        <div>
+          <svg id="anim" viewBox="0 0 420 230" role="img" aria-label="Animation of an open cover"></svg>
+        </div>
+        <div>
+          <div class="verdict good" id="compVerdict">
+            <div class="big"><span class="em" id="cEm">✅</span><span id="cTitle">COMPACT</span></div>
+            <p id="cBody"></p>
+          </div>
+          <div class="setcount" style="margin-top:14px;">Cover sets used: <b id="setN">0</b> <span id="setTail" style="font-weight:500;color:var(--muted)"></span></div>
+          <div class="coverline" id="coverLine" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" id="compNote" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- TAKEAWAY -->
+  <div class="takeaway">
+    <h2>The punch line</h2>
+    <p><span class="hl-prod">Product topology.</span> A basic open set pins only <b>finitely many</b> coordinates, so it
+      always contains a whole cylinder of points. Open sets are unavoidably fat, points can never be isolated, and
+      finitely many cylinders cover everything. Tychonoff: an arbitrary product of compact spaces is compact.</p>
+    <p><span class="hl-box">Box topology.</span> A basic open set may pin <b>every</b> coordinate at once. In
+      <span class="math" data-tex="\{0,1\}^{\mathbb N}" style="color:#fca5a5"></span> the single box
+      <span class="math" data-tex="\prod_i\{x_i\}=\{x\}" style="color:#fca5a5"></span> is a lone point: the space becomes
+      <b>discrete</b>. The cover by singletons is open and has no finite subcover, so an infinite discrete space is
+      <b>not compact</b>. Tychonoff fails.</p>
+    <p style="margin-top:14px; color:#f8fafc;"><b>One word decides it: <span style="color:#a5b4fc">finitely</span>.</b>
+      Allowing infinitely many constraints is exactly what breaks the finite-subcover machine.</p>
+  </div>
+
+  <footer class="foot">
+    Built with JSXGraph (draggable constructions) and KaTeX (notation), vendored locally · no build step, works offline.
+  </footer>
+</div>
+
+<script src="lib/katex.min.js"></script>
+<script src="lib/jsxgraph.min.js"></script>
+<script>
+/* ---------- KaTeX render ---------- */
+(function(){
+  document.querySelectorAll('.math').forEach(function(el){
+    try{ katex.render(el.getAttribute('data-tex'), el, {throwOnError:false, displayMode:false}); }
+    catch(e){ /* leave text */ }
+  });
+})();
+
+/* ---------- constants ---------- */
+var PROD='#16a34a', BOX='#dc2626', GRAY='#cbd5e1', INK='#0f172a';
+var PROD_SOFT='#dcfce7', BOX_SOFT='#fee2e2';
+var mode='product';
+var EPS=0.03;
+var N=8;
+/* preset target-point coordinates (the point x we enclose) */
+var targets=[0.72,0.30,0.58,0.44,0.66,0.24,0.50,0.78];
+
+/* ---------- JSXGraph board ---------- */
+JXG.Options.text.fontSize = 14;
+var board = JXG.JSXGraph.initBoard('board',{
+  boundingbox:[-0.20, 8.85, 1.18, 0.35],
+  keepaspectratio:false, axis:false, showNavigation:false, showCopyright:false,
+  pan:{enabled:false}, zoom:{enabled:false}
+});
+
+var coords=[]; // per-coordinate objects
+
+// scale legend ticks (0 and 1) above top row
+board.create('text',[0,8.62,'0'],{fontSize:11, color:'#94a3b8', anchorX:'middle', fixed:true, highlight:false});
+board.create('text',[1,8.62,'1'],{fontSize:11, color:'#94a3b8', anchorX:'middle', fixed:true, highlight:false});
+var subs=['','₁','₂','₃','₄','₅','₆','₇','₈'];
+
+for(var i=1;i<=N;i++){
+  var y = 9 - i; // coord1 top (y=8) ... coord8 (y=1)
+  // row label
+  board.create('text',[-0.16, y, 'x'+subs[i]],{fontSize:15, color:'#334155', anchorX:'right', anchorY:'middle', fixed:true, highlight:false});
+  // base axis segment (free = X_i)
+  var base = board.create('segment',[[0,y],[1,y]],{
+    strokeColor:GRAY, strokeWidth:7, fixed:true, highlight:false, layer:3, strokeLinecap:'round'
+  });
+  // constrained interval (drawn on top, recolored in update)
+  var a = board.create('glider',[0.0, y, base],{name:'', size:6, strokeWidth:2,
+    fillColor:'#ffffff', strokeColor:PROD, layer:7, showInfobox:false, label:{visible:false}});
+  var b = board.create('glider',[1.0, y, base],{name:'', size:6, strokeWidth:2,
+    fillColor:'#ffffff', strokeColor:PROD, layer:7, showInfobox:false, label:{visible:false}});
+  var interval = board.create('segment',[a,b],{
+    strokeColor:GRAY, strokeWidth:11, fixed:true, highlight:false, layer:5, strokeLinecap:'round'
+  });
+  // target point x_i (dark diamond)
+  var tpt = board.create('point',[targets[i-1], y],{
+    face:'diamond', size:4, fillColor:INK, strokeColor:INK, fixed:true, highlight:false,
+    name:'', showInfobox:false, layer:8, label:{visible:false}
+  });
+  coords.push({a:a,b:b,interval:interval,base:base,y:y,tpt:tpt});
+}
+
+function isPinned(c){
+  var lo=Math.min(c.a.X(), c.b.X()), hi=Math.max(c.a.X(), c.b.X());
+  return (lo>EPS) || (hi<1-EPS);
+}
+
+/* ---------- UI refs ---------- */
+var mShown=document.getElementById('mShown');
+var mTotal=document.getElementById('mTotal');
+var verdict=document.getElementById('verdict');
+var vEm=document.getElementById('vEm'), vTitle=document.getElementById('vTitle'), vBody=document.getElementById('vBody');
+var explain=document.getElementById('explain');
+var tailChk=document.getElementById('tailChk');
+var tailLabel=document.getElementById('tailLabel');
+var tailText=document.getElementById('tailText');
+var tailMsg=document.getElementById('tailMsg');
+var tailViz=document.getElementById('tailViz');
+var modePill=document.getElementById('modePill');
+
+/* build tail viz (3 ghost axes + dots) */
+(function(){
+  for(var k=0;k<3;k++){
+    var ax=document.createElement('div'); ax.className='axis';
+    var fill=document.createElement('i'); fill.style.left='0%'; fill.style.right='0%';
+    ax.appendChild(fill); tailViz.appendChild(ax);
+  }
+  var dots=document.createElement('span'); dots.className='dots'; dots.textContent='⋯'; tailViz.appendChild(dots);
+  var more=document.createElement('span'); more.style.fontSize='13px'; more.style.color='var(--faint)';
+  more.style.fontWeight='600'; more.textContent='∞ more coordinates'; tailViz.appendChild(more);
+})();
+
+/* ---------- main update ---------- */
+function update(){
+  var col = (mode==='product')?PROD:BOX;
+  var nShown=0;
+  for(var i=0;i<coords.length;i++){
+    var c=coords[i], pinned=isPinned(c);
+    if(pinned) nShown++;
+    c.interval.setAttribute({strokeColor: pinned?col:GRAY, strokeWidth: pinned?11:11});
+    c.a.setAttribute({strokeColor:col}); c.b.setAttribute({strokeColor:col});
+  }
+  var tailPinned = (mode==='box' && tailChk.checked);
+
+  // metrics
+  mShown.innerHTML = nShown + ' <small>/ 8</small>';
+  if(tailPinned){
+    mTotal.innerHTML = '∞ <small style="color:var(--box)">(infinite!)</small>';
+  } else {
+    mTotal.innerHTML = nShown + ' <small>(finite)</small>';
+  }
+
+  // tail viz coloring
+  var fills = tailViz.querySelectorAll('.axis i');
+  fills.forEach(function(f){
+    if(tailPinned){ f.style.left='30%'; f.style.right='40%'; f.style.background=BOX; }
+    else { f.style.left='0%'; f.style.right='0%'; f.style.background='var(--faint)'; }
+  });
+
+  // verdict + explanation
+  if(!tailPinned){
+    verdict.className='verdict good'; vEm.textContent='✅';
+    if(mode==='product'){
+      vTitle.textContent='Valid product-open set';
+      if(nShown===0){
+        vBody.textContent='Nothing pinned — this is the whole space. Drag handles to constrain coordinates.';
+      } else if(nShown<8){
+        vBody.innerHTML='You pinned <b>'+nShown+'</b> coordinate'+(nShown>1?'s':'')+'. The other '+(8-nShown)+
+          ' visible ones plus the entire infinite tail stay free. Finitely many pins — perfectly legal.';
+      } else {
+        vBody.innerHTML='All <b>8</b> visible coordinates pinned — <b>still legal!</b> 8 is finite. The infinitely many '+
+          'tail coordinates remain <span style="color:var(--prod);font-weight:700">= X<sub>i</sub></span>, exactly as a product-basic-open requires.';
+      }
+      explain.className='note';
+      explain.innerHTML='In the <b>product topology</b> the tail is <b>forced free</b>. However many of the eight you pin, '+
+        'you are pinning only <b>finitely many</b> — so this open set still contains a whole cylinder of infinitely many points.';
+    } else {
+      vTitle.textContent='Valid box-open set';
+      vBody.innerHTML='In the <b>box topology</b> you <em>may</em> pin every coordinate, but you haven&rsquo;t yet. '+
+        'So far this is an ordinary open set. Tick the tail box below to pin <b>all</b> coordinates and break compactness.';
+      explain.className='note warn';
+      explain.innerHTML='The box topology <b>allows</b> constraining the infinite tail. That extra freedom is precisely '+
+        'what will let a single box collapse to one point.';
+    }
+  } else {
+    // tail pinned — box only
+    verdict.className='verdict bad'; vEm.textContent='⚠️';
+    vTitle.textContent='Every coordinate pinned';
+    vBody.innerHTML='This box constrains <b>all</b> coordinates at once — impossible in the product topology. '+
+      'In <span class="mm" style="font-style:italic">{0,1}</span><sup>ℕ</sup> such a box is a <b>single point</b>: '+
+      '<span style="color:var(--box);font-weight:700">∏ {x<sub>i</sub>} = {x}</span>.';
+    explain.className='note warn';
+    explain.innerHTML='Now open sets can be <b>arbitrarily small</b> — down to one point. The space becomes '+
+      '<b>discrete</b>, and an infinite discrete space is <b>not compact</b>. See the cover below.';
+  }
+
+  updateCompactStatic();
+}
+
+/* recolor & relabel on mode switch of tail control availability */
+function refreshTailControl(){
+  if(mode==='product'){
+    tailChk.checked=false; tailChk.disabled=true;
+    tailLabel.classList.add('locked');
+    tailText.innerHTML='🔒 Tail is locked free — the product topology forbids pinning infinitely many coordinates';
+    tailMsg.innerHTML='Switch to the <b>box topology</b> to unlock the tail. The lock <em>is</em> Tychonoff&rsquo;s hypothesis: '+
+      'all but finitely many coordinates must equal <span style="font-style:italic">X<sub>i</sub></span>.';
+  } else {
+    tailChk.disabled=false;
+    tailLabel.classList.remove('locked');
+    tailText.innerHTML='Constrain the infinite tail (coordinates i ≥ 9) — pin <b>every</b> coordinate';
+    tailMsg.innerHTML='Ticking this pins all infinitely many coordinates at once — allowed only in the box topology.';
+  }
+}
+
+function onTailToggle(){ update(); }
+
+/* ---------- mode switching ---------- */
+function setMode(m){
+  mode=m;
+  document.getElementById('btnProduct').setAttribute('aria-pressed', m==='product');
+  document.getElementById('btnBox').setAttribute('aria-pressed', m==='box');
+  modePill.className='modepill '+m;
+  modePill.textContent = 'Currently: '+(m==='product'?'product topology':'box topology');
+  refreshTailControl();
+  update();
+  resetAnim();
+}
+
+board.on('update', update);
+
+/* ---------- COMPACTNESS ANIMATION (SVG) ---------- */
+var svg=document.getElementById('anim');
+var SVGNS='http://www.w3.org/2000/svg';
+var compVerdict=document.getElementById('compVerdict');
+var cEm=document.getElementById('cEm'), cTitle=document.getElementById('cTitle'), cBody=document.getElementById('cBody');
+var setN=document.getElementById('setN'), setTail=document.getElementById('setTail');
+var coverLine=document.getElementById('coverLine');
+var compNote=document.getElementById('compNote');
+var playBtn=document.getElementById('playBtn');
+var animTimer=null;
+
+function el(tag,attrs){ var e=document.createElementNS(SVGNS,tag); for(var k in attrs) e.setAttribute(k,attrs[k]); return e; }
+function clearSvg(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
+
+/* static (non-animated) depiction reflecting current mode */
+function updateCompactStatic(){
+  if(animTimer) return; // don't stomp an in-flight animation
+  resetAnim();
+}
+
+function resetAnim(){
+  if(animTimer){ clearInterval(animTimer); animTimer=null; }
+  clearSvg(); setTail.textContent=''; playBtn.disabled=false;
+  if(mode==='product'){
+    compVerdict.className='verdict good'; cEm.textContent='✅'; cTitle.textContent='COMPACT';
+    cBody.innerHTML='Product opens are fat cylinders — a few blanket the whole Cantor space. This is <b>Tychonoff</b>.';
+    setN.textContent='0';
+    coverLine.innerHTML='Open cover by cylinders pinning coordinate 1: '+
+      '<span style="color:var(--prod);font-weight:700">{x₁=0}</span> and <span style="color:var(--prod);font-weight:700">{x₁=1}</span>.';
+    compNote.className='note';
+    compNote.innerHTML='<b>Why compact:</b> every basic product-open set leaves all-but-finitely-many coordinates free, so it '+
+      'holds an entire cylinder of points. Points can never be isolated; a finite family of cylinders already covers everything. '+
+      'Tychonoff guarantees this for <em>any</em> product of compact spaces.';
+    drawProductStatic();
+  } else {
+    compVerdict.className='verdict bad'; cEm.textContent='❌'; cTitle.textContent='NOT COMPACT';
+    cBody.innerHTML='Box opens can be single points → the space is <b>discrete</b>. The singleton cover has no finite subcover.';
+    setN.textContent='0';
+    coverLine.innerHTML='Open cover by singletons: <span style="color:var(--box);font-weight:700">{ {x} : x ∈ {0,1}ℕ }</span>.';
+    compNote.className='note warn';
+    compNote.innerHTML='<b>Why not compact:</b> in the box topology each box <span style="color:var(--box);font-weight:700">∏{x<sub>i</sub>}={x}</span> '+
+      'is open, so <span class="mm">{0,1}</span><sup>ℕ</sup> is discrete. It is infinite, so covering it needs one set per point — '+
+      'infinitely many. No finite subcover exists, so it is not compact and Tychonoff fails.';
+    drawBoxStatic();
+  }
+}
+
+/* PRODUCT static: two fat cylinders */
+function drawProductStatic(){
+  svg.appendChild(el('text',{x:210,y:18,'text-anchor':'middle','font-size':13,fill:'#475569'}));
+  var lbl=el('text',{x:210,y:18,'text-anchor':'middle','font-size':13,fill:'#475569'}); lbl.textContent='The Cantor space {0,1}ℕ'; svg.appendChild(lbl);
+  // whole space bar outline
+  svg.appendChild(el('rect',{x:40,y:60,width:340,height:110,rx:10,fill:'#f8fafc',stroke:'#cbd5e1','stroke-width':1.5}));
+  var t=el('text',{x:210,y:210,'text-anchor':'middle','font-size':12.5,fill:'#94a3b8'}); t.textContent='2 fat cylinders ready to cover'; svg.appendChild(t);
+}
+
+/* BOX static: cloud of sample points */
+var boxDots=[];
+function drawBoxStatic(){
+  boxDots=[];
+  var lbl=el('text',{x:210,y:18,'text-anchor':'middle','font-size':13,fill:'#475569'}); lbl.textContent='Discrete space {0,1}ℕ — every point isolated'; svg.appendChild(lbl);
+  var cols=8, rows=3, x0=55, y0=55, dx=42, dy=48;
+  for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+    var cx=x0+c*dx, cy=y0+r*dy;
+    var d=el('circle',{cx:cx,cy:cy,r:6,fill:'#0f172a'});
+    svg.appendChild(d); boxDots.push({x:cx,y:cy,el:d,covered:false});
+  }
+  var t=el('text',{x:210,y:212,'text-anchor':'middle','font-size':12.5,fill:'#94a3b8'}); t.textContent='… and infinitely many more'; svg.appendChild(t);
+}
+
+/* ANIMATIONS */
+function playAnim(){
+  if(animTimer){ clearInterval(animTimer); animTimer=null; }
+  playBtn.disabled=true;
+  if(mode==='product') playProduct(); else playBox();
+}
+
+function playProduct(){
+  clearSvg(); setTail.textContent='';
+  var lbl=el('text',{x:210,y:18,'text-anchor':'middle','font-size':13,fill:'#475569'}); lbl.textContent='Covering {0,1}ℕ with 2 open cylinders'; svg.appendChild(lbl);
+  svg.appendChild(el('rect',{x:40,y:60,width:340,height:110,rx:10,fill:'#f8fafc',stroke:'#cbd5e1','stroke-width':1.5}));
+  var step=0;
+  var half1=el('rect',{x:44,y:64,width:0,height:102,rx:8,fill:PROD,'fill-opacity':0.28,stroke:PROD,'stroke-width':2});
+  var half2=el('rect',{x:212,y:64,width:0,height:102,rx:8,fill:PROD,'fill-opacity':0.28,stroke:PROD,'stroke-width':2});
+  var l1=el('text',{x:127,y:118,'text-anchor':'middle','font-size':13,fill:'#166534','font-weight':'700','opacity':0}); l1.textContent='x₁ = 0';
+  var l2=el('text',{x:295,y:118,'text-anchor':'middle','font-size':13,fill:'#166534','font-weight':'700','opacity':0}); l2.textContent='x₁ = 1';
+  svg.appendChild(half1); svg.appendChild(half2); svg.appendChild(l1); svg.appendChild(l2);
+  setN.textContent='0';
+  animTimer=setInterval(function(){
+    step++;
+    if(step===1){ half1.setAttribute('width',164); l1.setAttribute('opacity',1); setN.textContent='1';
+      coverLine.innerHTML='Cylinder <b style="color:var(--prod)">{x₁=0}</b> — pins ONE coordinate, contains ∞ points.'; }
+    else if(step===2){ half2.setAttribute('width',164); l2.setAttribute('opacity',1); setN.textContent='2';
+      coverLine.innerHTML='Cylinder <b style="color:var(--prod)">{x₁=1}</b> added.'; }
+    else if(step===3){ setTail.textContent='— done!';
+      var done=el('text',{x:210,y:205,'text-anchor':'middle','font-size':13.5,fill:PROD,'font-weight':'700'}); done.textContent='✓ Whole space covered by 2 sets — finite subcover!'; svg.appendChild(done);
+      coverLine.innerHTML='<b style="color:var(--prod)">Finite subcover found: just 2 sets.</b> Every open cover behaves this way ⇒ compact.';
+      clearInterval(animTimer); animTimer=null; playBtn.disabled=false; }
+  },780);
+}
+
+function playBox(){
+  clearSvg(); setTail.textContent='';
+  drawBoxStatic();
+  var idx=0, count=0;
+  setN.textContent='0';
+  animTimer=setInterval(function(){
+    if(idx<boxDots.length){
+      var d=boxDots[idx];
+      // shrinking box collapsing onto the point
+      var bx=el('rect',{x:d.x-20,y:d.y-20,width:40,height:40,rx:6,fill:'none',stroke:BOX,'stroke-width':2,'stroke-opacity':1});
+      svg.appendChild(bx);
+      d.el.setAttribute('fill',BOX);
+      // animate shrink
+      var w=40, tt=setInterval(function(){
+        w-=6; if(w<=14){ w=14; clearInterval(tt); }
+        bx.setAttribute('x',d.x-w/2); bx.setAttribute('y',d.y-w/2); bx.setAttribute('width',w); bx.setAttribute('height',w);
+      },30);
+      count++; setN.textContent=count;
+      coverLine.innerHTML='Box <b style="color:var(--box)">∏{x<sub>i</sub>}={x}</b> covers exactly ONE point. Sets used so far: '+count+'.';
+      idx++;
+    } else {
+      clearInterval(animTimer); animTimer=null;
+      setTail.textContent='… and ∞ more';
+      setN.textContent=count+'+';
+      var t=el('text',{x:210,y:210,'text-anchor':'middle','font-size':13.5,fill:BOX,'font-weight':'700'});
+      t.textContent='One set per point — you never finish. No finite subcover ✗'; svg.appendChild(t);
+      coverLine.innerHTML='<b style="color:var(--box)">No finite subcover:</b> ∞ points need ∞ singletons ⇒ NOT compact.';
+      playBtn.disabled=false;
+    }
+  },430);
+}
+
+/* ---------- resize handling ---------- */
+function doResize(){
+  var el=document.getElementById('board');
+  board.resizeContainer(el.clientWidth, el.clientHeight, true);
+  board.update();
+}
+window.addEventListener('resize', function(){ clearTimeout(window.__rz); window.__rz=setTimeout(doResize,150); });
+
+/* ---------- init ---------- */
+refreshTailControl();
+update();
+resetAnim();
+</script>
+</body>
+</html>

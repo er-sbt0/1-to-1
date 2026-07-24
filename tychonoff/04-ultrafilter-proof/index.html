@@ -1,0 +1,912 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tychonoff via Ultrafilters</title>
+<link rel="stylesheet" href="lib/katex.min.css" />
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#0e1428; --panel:#131a2e; --panel2:#0f1626;
+    --line:#26304a; --line2:#1b2338;
+    --text:#e6ecf7; --muted:#9aa7c2; --faint:#61708f;
+    --teal:#5eead4; --teal-d:#2dd4bf;
+    --gold:#fbbf24; --gold-d:#f59e0b;
+    --violet:#a78bfa; --violet-d:#8b5cf6;
+    --pink:#f472b6;
+    --radius:16px;
+    --font:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #16213f 0%, rgba(22,33,63,0) 60%),
+      radial-gradient(1000px 700px at 110% 10%, #1a1733 0%, rgba(26,23,51,0) 55%),
+      var(--bg);
+    color:var(--text); font-family:var(--font);
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    min-height:100vh;
+  }
+  header.top{
+    padding:22px 28px 8px; max-width:1400px; margin:0 auto;
+  }
+  header.top .eyebrow{
+    color:var(--teal); font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+    font-size:12px; margin-bottom:6px;
+  }
+  header.top h1{
+    margin:0; font-size:clamp(22px,3.2vw,34px); font-weight:750; letter-spacing:-.02em;
+  }
+  header.top h1 .accent{
+    background:linear-gradient(90deg,var(--teal),var(--violet));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  header.top p.sub{ margin:6px 0 0; color:var(--muted); font-size:14.5px; max-width:820px;}
+
+  .wrap{
+    max-width:1400px; margin:0 auto; padding:14px 28px 40px;
+    display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:20px;
+  }
+  @media (max-width:1080px){ .wrap{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:0 10px 40px rgba(0,0,0,.35);
+  }
+
+  /* ---- canvas ---- */
+  .stage{ position:relative; padding:10px; }
+  #canvasHolder{ width:100%; border-radius:12px; overflow:hidden; }
+  #canvasHolder canvas{ display:block; width:100%; height:auto; border-radius:12px;}
+
+  .stage .modebar{
+    position:absolute; top:20px; right:20px; display:flex; gap:6px;
+    background:rgba(10,15,30,.72); border:1px solid var(--line); border-radius:12px; padding:5px;
+    backdrop-filter:blur(6px);
+  }
+  .modebar button{
+    background:transparent; color:var(--muted); border:0; border-radius:8px;
+    padding:6px 12px; font-size:13px; font-weight:650; cursor:pointer; font-family:var(--font);
+    transition:.18s;
+  }
+  .modebar button.active{ background:linear-gradient(180deg,var(--teal-d),#0f766e); color:#04211c;}
+  .modebar button:not(.active):hover{ color:var(--text); background:rgba(255,255,255,.05)}
+  .modebar .lbl{ color:var(--faint); font-size:11px; align-self:center; padding:0 6px 0 4px; letter-spacing:.08em; text-transform:uppercase;}
+
+  /* ---- narration ---- */
+  .narr{ padding:20px 22px 8px; }
+  .narr .stepno{
+    display:inline-flex; align-items:center; gap:8px; color:var(--teal);
+    font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; margin-bottom:8px;
+  }
+  .narr .stepno .pill{ background:rgba(94,234,212,.12); border:1px solid rgba(94,234,212,.3);
+    padding:2px 9px; border-radius:999px; }
+  .narr h2{ margin:2px 0 10px; font-size:21px; font-weight:720; letter-spacing:-.01em;}
+  .narr .prose{ color:var(--muted); font-size:15px; }
+  .narr .prose b{ color:var(--text); font-weight:650;}
+  .narr .mathbox{
+    margin:14px 0 4px; padding:13px 16px; border-radius:12px;
+    background:var(--panel2); border:1px solid var(--line2);
+    overflow-x:auto;
+  }
+  .narr .mathbox .katex{ font-size:1.05em; }
+  .narr .mathbox + .mathbox{ margin-top:10px;}
+
+  /* ---- controls ---- */
+  .controls{ display:flex; align-items:center; gap:12px; padding:14px 22px 20px; flex-wrap:wrap;}
+  .btn{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:9px 16px; font-size:14px; font-weight:650; cursor:pointer;
+    font-family:var(--font); transition:.16s; display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn:hover{ border-color:var(--teal-d); color:#fff; transform:translateY(-1px);}
+  .btn:disabled{ opacity:.35; cursor:not-allowed; transform:none; border-color:var(--line);}
+  .btn.primary{ background:linear-gradient(180deg,var(--teal),var(--teal-d)); color:#04211c; border-color:transparent;}
+  .btn.primary:hover{ box-shadow:0 6px 20px rgba(45,212,191,.3);}
+  .progress{ display:flex; gap:7px; margin-left:auto; align-items:center;}
+  .progress .dot{ width:9px; height:9px; border-radius:50%; background:var(--line);
+    cursor:pointer; transition:.2s; }
+  .progress .dot.done{ background:var(--teal-d);}
+  .progress .dot.active{ background:var(--gold); transform:scale(1.35); box-shadow:0 0 0 4px rgba(251,191,36,.16);}
+
+  /* ---- sidebar ---- */
+  aside .card{ padding:18px 20px; }
+  aside h3{
+    margin:0 0 4px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--violet);
+    font-weight:700;
+  }
+  aside .glossary{ display:flex; flex-direction:column; gap:14px; margin-top:8px;}
+  .term{ border-left:2px solid var(--line); padding:2px 0 2px 12px;}
+  .term .name{ font-weight:700; font-size:14.5px; color:var(--text); margin-bottom:3px;}
+  .term .name .tag{ color:var(--teal); }
+  .term .def{ color:var(--muted); font-size:13px;}
+  .term .def .katex{ font-size:1em;}
+  .term .m{ margin-top:6px; overflow-x:auto; padding-bottom:2px;}
+  aside .legend{ margin-top:18px; border-top:1px solid var(--line2); padding-top:14px;}
+  .legend .row{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); margin:7px 0;}
+  .legend .sw{ width:22px; height:12px; border-radius:4px; flex:0 0 auto;}
+  .legend .sw.teal{ background:linear-gradient(90deg,var(--teal),var(--teal-d));}
+  .legend .sw.gold{ background:var(--gold);}
+  .legend .sw.violet{ background:rgba(167,139,250,.5); border:1px solid var(--violet);}
+
+  aside .hint{ margin-top:16px; font-size:12.5px; color:var(--faint); line-height:1.5;
+    background:var(--panel2); border:1px dashed var(--line); border-radius:10px; padding:11px 13px;}
+  aside .hint b{color:var(--muted)}
+
+  footer.foot{ max-width:1400px; margin:0 auto; padding:0 28px 34px; color:var(--faint); font-size:12.5px;}
+  .kbd{ font-family:ui-monospace,Menlo,Consolas,monospace; background:var(--panel2); border:1px solid var(--line);
+    border-bottom-width:2px; border-radius:6px; padding:1px 6px; font-size:12px; color:var(--muted);}
+</style>
+
+<header class="top">
+  <div class="eyebrow">Tychonoff's Theorem &mdash; the slick proof</div>
+  <h1>Compactness of Products via <span class="accent">Ultrafilter Convergence</span></h1>
+  <p class="sub">A product of compact spaces is compact. The one-line idea: push an ultrafilter forward
+    along each projection, let every compact factor supply a limit, and reassemble &mdash; because in the
+    product topology, convergence is nothing but coordinatewise convergence.</p>
+</header>
+
+<div class="wrap">
+  <main>
+    <div class="card stage">
+      <div id="canvasHolder"></div>
+      <div class="modebar">
+        <span class="lbl">coords</span>
+        <button data-mode="2">2</button>
+        <button data-mode="3" class="active">3</button>
+        <button data-mode="inf">&infin;</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="narr">
+        <div class="stepno"><span class="pill" id="stepPill">Step 1 / 8</span><span id="stepKicker"></span></div>
+        <h2 id="narrTitle">&nbsp;</h2>
+        <div class="prose" id="narrProse"></div>
+        <div id="narrMath"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="prevBtn">&larr; Back</button>
+        <button class="btn primary" id="nextBtn">Next &rarr;</button>
+        <button class="btn" id="replayBtn" title="Replay this step's animation">&#8635; Replay</button>
+        <div class="progress" id="progress"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="card">
+      <h3>Filters &amp; convergence</h3>
+      <div class="glossary" id="glossary"></div>
+      <div class="legend">
+        <div class="row"><span class="sw teal"></span> the ultrafilter &mdash; a swarm of sample points on the product</div>
+        <div class="row"><span class="sw gold"></span> the assembled limit <span id="lg-x"></span></div>
+        <div class="row"><span class="sw violet"></span> a basic open box (constrains finitely many coords)</div>
+      </div>
+      <div class="hint">
+        <b>Try it:</b> switch between <b>2 / 3 / &infin;</b> coordinates, step through with
+        <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span>, and <b>hover a coordinate axis</b>
+        to watch its pushforward ultrafilter funnel to a limit.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<footer class="foot">
+  Built with p5.js, GSAP, and KaTeX &mdash; all assets vendored locally, no network required.
+</footer>
+
+<script src="lib/p5.min.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+"use strict";
+
+/* ============================================================
+   KaTeX helpers
+   ============================================================ */
+function K(tex, display){
+  try{ return katex.renderToString(tex, {displayMode:!!display, throwOnError:false}); }
+  catch(e){ return tex; }
+}
+
+/* ============================================================
+   Proof steps (content)
+   ============================================================ */
+const STEPS = [
+  {
+    kicker:"the goal & the tool",
+    title:"What we prove, and the trick we use",
+    prose:`We want Tychonoff: an arbitrary product of compact spaces is compact. The classical
+      pointwise argument is painful, so we swap in a cleaner notion of compactness built from
+      <b>ultrafilters</b>. A space is compact exactly when every ultrafilter on it converges.`,
+    math:[ `X=\\prod_{i\\in I}X_i,\\quad\\text{each }X_i\\text{ compact}`,
+           `K\\text{ compact}\\iff\\text{every ultrafilter on }K\\text{ converges}` ]
+  },
+  {
+    kicker:"one ultrafilter on the product",
+    title:"Take an arbitrary ultrafilter on the product",
+    prose:`Fix any ultrafilter <b>&#120352;</b> on the product space <span class="im"></span>. To prove compactness it is
+      enough to show this single (arbitrary) &#120352; converges somewhere. Picture &#120352; as a dense
+      <b>swarm</b> of sample points spread across every coordinate.`,
+    math:[ `\\mathcal U\\ \\text{an ultrafilter on}\\ X=\\textstyle\\prod_i X_i`,
+           `\\forall A\\subseteq X:\\quad A\\in\\mathcal U\\ \\ \\text{or}\\ \\ X\\setminus A\\in\\mathcal U` ]
+  },
+  {
+    kicker:"project to each coordinate",
+    title:"Push \u{1D4B0} forward along every projection \u03C0\u1D62",
+    prose:`For each coordinate <span class="im"></span> the projection <span class="im"></span> pushes &#120352; forward to a
+      family <span class="im"></span> on the factor <span class="im"></span>. A crucial fact: the pushforward of an
+      ultrafilter <b>is again an ultrafilter</b>. So on every axis we now have an honest ultrafilter &mdash;
+      the shadow of the swarm on that coordinate.`,
+    math:[ `\\pi_i(\\mathcal U)=\\{\\,B\\subseteq X_i:\\ \\pi_i^{-1}(B)\\in\\mathcal U\\,\\}`,
+           `\\mathcal U\\ \\text{ultrafilter}\\ \\Longrightarrow\\ \\pi_i(\\mathcal U)\\ \\text{ultrafilter on }X_i` ]
+  },
+  {
+    kicker:"each factor is compact",
+    title:"Every coordinate ultrafilter converges \u2014 choose a limit",
+    prose:`Here compactness of the factors pays off: since each <span class="im"></span> is compact, its ultrafilter
+      <span class="im"></span> <b>converges</b> to some point <span class="im"></span>. There may be several limits, so we
+      invoke the <b>Axiom of Choice</b> to select one limit per coordinate. Watch each axis funnel its swarm
+      down to <span class="im"></span>.`,
+    math:[ `X_i\\ \\text{compact}\\ \\Longrightarrow\\ \\pi_i(\\mathcal U)\\to x_i\\ \\text{for some }x_i\\in X_i`,
+           `\\text{(Axiom of Choice: pick one }x_i\\text{ for every }i\\in I)` ]
+  },
+  {
+    kicker:"assemble the candidate point",
+    title:"Assemble the point x = (x\u1D62)",
+    prose:`Glue the chosen coordinate-limits into a single point of the product. This <span class="im"></span> is our
+      candidate for the limit of the whole ultrafilter &#120352;. The <b>gold thread</b> threads through every
+      funnel point.`,
+    math:[ `x=(x_i)_{i\\in I}\\in\\textstyle\\prod_i X_i` ]
+  },
+  {
+    kicker:"the heart: the product topology",
+    title:"Basic open sets touch only finitely many coordinates",
+    prose:`Why does coordinatewise convergence suffice? Because a <b>basic</b> open neighborhood of <span class="im"></span>
+      in the product topology restricts only <b>finitely many</b> coordinates &mdash; all the others range freely.
+      The violet box below pins coordinates <span class="im"></span> and leaves the rest wide open.`,
+    math:[ `V=\\pi_{i_1}^{-1}(U_1)\\cap\\cdots\\cap\\pi_{i_k}^{-1}(U_k),\\quad x_{i_j}\\in U_j`,
+           `\\text{basic opens constrain only }i_1,\\dots,i_k\\ \\text{— finitely many}` ]
+  },
+  {
+    kicker:"put it together",
+    title:"Each constraint already lies in \u{1D4B0}, so the box does too",
+    prose:`Take any basic neighborhood <span class="im"></span> of <span class="im"></span>. For each of its finitely many
+      factors, <span class="im"></span> so the constraint <span class="im"></span> belongs to &#120352;.
+      A filter is closed under <b>finite</b> intersection, hence the whole box <span class="im"></span> lies in &#120352;.
+      Every neighborhood of <span class="im"></span> is in &#120352;.`,
+    math:[ `\\pi_{i_j}(\\mathcal U)\\to x_{i_j}\\ \\Longrightarrow\\ U_j\\in\\pi_{i_j}(\\mathcal U)\\ \\Longrightarrow\\ \\pi_{i_j}^{-1}(U_j)\\in\\mathcal U`,
+           `\\textstyle\\bigcap_{j=1}^{k}\\pi_{i_j}^{-1}(U_j)=V\\in\\mathcal U\\quad(\\text{finite intersection})` ]
+  },
+  {
+    kicker:"Q.E.D.",
+    title:"\u{1D4B0} converges to x \u2014 so the product is compact",
+    prose:`Every neighborhood of <span class="im"></span> belongs to &#120352;, which is exactly what
+      <b>&#120352; &rarr; x</b> means. Our arbitrary ultrafilter converges. Therefore the product is compact.
+      That is <b>Tychonoff's theorem</b>. &#8718;`,
+    math:[ `\\mathcal N_x\\subseteq\\mathcal U\\iff\\mathcal U\\to x`,
+           `\\text{every ultrafilter on }\\textstyle\\prod_i X_i\\text{ converges}\\ \\Longrightarrow\\ \\textstyle\\prod_i X_i\\ \\text{compact}` ]
+  }
+];
+
+// inline-math tokens injected into prose (order matters, fills .im spans)
+const PROSE_IM = [
+  [],
+  [ `X` ],
+  [ `i`, `\\pi_i`, `\\pi_i(\\mathcal U)`, `X_i` ],
+  [ `X_i`, `\\pi_i(\\mathcal U)`, `x_i`, `x_i` ],
+  [ `x` ],
+  [ `x`, `i_1,\\dots,i_k` ],
+  [ `V`, `x`, `\\pi_{i_j}(\\mathcal U)\\to x_{i_j}`, `\\pi_{i_j}^{-1}(U_j)`, `V`, `x` ],
+  [ `x` ]
+];
+
+/* ============================================================
+   Glossary
+   ============================================================ */
+const GLOSSARY = [
+  { name:`<span class="tag">Filter</span> \u{1D4D5} on a set S`,
+    def:`A nonempty family of subsets, never containing \u2205, that is upward closed and closed under finite intersections.`,
+    m:[ `A\\in\\mathcal F,\\ A\\subseteq B\\ \\Rightarrow\\ B\\in\\mathcal F`,
+        `A,B\\in\\mathcal F\\ \\Rightarrow\\ A\\cap B\\in\\mathcal F` ] },
+  { name:`<span class="tag">Ultrafilter</span> \u{1D4B0}`,
+    def:`A filter that is maximal: for every subset it contains that set or its complement.`,
+    m:[ `\\forall A\\subseteq S:\\ \\ A\\in\\mathcal U\\ \\text{ or }\\ S\\setminus A\\in\\mathcal U` ] },
+  { name:`<span class="tag">Pushforward</span> \u03C0\u1D62(\u{1D4B0})`,
+    def:`The image ultrafilter on the factor: sets whose preimage lies in \u{1D4B0}.`,
+    m:[ `\\pi_i(\\mathcal U)=\\{B\\subseteq X_i:\\pi_i^{-1}(B)\\in\\mathcal U\\}` ] },
+  { name:`<span class="tag">Convergence</span> \u{1D4B0} \u2192 x`,
+    def:`\u{1D4B0} converges to x when every open neighborhood of x belongs to \u{1D4B0}.`,
+    m:[ `\\mathcal U\\to x\\iff\\mathcal N_x\\subseteq\\mathcal U` ] },
+  { name:`<span class="tag">Compactness</span> (ultrafilter form)`,
+    def:`Equivalent to the open-cover definition; the form we exploit here.`,
+    m:[ `K\\text{ compact}\\iff\\text{every ultrafilter on }K\\text{ converges}` ] }
+];
+
+/* ============================================================
+   Visualization state  (read every frame by p5, tweened by GSAP)
+   ============================================================ */
+const NSAMPLES = 64;
+let MODE = "3";
+const S = {
+  N: 3,             // number of drawn columns
+  infMode:false,
+  reveal: 0.0,      // swarm opacity 0..1
+  spread: [],       // per-column spread 0..1  (1 = scattered, ~0 = collapsed to x_i)
+  funnel: [],       // per-column funnel-cone reveal 0..1
+  markers: 0.0,     // x_i marker reveal
+  limit: 0.0,       // gold assembled thread reveal
+  box: 0.0,         // violet box reveal
+  boxK: 2,          // # constrained coords
+  scan: -1,         // projection sweep position (column-space), -1 = off
+  glow: 0.0         // final celebratory glow
+};
+// static geometry (recomputed when N/mode changes)
+let xTarget = [];   // per-column limit value 0..1
+let samples = [];   // NSAMPLES x N   raw values 0..1
+let colLabel = [];
+
+function seeded(n){ // deterministic pseudo-random for reproducible look
+  let s = Math.sin(n*127.1+31.7)*43758.5453; return s-Math.floor(s);
+}
+
+function buildData(N, infMode){
+  S.N = N; S.infMode = infMode;
+  xTarget = []; colLabel = [];
+  for(let i=0;i<N;i++){
+    xTarget[i] = 0.5 + 0.26*Math.sin(i*1.7+0.6) + 0.06*Math.cos(i*3.1);
+    xTarget[i] = Math.max(0.16, Math.min(0.84, xTarget[i]));
+  }
+  samples = [];
+  for(let sIdx=0;sIdx<NSAMPLES;sIdx++){
+    const row=[];
+    for(let i=0;i<N;i++){
+      // raw scattered value, biased a little per column for organic look
+      let base = 0.5 + (seeded(sIdx*13.3+i*7.1)-0.5)*1.35;
+      base = Math.max(0.05, Math.min(0.95, base));
+      row.push(base);
+    }
+    samples.push(row);
+  }
+  // labels
+  if(infMode){
+    colLabel = ["X\u2081","X\u2082","X\u2083","X\u2084","X\u2099"];
+  } else if(N===2){ colLabel=["X\u2081","X\u2082"]; }
+  else { colLabel=["X\u2081","X\u2082","X\u2083"]; }
+  // spread/funnel arrays sized to N
+  S.spread = new Array(N).fill(1);
+  S.funnel = new Array(N).fill(0);
+  // boxK: constrained coords (fewer than N, to show "finitely many")
+  S.boxK = infMode ? 3 : (N===2 ? 1 : 2);
+}
+
+const subOf = ["\u2080","\u2081","\u2082","\u2083","\u2084","\u2085","\u2086","\u2087","\u2088","\u2089"];
+function sub(i){ // 1-based subscript label; last col in inf mode -> n
+  if(S.infMode && i===S.N-1) return "\u2099";
+  return subOf[i+1]||("_"+(i+1));
+}
+
+/* ============================================================
+   GSAP-driven step application
+   ============================================================ */
+let currentStep = 0;
+let stepTL = null;
+
+function applyStep(step, opts){
+  opts = opts||{};
+  const instant = !!opts.instant;
+  if(stepTL){ stepTL.kill(); stepTL=null; }
+  gsap.killTweensOf(S);
+  gsap.killTweensOf(S.spread);
+  gsap.killTweensOf(S.funnel);
+
+  const N = S.N, K = S.boxK;
+  const tl = gsap.timeline();
+  const d = instant ? 0 : 1;
+
+  // helper to set every column spread
+  const setSpread = (val,dur,stagger)=>{
+    for(let i=0;i<N;i++){
+      tl.to(S.spread, {[i]:val, duration:dur, ease:"power2.inOut"},
+        stagger? "<"+(i*stagger) : (i===0? 0 : "<"));
+    }
+  };
+
+  switch(step){
+    case 0:
+      tl.to(S,{reveal:0.16, markers:0, limit:0, box:0, glow:0, scan:-1, duration:.5*d, ease:"power2.out"},0);
+      setSpread(1, .5*d, 0);
+      for(let i=0;i<N;i++) tl.to(S.funnel,{[i]:0,duration:.3*d},0);
+      break;
+    case 1:
+      tl.to(S,{reveal:1, markers:0, limit:0, box:0, glow:0, scan:-1, duration:.7*d, ease:"power2.out"},0);
+      setSpread(1, .5*d, 0);
+      break;
+    case 2:
+      tl.to(S,{reveal:1, markers:0, limit:0, box:0, glow:0, duration:.4*d},0);
+      setSpread(1, .4*d, 0);
+      // sweep the projection scanner across all columns
+      tl.fromTo(S,{scan:-0.4},{scan:N-0.6, duration:1.5*d, ease:"none"},0);
+      tl.to(S,{scan:-1, duration:0.01},">");
+      // pulse funnels on lightly
+      for(let i=0;i<N;i++) tl.to(S.funnel,{[i]:0.35,duration:.3*d},0);
+      break;
+    case 3:
+      tl.to(S,{reveal:1, box:0, limit:0, glow:0, scan:-1, duration:.3*d},0);
+      // funnels bloom + spreads collapse, staggered per coordinate
+      for(let i=0;i<N;i++){
+        tl.to(S.funnel,{[i]:1, duration:.4*d, ease:"power1.out"}, i*0.18*d);
+        tl.to(S.spread,{[i]:0.055, duration:.7*d, ease:"power3.inOut"}, i*0.18*d+0.05);
+      }
+      tl.to(S,{markers:1, duration:.5*d, ease:"back.out(2)"}, 0.3*d);
+      break;
+    case 4:
+      tl.to(S,{reveal:0.85, markers:1, box:0, glow:0, scan:-1, duration:.4*d},0);
+      setSpread(0.055, .3*d, 0);
+      for(let i=0;i<N;i++) tl.to(S.funnel,{[i]:0.6,duration:.3*d},0);
+      tl.fromTo(S,{limit:0},{limit:1, duration:.9*d, ease:"power2.out"},0.1*d);
+      break;
+    case 5:
+      tl.to(S,{reveal:0.7, markers:1, limit:1, glow:0, scan:-1, duration:.4*d},0);
+      // constrained cols stay tight; free cols loosen to show "unconstrained"
+      for(let i=0;i<N;i++){
+        const v = (i<K) ? 0.05 : 0.65;
+        tl.to(S.spread,{[i]:v, duration:.7*d, ease:"power2.inOut"},0);
+        tl.to(S.funnel,{[i]: (i<K?0.5:0.15), duration:.4*d},0);
+      }
+      tl.fromTo(S,{box:0},{box:1, duration:.8*d, ease:"back.out(1.5)"},0.15*d);
+      break;
+    case 6:
+      tl.to(S,{reveal:0.95, markers:1, limit:1, box:1, glow:0, scan:-1, duration:.4*d},0);
+      // constrained cols pull the whole swarm through the bands
+      for(let i=0;i<N;i++){
+        const v = (i<K) ? 0.05 : 0.5;
+        tl.to(S.spread,{[i]:v, duration:.8*d, ease:"power3.inOut"},0);
+      }
+      break;
+    case 7:
+      tl.to(S,{reveal:1, markers:1, limit:1, box:0.4, glow:0, scan:-1, duration:.4*d},0);
+      setSpread(0.045, 1.0*d, 0.02);
+      for(let i=0;i<N;i++) tl.to(S.funnel,{[i]:0.8,duration:.4*d},0);
+      tl.fromTo(S,{glow:0},{glow:1, duration:1.1*d, ease:"power2.out"},0.2*d);
+      break;
+  }
+  stepTL = tl;
+}
+
+/* ============================================================
+   Render narration / glossary
+   ============================================================ */
+function fillProse(html, imList){
+  // replace each <span class="im"></span> in order with rendered math
+  let idx=0;
+  return html.replace(/<span class="im"><\/span>/g, ()=>{
+    const tex = imList[idx++] || "";
+    return `<span class="katex-inline">${K(tex,false)}</span>`;
+  });
+}
+
+function renderStepText(step){
+  const st = STEPS[step];
+  document.getElementById("stepPill").textContent = `Step ${step+1} / ${STEPS.length}`;
+  document.getElementById("stepKicker").textContent = st.kicker;
+  const titleEl = document.getElementById("narrTitle");
+  const proseEl = document.getElementById("narrProse");
+  const mathEl  = document.getElementById("narrMath");
+
+  titleEl.textContent = st.title;
+  proseEl.innerHTML = fillProse(st.prose, PROSE_IM[step]||[]);
+  mathEl.innerHTML = st.math.map(t=>`<div class="mathbox">${K(t,true)}</div>`).join("");
+
+  // fade-in
+  gsap.fromTo([titleEl,proseEl,mathEl],
+    {opacity:0, y:8},{opacity:1, y:0, duration:.5, stagger:.06, ease:"power2.out"});
+
+  // progress dots
+  const prog = document.getElementById("progress");
+  [...prog.children].forEach((d,i)=>{
+    d.className = "dot" + (i===step?" active":"") + (i<step?" done":"");
+  });
+  document.getElementById("prevBtn").disabled = (step===0);
+  document.getElementById("nextBtn").disabled = (step===STEPS.length-1);
+  document.getElementById("nextBtn").textContent = (step===STEPS.length-1)? "Done \u2714" : "Next \u2192";
+}
+
+function buildProgressDots(){
+  const prog = document.getElementById("progress");
+  prog.innerHTML="";
+  STEPS.forEach((_,i)=>{
+    const d=document.createElement("span");
+    d.className="dot"; d.title="Go to step "+(i+1);
+    d.onclick=()=>gotoStep(i);
+    prog.appendChild(d);
+  });
+}
+
+function renderGlossary(){
+  const g = document.getElementById("glossary");
+  g.innerHTML = GLOSSARY.map(t=>`
+    <div class="term">
+      <div class="name">${t.name}</div>
+      <div class="def">${t.def}</div>
+      ${t.m.map(m=>`<div class="m">${K(m,true)}</div>`).join("")}
+    </div>`).join("");
+  document.getElementById("lg-x").innerHTML = K("x=(x_i)",false);
+}
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+function gotoStep(step, instant){
+  step = Math.max(0, Math.min(STEPS.length-1, step));
+  currentStep = step;
+  renderStepText(step);
+  applyStep(step, {instant:!!instant});
+}
+
+/* ============================================================
+   p5 sketch
+   ============================================================ */
+const sketch = (p)=>{
+  let W=900, H=560;
+  let hoverCol = -1;
+
+  function layout(){
+    const holder = document.getElementById("canvasHolder");
+    W = Math.max(320, holder.clientWidth);
+    H = Math.round(Math.min(600, Math.max(430, W*0.6)));
+  }
+
+  p.setup = ()=>{
+    layout();
+    const c = p.createCanvas(W,H);
+    c.parent("canvasHolder");
+    p.pixelDensity(Math.min(2, window.devicePixelRatio||1));
+    p.textFont("Segoe UI, system-ui, sans-serif");
+  };
+
+  p.windowResized = ()=>{ layout(); p.resizeCanvas(W,H); };
+
+  // geometry helpers -------------------------------------------------
+  const padL=()=>W*0.10, padR=()=>W*0.90;
+  const padT=()=>H*0.12, padB=()=>H*0.84;
+  function colX(i){
+    const N=S.N;
+    if(N===1) return (padL()+padR())/2;
+    return padL() + (padR()-padL())*(i/(N-1));
+  }
+  function valY(v){ return padB() - (padB()-padT())*v; }
+  // crossing value of a sample on column i, given spread
+  function crossing(sIdx, i){
+    const sp = S.spread[i];
+    const raw = samples[sIdx][i];
+    // small residual jitter so collapsed swarm still breathes a touch
+    const jit = (seeded(sIdx*3.7+i*9.1)-0.5)*0.02*sp;
+    return xTarget[i] + (raw - xTarget[i])*sp + jit;
+  }
+
+  p.draw = ()=>{
+    p.clear();
+    // panel background
+    p.noStroke();
+    p.fill(12,17,32);
+    p.rect(0,0,W,H,12);
+    drawGrid();
+
+    // detect hover column
+    hoverCol = -1;
+    const my=p.mouseY, mx=p.mouseX;
+    if(mx>=0&&mx<=W&&my>=0&&my<=H){
+      for(let i=0;i<S.N;i++){
+        if(Math.abs(mx-colX(i)) < (padR()-padL())/(S.N*2.2)+18 && my>padT()-20 && my<padB()+30){
+          hoverCol=i; break;
+        }
+      }
+    }
+
+    drawBox();
+    drawColumns();
+    drawScan();
+    drawSwarm();
+    drawFunnels();
+    drawMarginDots();
+    drawLimit();
+    drawMarkers();
+    drawScanLabel();
+    if(hoverCol>=0) drawHoverInset(hoverCol);
+    drawGlow();
+  };
+
+  // ------------------------------------------------------------------
+  function drawGrid(){
+    p.stroke(28,36,58); p.strokeWeight(1);
+    for(let k=0;k<=4;k++){
+      const y = p.lerp(padT(),padB(),k/4);
+      p.line(padL()*0.55, y, padR()+ (W*0.06), y);
+    }
+  }
+
+  function drawColumns(){
+    const N=S.N;
+    for(let i=0;i<N;i++){
+      const x=colX(i);
+      const hot = (i===hoverCol);
+      // axis line
+      p.strokeWeight(hot?3:2);
+      p.stroke(hot?94:52, hot?234:64, hot?212:96, hot?255:200);
+      p.line(x, padT()-6, x, padB()+6);
+      // caps
+      p.noStroke(); p.fill(hot?94:70, hot?234:82, hot?212:110);
+      p.circle(x,padT()-6,hot?7:5); p.circle(x,padB()+6,hot?7:5);
+      // label
+      p.textAlign(p.CENTER,p.TOP); p.textStyle(p.BOLD);
+      p.textSize(Math.min(17,W*0.02));
+      p.fill(hot?230:150, hot?240:165, hot?255:190);
+      p.text(colLabel[i], x, padB()+16);
+    }
+    // "infinitely many" annotation
+    if(S.infMode){
+      const x = padR()+W*0.04;
+      p.fill(150,120,220); p.textAlign(p.CENTER,p.CENTER); p.textStyle(p.BOLD);
+      p.textSize(Math.min(22,W*0.03));
+      p.text("\u22EF", (colX(N-2)+colX(N-1))/2, valY(0.5));
+      p.textSize(Math.min(12,W*0.016)); p.fill(120,132,160); p.textStyle(p.NORMAL);
+      p.text("infinitely\nmany coords", x, valY(0.5));
+    }
+  }
+
+  function drawSwarm(){
+    if(S.reveal<=0.01) return;
+    const N=S.N;
+    p.noFill();
+    for(let s=0;s<NSAMPLES;s++){
+      const a = 26*S.reveal;
+      p.stroke(94,234,212, a);
+      p.strokeWeight(1.1);
+      p.beginShape();
+      for(let i=0;i<N;i++){
+        p.vertex(colX(i), valY(crossing(s,i)));
+      }
+      p.endShape();
+    }
+    // sample nodes near collapsed columns get brighter
+    for(let s=0;s<NSAMPLES;s++){
+      for(let i=0;i<N;i++){
+        const sp=S.spread[i];
+        const a = (sp<0.2? 60:24)*S.reveal;
+        p.noStroke(); p.fill(94,234,212,a);
+        p.circle(colX(i), valY(crossing(s,i)), sp<0.2?2.6:1.8);
+      }
+    }
+  }
+
+  // margin dots = the pushforward ultrafilter on each axis
+  function drawMarginDots(){
+    // handled inside drawSwarm nodes; keep hook for clarity
+  }
+
+  function drawFunnels(){
+    const N=S.N;
+    for(let i=0;i<N;i++){
+      const f=S.funnel[i]; if(f<=0.02) continue;
+      const x=colX(i); const yx=valY(xTarget[i]);
+      // cone from wide spread at top to the limit point
+      const topW = (padR()-padL())/(N)*0.34;
+      const yTop = padT()+ (padB()-padT())*0.05;
+      p.noStroke();
+      const g = p.drawingContext;
+      const grd = g.createLinearGradient(0,yTop,0,yx);
+      grd.addColorStop(0, `rgba(94,234,212,${0.0*f})`);
+      grd.addColorStop(1, `rgba(251,191,36,${0.16*f})`);
+      g.fillStyle=grd;
+      p.beginShape();
+      p.vertex(x-topW, yTop); p.vertex(x+topW,yTop);
+      p.vertex(x+3, yx); p.vertex(x-3, yx);
+      p.endShape(p.CLOSE);
+      // funnel edges
+      p.stroke(251,191,36, 90*f); p.strokeWeight(1);
+      p.line(x-topW,yTop,x,yx); p.line(x+topW,yTop,x,yx);
+    }
+  }
+
+  function drawMarkers(){
+    if(S.markers<=0.02) return;
+    const N=S.N;
+    for(let i=0;i<N;i++){
+      const x=colX(i), y=valY(xTarget[i]);
+      const r = 6 + 3*Math.sin(p.frameCount*0.08 + i);
+      p.noStroke(); p.fill(251,191,36, 45*S.markers);
+      p.circle(x,y, (r+8)*S.markers);
+      p.fill(251,191,36, 255*S.markers);
+      p.circle(x,y, 8*S.markers);
+      p.fill(20,16,4); p.circle(x,y,3*S.markers);
+      // x_i label
+      p.fill(251,191,36, 235*S.markers); p.textStyle(p.BOLD);
+      p.textSize(Math.min(13,W*0.017)); p.textAlign(p.LEFT,p.CENTER);
+      p.text("x"+sub(i), x+11, y-2);
+    }
+  }
+
+  function drawLimit(){
+    if(S.limit<=0.02) return;
+    const N=S.N;
+    const prog = S.limit;
+    p.stroke(251,191,36, 235*prog); p.strokeWeight(3);
+    p.noFill();
+    // glow
+    p.drawingContext.shadowColor="rgba(251,191,36,0.55)";
+    p.drawingContext.shadowBlur=14*prog;
+    p.beginShape();
+    const upto = prog*(N-1);
+    for(let i=0;i<N;i++){
+      if(i<=upto || prog>=0.999){
+        p.vertex(colX(i), valY(xTarget[i]));
+      } else {
+        // partial edge to animate the thread being drawn
+        const t = upto-(i-1);
+        if(t>0){
+          const x0=colX(i-1),y0=valY(xTarget[i-1]);
+          const x1=colX(i),y1=valY(xTarget[i]);
+          p.vertex(p.lerp(x0,x1,t), p.lerp(y0,y1,t));
+        }
+        break;
+      }
+    }
+    p.endShape();
+    p.drawingContext.shadowBlur=0;
+  }
+
+  function drawBox(){
+    if(S.box<=0.02) return;
+    const N=S.N, K=S.boxK;
+    const a=S.box;
+    const halfBand = 0.075; // tolerance in value space
+    for(let i=0;i<K && i<N;i++){
+      const x=colX(i);
+      const yTop = valY(Math.min(0.97, xTarget[i]+halfBand));
+      const yBot = valY(Math.max(0.03, xTarget[i]-halfBand));
+      const bw = (padR()-padL())/(N)*0.5;
+      p.noStroke(); p.fill(167,139,250, 34*a);
+      p.rect(x-bw, yTop, bw*2, yBot-yTop, 8);
+      p.stroke(167,139,250, 150*a); p.strokeWeight(1.4); p.noFill();
+      p.rect(x-bw, yTop, bw*2, yBot-yTop, 8);
+      // U_j label
+      p.noStroke(); p.fill(190,170,255, 220*a); p.textStyle(p.BOLD);
+      p.textSize(Math.min(12,W*0.016)); p.textAlign(p.CENTER,p.BOTTOM);
+      p.text("U"+subOf[i+1], x, yTop-4);
+    }
+    // "free" coordinate hint on unconstrained cols
+    for(let i=K;i<N;i++){
+      const x=colX(i);
+      p.stroke(97,112,143, 120*a); p.strokeWeight(1); p.drawingContext.setLineDash([4,5]);
+      p.line(x, padT(), x, padB()); p.drawingContext.setLineDash([]);
+      p.noStroke(); p.fill(120,134,164,190*a); p.textStyle(p.NORMAL);
+      p.textSize(Math.min(11,W*0.015)); p.textAlign(p.CENTER,p.TOP);
+      p.text("free", x, padT()-2);
+    }
+    // caption
+    p.noStroke(); p.fill(190,170,255, 210*a); p.textStyle(p.BOLD);
+    p.textSize(Math.min(13,W*0.017)); p.textAlign(p.LEFT,p.TOP);
+    p.text("basic open box  V  \u2014  constrains "+K+" coord"+(K>1?"s":"")+", rest free",
+      padL()*0.55, H*0.965);
+  }
+
+  function drawScan(){
+    if(S.scan<-0.5) return;
+    // scanner highlights the column currently being "projected"
+    const i = Math.round(S.scan);
+    if(i<0||i>=S.N) return;
+    const x=colX(i);
+    const t = 1-Math.min(1,Math.abs(S.scan-i)*2);
+    p.noStroke(); p.fill(94,234,212, 40*t);
+    const bw=(padR()-padL())/(S.N)*0.5;
+    p.rect(x-bw, padT()-6, bw*2, padB()-padT()+12, 8);
+  }
+  function drawScanLabel(){
+    if(S.scan<-0.5) return;
+    const i=Math.round(S.scan);
+    if(i<0||i>=S.N) return;
+    const t=1-Math.min(1,Math.abs(S.scan-i)*2); if(t<0.05) return;
+    const x=colX(i);
+    p.noStroke(); p.fill(94,234,212, 230*t); p.textStyle(p.BOLD);
+    p.textSize(Math.min(13,W*0.017)); p.textAlign(p.CENTER,p.BOTTOM);
+    p.text("\u03C0"+sub(i)+"(\u{1D4B0})", x, padT()-14);
+  }
+
+  // hover: enlarged mini-funnel for one coordinate
+  function drawHoverInset(i){
+    const iw = Math.min(220, W*0.28), ih = Math.min(150, H*0.34);
+    let ix = colX(i) + 24; let iy = padT()+6;
+    if(ix+iw > W-8) ix = colX(i)-iw-24;
+    ix = Math.max(8, ix);
+    // panel
+    p.push();
+    p.drawingContext.shadowColor="rgba(0,0,0,0.5)"; p.drawingContext.shadowBlur=18;
+    p.noStroke(); p.fill(16,22,40,240); p.rect(ix,iy,iw,ih,12);
+    p.drawingContext.shadowBlur=0;
+    p.stroke(94,234,212,120); p.strokeWeight(1); p.noFill(); p.rect(ix,iy,iw,ih,12);
+    // title
+    p.noStroke(); p.fill(94,234,212); p.textStyle(p.BOLD); p.textAlign(p.LEFT,p.TOP);
+    p.textSize(13); p.text("\u03C0"+sub(i)+"(\u{1D4B0})  \u2192  x"+sub(i), ix+12, iy+10);
+    p.fill(150,165,190); p.textStyle(p.NORMAL); p.textSize(11);
+    p.text("pushforward ultrafilter on "+colLabel[i], ix+12, iy+28);
+    // mini axis
+    const ax = ix+iw*0.5; const at=iy+50, ab=iy+ih-16;
+    p.stroke(80,96,130); p.strokeWeight(2); p.line(ax,at,ax,ab);
+    const yOf=(v)=> ab - (ab-at)*v;
+    // dots funneling: animate a local converging parameter
+    const conv = 0.5 + 0.5*Math.sin(p.frameCount*0.05); // 0..1 oscillation
+    for(let s=0;s<30;s++){
+      const raw = seeded(s*5.3+i*2.1);
+      const v = xTarget[i] + (raw-xTarget[i])*conv;
+      const spreadX = (raw-0.5)*iw*0.5*conv;
+      p.noStroke(); p.fill(94,234,212, 120+120*(1-conv));
+      p.circle(ax+spreadX, yOf(v), 3);
+    }
+    // limit point
+    p.fill(251,191,36); p.noStroke(); p.circle(ax, yOf(xTarget[i]), 7);
+    p.fill(20,16,4); p.circle(ax, yOf(xTarget[i]),3);
+    p.pop();
+  }
+
+  function drawGlow(){
+    if(S.glow<=0.02) return;
+    const g=S.glow;
+    // soft vignette pulse
+    const cx=W/2, cy=H/2;
+    const grd=p.drawingContext.createRadialGradient(cx,cy,0,cx,cy,W*0.7);
+    grd.addColorStop(0,`rgba(251,191,36,${0.05*g})`);
+    grd.addColorStop(1,`rgba(251,191,36,0)`);
+    p.noStroke(); p.drawingContext.fillStyle=grd; p.rect(0,0,W,H);
+    // Q.E.D. sparkles along limit thread
+    for(let i=0;i<S.N;i++){
+      const x=colX(i), y=valY(xTarget[i]);
+      const tw = (Math.sin(p.frameCount*0.15+i*1.7)+1)/2;
+      p.noStroke(); p.fill(255,255,255, 200*g*tw);
+      p.circle(x,y,2+3*tw);
+    }
+  }
+
+  // expose a resize/rebuild hook
+  p._rebuild = ()=>{ /* geometry pulls from S live; nothing cached */ };
+};
+
+let p5inst;
+
+/* ============================================================
+   Wire up controls
+   ============================================================ */
+function setMode(mode){
+  MODE = mode;
+  document.querySelectorAll(".modebar button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.mode===mode);
+  });
+  if(mode==="2") buildData(2,false);
+  else if(mode==="3") buildData(3,false);
+  else buildData(5,true);
+  // re-apply current step so spreads/box match new N
+  gotoStep(currentStep, true);
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  renderGlossary();
+  buildProgressDots();
+  buildData(3,false);
+
+  p5inst = new p5(sketch);
+
+  document.getElementById("nextBtn").onclick = ()=>gotoStep(currentStep+1);
+  document.getElementById("prevBtn").onclick = ()=>gotoStep(currentStep-1);
+  document.getElementById("replayBtn").onclick = ()=>applyStep(currentStep,{instant:false});
+  document.querySelectorAll(".modebar button").forEach(b=>{
+    b.onclick=()=>setMode(b.dataset.mode);
+  });
+  window.addEventListener("keydown", e=>{
+    if(e.key==="ArrowRight"){ gotoStep(currentStep+1); }
+    else if(e.key==="ArrowLeft"){ gotoStep(currentStep-1); }
+  });
+
+  // start
+  gotoStep(0, false);
+});
+</script>
