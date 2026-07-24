@@ -24,18 +24,31 @@ compare the artifacts in Phase 4.
 Before any ideas, extract the math. Do not skip this — the quality of every downstream
 visual depends on it.
 
+**North star: find the essence.** The goal is never to decorate the formula — it is to
+convey what the theorem *means* and *why it is true*, and to spotlight the one non-trivial
+insight a learner would not have guessed. Before anything else, answer in a sentence: *if
+someone forgets every symbol but keeps one idea from this, what is that idea?* Everything
+downstream — concepts, visuals, artifacts — serves that essence.
+
 1. **State it precisely.** Write the theorem formally (with quantifiers/hypotheses) and in
    one plain-language sentence. Note the discipline (topology, analysis, probability, linear
    algebra, number theory, …).
-2. **Decompose into conveyable pieces.** List the sub-concepts a learner must grasp: the
+2. **Name the essence.** In one or two sentences, state the deep idea the theorem is really
+   about — the "aha" that survives once the notation is gone. Then name the **non-trivial
+   understanding**: the thing that is surprising, counterintuitive, or easy to get wrong,
+   that separates real understanding from symbol-pushing. This is what the artifacts must
+   make land.
+3. **Decompose into conveyable pieces.** List the sub-concepts a learner must grasp: the
    objects, the hypotheses, the claim, the mechanism/proof idea, the failure modes (what
    breaks if a hypothesis is dropped), and the canonical example.
-3. **Identify the intuition gaps.** For each piece, name *what is hard to picture* and the
+4. **Identify the intuition gaps.** For each piece, name *what is hard to picture* and the
    visual metaphor that would resolve it. This list is the seed for the concepts in Phase 1.
-4. **Pick the audience level** (default: motivated student who has seen the basics of the
+5. **Pick the audience level** (default: motivated student who has seen the basics of the
    field). One concept may go deeper for the proof-curious.
 
-Produce a short table: `piece | why it's hard | candidate visual metaphor`.
+Produce a short table: `piece | why it's hard | candidate visual metaphor`, and carry the
+**essence + non-trivial insight** forward — every concept in Phase 1 should be judged by how
+well it delivers them.
 
 ---
 
@@ -60,7 +73,9 @@ For each concept, write: **name · the piece it conveys · the key interaction/v
 general terms) · a zero-padded index with a short descriptive slug** (`01-cantor-tree`,
 `02-product-vs-box`, … ordered — the slug lets you tell concepts apart without opening them).
 
-Run a **coverage check**: confirm the facets are genuinely varied before presenting.
+Run a **coverage check**: confirm the facets are genuinely varied — *and* that at least one
+concept goes straight at the **essence + non-trivial insight** from Phase 0, rather than every
+concept only illustrating mechanics. A varied-but-shallow spread is a failure.
 
 ---
 
@@ -101,21 +116,41 @@ excellent and distinct. [Already built: <prior angles + stacks> — pick a diffe
 WORKING DIRECTORY (create all files here): <absolute path>/<topic>/<theorem>/<idx>/
 
 THE IDEA: [one-line general framing from Phase 1].
+THE ESSENCE (this is the point — everything serves it):
+  - [the deep idea the theorem is really about — the "aha" that survives once notation is gone]
+  - [the NON-TRIVIAL understanding to spotlight — the surprising / counterintuitive / easy-to-
+    get-wrong thing that separates real understanding from symbol-pushing]
 MATHEMATICAL CONTENT (must be correct):
   - [precise statement + the specific facts/proof steps this angle depends on]
   - [the honesty caveats that must be surfaced, not glossed]
 
-YOUR JOB — think from first principles, then implement:
+YOUR JOB — think from first principles, then implement. The bar is not "a pretty picture of
+the formula" — it is: does a viewer walk away *understanding the essence and the non-trivial
+insight above*? If a visual is decorative but doesn't move that needle, cut it.
   1. Choose your libraries. Consider the palette below and pick what fits THIS scene; don't
      run four libraries that do the same job.
   2. Decide what the mathematical object on screen is, exactly — the data structure (a tree
      of paths? a parameterized surface? a swarm of samples? a cover of open sets?).
-  3. Prefer honest computation over faked visuals — actually compute the subcover, the
+  3. Construct visualizations and artifacts that REFLECT THE ESSENCE — each one earns its
+     place by making the meaning or the non-trivial insight tangible (a manipulable object, a
+     before/after contrast, a "watch it break" failure mode). Prefer one deep, revealing
+     visual over several shallow ones.
+  4. Prefer honest computation over faked visuals — actually compute the subcover, the
      transform, the eigen-decomposition, the limit. Label any metaphor/projection as such.
-  4. Define the interaction contract: what the user can drag/toggle/step, and what updates.
-  5. Define the narration: the staged steps/panels that carry the argument, with the KaTeX
+  5. Define the interaction contract: what the user can drag/toggle/step, and what updates.
+  6. Define the narration: the staged steps/panels that carry the argument, with the KaTeX
      statement at each step.
   Then build it.
+
+PAGE LAYOUT (structure the understanding, don't cram it into one screen):
+  - Don't only fold OUT (expanding a single dense view). Fold DOWN: lay the explanation out as
+    a vertical scroll of separated sections, each section one clean beat of the argument, so
+    the viewer descends through the idea at their own pace.
+  - Within a section, you may split LEFT/RIGHT to spotlight different parts side by side — e.g.
+    the object/visual on one side and the corresponding explanation (or the formula, or the
+    contrasting case) on the other, so what the text is talking about is visible next to it.
+  - Keep each section focused on a single point; let scroll (and, where it fits, scroll-driven
+    progression) carry the narrative rather than piling every control onto one busy canvas.
 
 LIBRARY PALETTE (a MENU, not a mandate — reason from the scene to the tool, don't reach for
 the first row). Pick the fewest libraries that do the job; never run two that do the same job.
@@ -220,8 +255,8 @@ being distinct.
 ## Phase 4 — Compare
 
 When all artifacts are built, present a comparison table
-(`# | dir | angle | stack | standout interaction`), call out shared gotchas the
-agents hit, note any math-honesty flags surfaced, and offer next steps: a **landing page**
+(`# | dir | angle | stack | standout interaction | how well it lands the essence`), call out
+shared gotchas the agents hit, note any math-honesty flags surfaced, and offer next steps: a **landing page**
 linking all N for side-by-side judging, a **scored comparison** after the user looks, or
 **polish the strongest one**.
 
@@ -229,6 +264,12 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 
 ## Hard-won lessons (bake these into every subagent brief)
 
+- **Essence over decoration.** The win condition is a viewer *understanding the deep idea and
+  the non-trivial insight* — not a tidy animation of the formula. Every visual, artifact, and
+  interaction must earn its place by moving that needle; cut the merely pretty.
+- **Fold down, not just out.** A vertical scroll of separated, single-point sections (with
+  left/right spotlighting inside a section) beats one overloaded canvas. Let the descent carry
+  the argument.
 - **`file://` blocks ES modules** (CORS `origin: null`). Use UMD/global script tags for
   Three.js and anything else that ships as ESM. No importmaps to CDN or local modules.
 - **KaTeX needs standards mode** — always emit `<!DOCTYPE html>`, `<head>`, `<body>`.
