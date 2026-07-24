@@ -14,10 +14,8 @@ comparison writeup.
 The orchestrating agent (you) does the light-touch work inline: understand the math (Phase 0)
 and generate the **general** concept ideas (Phase 1), record the plan (Phase 2), then
 **immediately** launch subagents **one at a time** (Phase 3) — each subagent chooses its
-own libraries, designs the build from first principles, and implements the artifact. A
-**reviewer subagent then opens and judges every artifact** (Phase 4); anything below the bar
-loops back to Phase 3 with more tries and a sharper brief. You compare the survivors in
-Phase 5.
+own libraries, designs the build from first principles, and implements the artifact. You
+compare the artifacts in Phase 4.
 
 ---
 
@@ -219,57 +217,10 @@ being distinct.
 
 ---
 
-## Phase 4 — Review, judge, and iterate  🔎
+## Phase 4 — Compare
 
-Do **not** trust the builders' self-reports — a broken `file://` page (blank screen, dead
-animation, 404 on a lib) looks "done" to the agent that wrote it. Spin up **one reviewer
-subagent** (type `general-purpose`) whose whole job is to *open every artifact and judge it*.
-This is both the smoke test (does it even render offline?) and the quality bar.
-
-**Reviewer brief** (fill the brackets):
-```
-You are the REVIEWER for N standalone math explainers of [THEOREM]. Open each one and judge it
-honestly and skeptically. The builders' reports are NOT evidence — only what actually renders
-on screen counts. Bias toward being hard to impress.
-
-ARTIFACTS: <absolute path>/<topic>/<theorem>/   (one subdir per concept, each with index.html)
-
-FOR EACH artifact:
-  1. Open index.html headless from file:// (Playwright / puppeteer / `chromium --headless`, or
-     the /run skill). Capture screenshots: an initial frame AND frames AFTER driving the main
-     interaction (click / drag / step / play) so the ANIMATION is actually exercised — not just
-     the static first paint.
-  2. Read the browser console. Any uncaught error, failed local asset (404 on lib/*), or
-     ESM/CORS failure = automatic FAIL on liveness; record the exact message.
-  3. Score each axis 1–5 with a one-line justification grounded in what you SAW:
-       - Liveness       — opens offline, no console errors, every asset loads from lib/.
-       - Visual craft   — is the emulation genuinely impressive? typography, color, layout,
-                          the "wow". A correct-but-ugly static diagram scores low.
-       - Animation/interaction — does it move and respond? does driving the control change the
-                          picture meaningfully, or is it inert?
-       - Math fidelity  — content correct AND honest (caveats surfaced, nothing faked/hand-waved).
-  4. Verdict: SHIP or ITERATE. If ITERATE, name the single most important fix.
-
-RETURN: a table (dir | liveness | visual | anim | math | verdict), the failing screenshots/console
-lines as evidence, and the 2–3 concrete, transferable lessons to feed back into the builder briefs.
-```
-
-**Act on the verdicts:**
-- **All SHIP** → go to Phase 5.
-- **Any ITERATE** → loop back to **Phase 3** for the weak concepts, but raise the effort:
-  - Give those rebuilds **more attempts / more budget** than the first pass.
-  - **Sharpen the brief** — fold the reviewer's concrete lessons and the per-artifact fix
-    directly into the subagent spec template, so the next build can't repeat the same miss.
-  - Re-review the rebuilt artifacts. Keep looping autonomously until the reviewer ships them —
-    or, after a reasonable number of rebuild passes with no progress, cut the concept on your
-    own judgment and note it in the Phase 5 comparison. Do not stop to ask.
-
----
-
-## Phase 5 — Compare
-
-When all artifacts have shipped the reviewer's bar, present a comparison table
-(`# | dir | angle | stack | standout interaction | reviewer score`), call out shared gotchas the
+When all artifacts are built, present a comparison table
+(`# | dir | angle | stack | standout interaction`), call out shared gotchas the
 agents hit, note any math-honesty flags surfaced, and offer next steps: a **landing page**
 linking all N for side-by-side judging, a **scored comparison** after the user looks, or
 **polish the strongest one**.
@@ -290,11 +241,6 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 - **Diversify on purpose.** Different facet *and* different tool per concept — that is what
   makes the comparison worth running. Sequential launches let you enforce this by telling
   each subagent what the earlier ones already used.
-- **A builder's "done" is not evidence.** Blank pages, dead animations, and 404'd libs all
-  self-report as success. Always open every artifact (Phase 4 reviewer) before judging.
-- **Iterate on the weak ones.** First-pass output is a draft. Feed the reviewer's concrete
-  findings back into the brief and rebuild with more budget until the visuals actually impress
-  — not just until they render.
 
 ---
 
@@ -303,6 +249,5 @@ linking all N for side-by-side judging, a **scored comparison** after the user l
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
 > Use N = [5]. Delivery = standalone offline dirs under `./<topic>/<theorem>/<idx>/`.
 > Audience = [level]. Run the whole procedure end to end with no approval stops: outline the
-> general concepts, then spin up subagents automatically (one at a time). After building, run
-> a reviewer subagent that opens and judges each artifact, and iterate on any that don't clear
-> the bar.
+> general concepts, then spin up subagents automatically (one at a time), and compare the
+> artifacts when they're built.
