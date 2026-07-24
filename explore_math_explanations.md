@@ -290,6 +290,29 @@ DELIVERY REQUIREMENTS (strict):
     + importmap FAILS from file:// (CORS origin: null). Confirm classic <script> loading.
   - Polished, legible design: good typography, semantic color, responsive layout.
   - Add a short `README.md`: the idea, the math, the libs you chose (and why), and how to open.
+  - Write a machine-readable `manifest.json` (this is for automating artifact creation later —
+    it must be extractable and aggregable across concepts, so use EXACTLY these keys):
+    ```json
+    {
+      "concept": "<idx-slug, e.g. 02-product-vs-box>",
+      "angle": "<one-line: the piece of the math this artifact conveys>",
+      "libraries": [
+        {"name": "<lib>", "version": "<pinned version>", "role": "<what job it did in THIS scene>",
+         "build": "umd|iife|global|esm", "source": "<CDN URL you vendored from>"}
+      ],
+      "building_blocks": [
+        "<reusable component/pattern this artifact needed, e.g. 'scroll-driven section stepper',",
+        "'KaTeX step-caption renderer', 'draggable open-cover overlay', 'live eigen-decomposition',",
+        "'before/after failure-mode toggle' — name the COMPONENTS a generator would need to emit>"
+      ],
+      "computations": ["<real math computed in-page, e.g. 'FFT via math.js', 'subcover search'>"],
+      "interactions": ["<what the user can drag/toggle/step and what updates>"],
+      "assets": ["<non-lib vendored assets, e.g. 'katex .woff2 fonts', '.wasm'>"],
+      "gotchas": ["<offline/file:// or lib pitfalls you hit and how you resolved them>"]
+    }
+    ```
+    Be precise and literal in `libraries` and `building_blocks` — these two lists are what gets
+    mined to auto-assemble future artifacts, so name real, reusable units, not vague prose.
 
 Work autonomously. Do not ask questions. When done, briefly report what you built and why you
 chose your stack.
@@ -308,6 +331,14 @@ When all artifacts are built, present a comparison table
 shared gotchas the agents hit, note any math-honesty flags surfaced, and offer next steps: a **landing page**
 linking all N for side-by-side judging, a **scored comparison** after the user looks, or
 **polish the strongest one**.
+
+**Aggregate the tech inventory.** Read every concept's `manifest.json` and roll them up into
+one `_inventory.json` at `./<topic>/<theorem>/` — the union of libraries (with versions,
+roles, build types, and how many concepts used each), the union of `building_blocks`, and the
+recurring `computations`/`interactions`/`gotchas`. This roll-up is the deliverable that feeds
+automating artifact creation: it names, across the whole run, which technologies and reusable
+components a generator would need to assemble these explainers. Flag components that recur
+across concepts (strong candidates to templatize) versus one-offs.
 
 ---
 
