@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Islands, Three Bridges — where sparsity hides</title>
+<link rel="stylesheet" href="lib/katex.min.css">
+<style>
+:root{
+  /* page plane */
+  --bg:#0b0e14;
+  --panel:#161c28;      /* chart surface — palette validated against this */
+  --panel2:#1c2432;
+  --line:#28324399;
+  --line-solid:#283243;
+  --ink:#e9edf5;        /* primary ink */
+  --ink2:#a3aebf;       /* secondary ink */
+  --ink3:#7c8699;       /* muted: axis / labels */
+  --grid:#232c3b;       /* hairline gridline */
+  --base:#333e52;       /* baseline / axis */
+  /* categorical (validated: 2 slots, dark, surface #161c28 — all checks pass) */
+  --s1:#3987e5;
+  --s2:#d95926;
+  /* status (reserved; always shipped with a glyph + label, never colour alone) */
+  --good:#0ca30c;
+  --warn:#fab219;
+  --crit:#d03b3b;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0;
+  background:
+    radial-gradient(1200px 720px at 12% -10%, #141c2b 0%, transparent 62%),
+    radial-gradient(900px 560px at 92% 2%, #131b26 0%, transparent 58%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+header.hero{padding:80px 0 44px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--s1);margin-bottom:20px}
+h1{font-weight:660;font-size:clamp(32px,5vw,52px);line-height:1.06;letter-spacing:-.028em;margin:0 0 22px;max-width:20ch}
+h1 .hl{color:var(--s2)}
+.lede{font-size:clamp(16.5px,2vw,20px);color:var(--ink2);max-width:64ch;margin:0 0 14px}
+.lede strong{color:var(--ink);font-weight:620}
+.statement{margin-top:32px;padding:22px 26px;background:var(--panel);border:1px solid var(--line-solid);border-left:3px solid var(--s1);border-radius:0 12px 12px 0}
+.statement .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px}
+.statement .note{font-size:14px;color:var(--ink3);margin-top:12px}
+
+/* ---------- sections ---------- */
+section.beat{padding:78px 0;border-bottom:1px solid var(--line)}
+section.beat:last-of-type{border-bottom:none}
+.beat-head{max-width:72ch;margin-bottom:34px}
+.beat-num{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;color:var(--s1);margin-bottom:12px;text-transform:uppercase}
+h2{font-weight:640;font-size:clamp(25px,3.3vw,33px);line-height:1.14;letter-spacing:-.022em;margin:0 0 14px}
+.thesis{font-size:17.5px;color:var(--ink2);margin:0}
+.thesis strong{color:var(--ink);font-weight:620}
+p{max-width:72ch}
+.prose{font-size:16.5px;color:var(--ink2)}
+.prose strong{color:var(--ink);font-weight:600}
+.prose em{color:var(--ink);font-style:italic}
+
+/* ---------- layout ---------- */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:26px;align-items:start}
+.split.wide-left{grid-template-columns:minmax(0,1.22fr) minmax(0,1fr)}
+.split.wide-right{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
+@media (max-width:900px){.split,.split.wide-left,.split.wide-right{grid-template-columns:1fr}}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+.panel{background:var(--panel);border:1px solid var(--line-solid);border-radius:14px;padding:20px}
+.panel.flush{padding:12px}
+.panel-title{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin:0 0 14px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.panel-title .rt{letter-spacing:.04em;text-transform:none;color:var(--ink3)}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.controls .lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
+button.btn{
+  font-family:var(--sans);font-size:13px;font-weight:520;
+  background:var(--panel2);color:var(--ink);border:1px solid var(--line-solid);
+  padding:6px 12px;border-radius:8px;cursor:pointer;transition:.14s;
+}
+button.btn:hover{background:#243043;border-color:#3a4761}
+button.btn.on{background:#1d3a63;border-color:var(--s1);color:#dbe9ff}
+.seg{display:inline-flex;border:1px solid var(--line-solid);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--line-solid)}
+.seg button:last-child{border-right:none}
+
+/* ---------- graph + chart hosts ---------- */
+.cyhost{width:100%;height:390px;border-radius:10px;background:#10151f;border:1px solid #202939}
+.cyhost.sm{height:260px}
+.charthost{width:100%;height:400px}
+.charthost.sm{height:270px}
+
+/* ---------- readout ---------- */
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:10px;margin-top:2px}
+.stat{background:var(--panel2);border:1px solid var(--line-solid);border-radius:10px;padding:10px 12px}
+.stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.stat .v{font-size:24px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}
+.stat .v.small{font-size:17px}
+
+/* verdict chip: dot + glyph + text — never colour alone */
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;font-size:13.5px;font-weight:560;background:var(--panel2);border:1px solid var(--line-solid);color:var(--ink)}
+.chip .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.chip .gl{font-family:var(--mono);font-weight:700}
+.chip.pass .dot{background:var(--good)} .chip.pass{border-color:#1c5c22}
+.chip.tight .dot{background:var(--warn)} .chip.tight{border-color:#6b5310}
+.chip.fail .dot{background:var(--crit)} .chip.fail{border-color:#6e2222}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:12.5px;color:var(--ink2)}
+.legend .it{display:inline-flex;align-items:center;gap:7px}
+.legend .sw{width:12px;height:12px;border-radius:3px;flex:none}
+.legend .sw.line{height:0;border-top:2px dashed var(--ink2);border-radius:0}
+
+/* ---------- tables ---------- */
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.tbl th{text-align:right;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line-solid)}
+table.tbl th:first-child,table.tbl td:first-child{text-align:left}
+table.tbl td{padding:6px 8px;border-bottom:1px solid #1e2634;color:var(--ink2)}
+table.tbl td.em{color:var(--ink);font-weight:560}
+table.tbl tr.foot td{border-bottom:none;border-top:1px solid var(--line-solid);color:var(--ink);font-weight:560}
+
+/* ---------- misc ---------- */
+.log{font-family:var(--mono);font-size:11.5px;line-height:1.75;color:var(--ink2);background:#10151f;border:1px solid #202939;border-radius:10px;padding:14px 16px;white-space:pre-wrap;max-height:290px;overflow:auto}
+.log b{color:var(--ink);font-weight:600}
+.log .g{color:#3fbf3f} .log .r{color:#e46a6a} .log .y{color:#e0b13f}
+.callout{margin-top:18px;padding:16px 18px;border-radius:12px;background:#171d2a;border:1px solid var(--line-solid);border-left:3px solid var(--warn)}
+.callout .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--warn);margin-bottom:8px}
+.callout p{margin:0;font-size:15px;color:var(--ink2)}
+.callout p+p{margin-top:9px}
+.callout.crit{border-left-color:var(--crit)} .callout.crit .cap{color:var(--crit)}
+.callout.good{border-left-color:var(--good)} .callout.good .cap{color:#2fbf4f}
+.texblock{margin:16px 0;overflow-x:auto;overflow-y:hidden}
+.katex{font-size:1.02em}
+.panel .texblock .katex{font-size:.9em}
+.statement .texblock .katex{font-size:1em}
+@media (max-width:1080px){.panel .texblock .katex{font-size:.82em}.statement .texblock .katex{font-size:.84em}}
+.hint{font-size:12.5px;color:var(--ink3);margin-top:10px}
+.hint kbd{font-family:var(--mono);font-size:11px;background:var(--panel2);border:1px solid var(--line-solid);border-radius:5px;padding:1px 5px;color:var(--ink2)}
+ul.tight{max-width:72ch;color:var(--ink2);font-size:16px;padding-left:22px}
+ul.tight li{margin:8px 0}
+ul.tight strong{color:var(--ink);font-weight:600}
+footer{padding:56px 0 80px;color:var(--ink3);font-size:13.5px}
+footer a{color:var(--ink2)}
+.busy{display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink3);font-family:var(--mono);font-size:12px;letter-spacing:.1em}
+</style>
+</head>
+<body>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">Nash-Williams / Tutte · tree packing · 1961</div>
+  <h1>Three islands,<br>three bridges — <span class="hl">sparsity hides at an intermediate resolution</span></h1>
+  <p class="lede">A spanning tree must spend exactly <strong>r&nbsp;&minus;&nbsp;1</strong> of its edges to weld <em>r</em> clusters of vertices into one piece. So <em>k</em> edge-disjoint spanning trees need at least <strong>k(r&nbsp;&minus;&nbsp;1)</strong> edges running <em>between</em> clusters — for <strong>every</strong> way of clustering. The miracle of the theorem is that this obvious toll is the <strong>only</strong> toll.</p>
+  <p class="lede">This page is about the word <em>every</em>. You will meet a graph that pays the toll at the coarsest resolution (<span style="white-space:nowrap">r = 2</span>, the cuts) and pays it at the finest (<span style="white-space:nowrap">r = n</span>, the headcount) — and is still bankrupt in between.</p>
+  <div class="statement">
+    <div class="cap">Theorem (Nash-Williams; Tutte, 1961)</div>
+    <div class="texblock" id="tex-main"></div>
+    <div class="note">Here <span id="tex-eG"></span> counts the edges of <em>G</em> whose two endpoints lie in different parts. <em>G</em> is a finite multigraph.</div>
+  </div>
+</div></header>
+
+<!-- ======================= 01 THE TOLL ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">01 — the toll</div>
+    <h2>Why <span id="tex-krm1" style="display:inline-block"></span> is forced</h2>
+    <p class="thesis">Squash each cluster down to a single point. A spanning tree of <em>G</em> becomes a <strong>connected spanning subgraph of the quotient</strong> on <em>r</em> points — and that costs at least <em>r</em>&nbsp;&minus;&nbsp;1 edges. The trees are edge-disjoint, so their tolls add.</p>
+  </div>
+  <div class="split wide-left">
+    <div class="stack">
+      <div class="panel flush">
+        <div class="panel-title">the graph <span class="rt" id="l1-name"></span></div>
+        <div class="cyhost" id="cy-c6"></div>
+        <div class="controls">
+          <span class="lab">clusters</span>
+          <button class="btn" data-preset="c6-1">all one</button>
+          <button class="btn" data-preset="c6-2">two halves</button>
+          <button class="btn" data-preset="c6-3">three arcs</button>
+          <button class="btn" data-preset="c6-n">every vertex alone</button>
+        </div>
+        <div class="hint">Click any <kbd>vertex</kbd> to move it into the next cluster (a new cluster is created when you pass the last one). Thick edges are the ones that <em>cross</em> between clusters — the only edges a tree can spend on welding.</div>
+      </div>
+      <div class="panel flush">
+        <div class="panel-title">the quotient <span class="rt">G / P — each cluster squashed to a point</span></div>
+        <div class="cyhost sm" id="cy-c6q"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-title">the argument</div>
+        <div class="texblock" id="tex-toll"></div>
+        <p class="prose" style="font-size:15.5px;margin:0">Contract every part to a point. A spanning tree <em>T</em> of <em>G</em> maps onto a connected spanning subgraph of the <em>r</em>-point quotient, so <strong>at least r&nbsp;&minus;&nbsp;1 edges of T must cross</strong>. Different trees never share an edge, so the k tolls are paid out of <em>disjoint</em> pockets. Add them up.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title">live toll <span class="rt" id="l1-k"></span></div>
+        <div class="charthost sm" id="ch-c6meter"></div>
+        <div class="readout" id="l1-stats"></div>
+        <div style="margin-top:14px" id="l1-verdict"></div>
+        <div class="controls">
+          <span class="lab">k =</span>
+          <span class="seg" id="l1-kseg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ======================= 02 INSTINCT ONE ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">02 — instinct one</div>
+    <h2>&ldquo;Just make it <em>k</em>-edge-connected&rdquo;</h2>
+    <p class="thesis">The <span style="white-space:nowrap">r = 2</span> case of the condition <strong>is exactly k-edge-connectivity</strong>: a 2-part clustering is a cut, and it needs k(2&nbsp;&minus;&nbsp;1) = k edges. That is such a natural condition that it feels like the whole story. It is not.</p>
+  </div>
+  <p class="prose">Take the 6-cycle and k = 2. Every one of its <strong>31</strong> cuts has at least 2 edges — <span style="white-space:nowrap">C<sub>6</sub></span> is genuinely 2-edge-connected, so it passes the <span style="white-space:nowrap">r = 2</span> test. But C<sub>6</sub> is small enough that we can enumerate <strong>every single partition of its vertex set</strong> — all Bell(6) = 203 of them — and read off the true minimum cross-edge count at each resolution.</p>
+  <div class="split wide-right" style="margin-top:26px">
+    <div class="panel">
+      <div class="panel-title">exhaustive scan <span class="rt">C₆ · all 203 partitions</span></div>
+      <div class="log" id="log-c6"></div>
+      <div class="callout">
+        <div class="cap">be honest about this one</div>
+        <p>C<sub>6</sub> is a <em>warm-up</em>, not the punchline. It fails at r = 3 (3 cross edges &lt; 4 required), but it also fails the plain headcount at r = n: 6 edges &lt; 2·5 = 10. So a sceptic can patch the instinct — <em>&ldquo;check the cuts <strong>and</strong> check the edge count&rdquo;</em> — and C<sub>6</sub> is caught.</p>
+        <p>Section 03 removes that escape.</p>
+      </div>
+    </div>
+    <div class="panel flush">
+      <div class="panel-title">resolution scan <span class="rt">min cross edges vs. the toll, k = 2</span></div>
+      <div class="charthost" id="ch-c6scan"></div>
+      <div class="legend" id="lg-c6"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ======================= 03 THE ISLANDS ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">03 — the specimen</div>
+    <h2>Three islands, three bridges</h2>
+    <p class="thesis">Three disjoint copies of K<sub>5</sub>, joined pairwise by a <strong>single edge</strong> each. Fifteen vertices, thirty-three edges. It passes the cut test <em>and</em> it passes the headcount test. Both instincts are satisfied.</p>
+  </div>
+  <div class="split wide-left">
+    <div class="panel flush">
+      <div class="panel-title">the graph <span class="rt" id="isl-name"></span></div>
+      <div class="cyhost" id="cy-isl0" style="height:420px"></div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-title">test 1 &mdash; the cuts <span class="rt">r = 2</span></div>
+        <div class="texblock" id="tex-t1"></div>
+        <div class="log" id="log-cut" style="max-height:none"></div>
+        <div style="margin-top:14px" id="v-cut"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">test 2 &mdash; the headcount <span class="rt">r = n</span></div>
+        <div class="texblock" id="tex-t2"></div>
+        <div class="log" id="log-cnt" style="max-height:none"></div>
+        <div style="margin-top:14px" id="v-cnt"></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="border-left-color:var(--s1)">
+    <div class="cap" style="color:var(--s1)">where this leaves us</div>
+    <p>The coarsest resolution is fine. The finest resolution is fine, with five edges to spare. Every instinct a first course gives you says this graph should carry two edge-disjoint spanning trees. Scroll on.</p>
+  </div>
+</div></section>
+
+<!-- ======================= 04 THE SCANNER ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">04 — the scanner</div>
+    <h2>Sweep the resolution dial</h2>
+    <p class="thesis">The condition quantifies over <strong>all</strong> r. So sweep r from 2 to n, and at each r ask for the <em>cheapest</em> clustering into exactly that many parts. Compare it with the toll k(r&nbsp;&minus;&nbsp;1). One value of r is short. Only one.</p>
+  </div>
+
+  <div class="panel flush" style="margin-bottom:26px">
+    <div class="panel-title">resolution scan <span class="rt" id="scan-cap"></span></div>
+    <div class="charthost" id="ch-islscan" style="height:460px"></div>
+    <div class="legend" id="lg-isl"></div>
+    <div class="hint">Click any bar to load that exact minimising clustering into the graph below. Change k with the buttons — the bars do not move (they are properties of the graph), only the toll line does.</div>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel flush">
+      <div class="panel-title">the clustering <span class="rt" id="l2-name"></span></div>
+      <div class="cyhost" id="cy-isl" style="height:430px"></div>
+      <div class="controls">
+        <span class="lab">jump to</span>
+        <button class="btn" data-preset="isl-2">the min cut (r=2)</button>
+        <button class="btn" data-preset="isl-3">the three islands (r=3)</button>
+        <button class="btn" data-preset="isl-n">every vertex alone (r=15)</button>
+        <button class="btn" data-preset="isl-1">all one</button>
+      </div>
+      <div class="hint">Click any <kbd>vertex</kbd> to move it into the next cluster. Thick edges cross between clusters.</div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-title">live toll <span class="rt" id="l2-k"></span></div>
+        <div class="charthost sm" id="ch-islmeter"></div>
+        <div class="readout" id="l2-stats"></div>
+        <div style="margin-top:14px" id="l2-verdict"></div>
+        <div class="controls">
+          <span class="lab">k =</span>
+          <span class="seg" id="l2-kseg"></span>
+        </div>
+      </div>
+      <div class="panel flush">
+        <div class="panel-title">the quotient <span class="rt">G / P</span></div>
+        <div class="cyhost sm" id="cy-islq"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout crit" style="margin-top:26px">
+    <div class="cap">the certificate</div>
+    <p id="cert-line"></p>
+    <p>Cut the fifteen vertices into the three islands. Every K<sub>5</sub> is internally lavish — but only <strong>three</strong> edges leave their island, and welding three clusters into one costs each tree two edges, so two trees need four. Three is less than four. <strong>No two edge-disjoint spanning trees exist.</strong> The obstruction is invisible at r = 2 and invisible at r = 15; it lives only at r = 3.</p>
+  </div>
+</div></section>
+
+<!-- ======================= 05 THE SEARCH ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">05 — what we actually searched</div>
+    <h2>The scope of the claim</h2>
+    <p class="thesis">A curve is only as honest as the search behind it. Here is exactly what was computed in your browser, and what each computation does and does not prove.</p>
+  </div>
+  <div class="split">
+    <div class="panel">
+      <div class="panel-title">search log <span class="rt">run live in this page</span></div>
+      <div class="log" id="log-search" style="max-height:none"></div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <div class="panel-title">what each line proves</div>
+        <ul class="tight" style="margin:0;font-size:15px">
+          <li><strong>The r = 3 witness is a proof.</strong> To show a packing is <em>impossible</em> you only need to exhibit one bad clustering. The three islands are that clustering; nothing about the rest of the scan is needed for the punchline.</li>
+          <li><strong>The scan bars are exact minima, not samples.</strong> Each bar is the true minimum over <em>all</em> partitions into exactly r parts, proved by a branch-and-bound over the complete restricted-growth-string tree: partial cross-edge counts only grow, so any branch already at or above the incumbent is pruned with no loss. The node counts below are what the pruning left.</li>
+          <li><strong>Bell(15) = 1 382 958 545.</strong> Enumerating every partition one by one is out of reach in a browser; the branch-and-bound is what makes the exact answer cheap. It is seeded with a local-search optimum purely to prune harder — the seed is never reported as the answer.</li>
+          <li><strong>The greedy packer is not a proof.</strong> It is a randomised first-fit heuristic. When it reports 27 of 28 tree-edges on the island graph it is corroboration, not evidence; the r = 3 certificate is the evidence.</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <div class="cap">timing caveat</div>
+        <p>Elapsed times come from <span style="font-family:var(--mono);font-size:13px">performance.now()</span> and vary with your machine. Under some headless-screenshot harnesses the clock does not advance and every row reads 0.0 ms.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ======================= 06 THE FIX ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">06 — what <em>is</em> sufficient</div>
+    <h2>Double-count your way out: 2k-edge-connectivity</h2>
+    <p class="thesis">Checking every partition is expensive. But there is a cheap condition that <strong>implies</strong> all of them at once — and its proof is one line of double counting.</p>
+  </div>
+  <div class="split wide-right">
+    <div class="panel">
+      <div class="panel-title">the corollary and its proof</div>
+      <div class="texblock" id="tex-cor"></div>
+      <p class="prose" style="font-size:15.5px">Fix any partition into r parts. Each part <em>V<sub>i</sub></em> is one side of a cut, so at least 2k edges leave it. Summing over the parts counts every crossing edge <strong>exactly twice</strong> — once from each end. So</p>
+      <div class="texblock" id="tex-dbl"></div>
+      <p class="prose" style="font-size:15.5px;margin-bottom:0">which is <em>strictly more</em> than k(r&nbsp;&minus;&nbsp;1). Every partition passes, at every r, with a whole kr&nbsp;&minus;&nbsp;k(r&nbsp;&minus;&nbsp;1) = k to spare. Then the hard direction of the theorem turns that into k actual trees.</p>
+    </div>
+    <div class="panel flush">
+      <div class="panel-title">the double count, on the live clustering <span class="rt" id="dc-cap"></span></div>
+      <div class="cyhost" id="cy-thick" style="height:360px"></div>
+      <div class="controls">
+        <span class="lab">bridges per pair</span>
+        <span class="seg" id="thick-seg"></span>
+        <button class="btn" data-preset="th-3">cluster by island</button>
+        <button class="btn" data-preset="th-2">min cut</button>
+        <button class="btn" data-preset="th-n">all alone</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="split" style="margin-top:22px">
+    <div class="panel">
+      <div class="panel-title">per-part tally <span class="rt">δ(Vᵢ) = edges leaving part i</span></div>
+      <div id="dc-table"></div>
+    </div>
+    <div class="panel flush">
+      <div class="panel-title">both scans together <span class="rt">k = 2</span></div>
+      <div class="charthost" id="ch-cmp" style="height:340px"></div>
+      <div class="legend" id="lg-cmp"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:22px">
+    <div class="panel-title">does the theorem deliver? <span class="rt">randomised first-fit packer, 6000 restarts</span></div>
+    <div class="controls" style="margin-top:0">
+      <button class="btn" id="btn-pack">Search for 2 edge-disjoint spanning trees</button>
+      <span id="pack-out" style="font-size:13.5px;color:var(--ink2)"></span>
+    </div>
+    <div class="log" id="log-pack" style="margin-top:14px;max-height:none"></div>
+  </div>
+
+  <div class="callout" style="margin-top:22px">
+    <div class="cap">no contradiction — read this carefully</div>
+    <p>The one-bridge island graph is <strong>2</strong>-edge-connected, and for k = 2 the corollary asks for <strong>4</strong>-edge-connectivity. It misses the hypothesis by a factor of two, so it never contradicted the corollary — it only refutes the weaker instinct that <em>k</em>-edge-connectivity is enough.</p>
+    <p>Doubling the bridges makes the minimum cut 4 = 2k, the corollary applies, and the packer really does find the two trees.</p>
+    <p>Also note the corollary is <strong>not tight at k = 1</strong>: it would demand 2-edge-connectivity, but plain connectivity already gives you one spanning tree. The factor 2 is the price of a uniform statement.</p>
+  </div>
+</div></section>
+
+<!-- ======================= 07 SHARPNESS ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">07 — sharpness</div>
+    <h2>2k cannot be lowered to 2k &minus; 1</h2>
+    <p class="thesis">For k = 2 the corollary asks for 4-edge-connectivity. Three-edge-connectivity is not enough, and the Petersen graph says so — while also giving a second, independent example of an obstruction hiding away from r = 2.</p>
+  </div>
+  <div class="split wide-right">
+    <div class="panel">
+      <div class="panel-title">Petersen <span class="rt">n = 10, m = 15, 3-edge-connected</span></div>
+      <div class="cyhost sm" id="cy-pet" style="height:320px"></div>
+      <div class="log" id="log-pet" style="margin-top:14px;max-height:none"></div>
+    </div>
+    <div class="panel flush">
+      <div class="panel-title">exhaustive scan <span class="rt">Petersen · all Bell(10) = 115 975 partitions</span></div>
+      <div class="charthost" id="ch-petscan" style="height:360px"></div>
+      <div class="legend" id="lg-pet"></div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:22px">
+    <div class="cap">two lessons from one graph</div>
+    <p><strong>Sharpness.</strong> Petersen is (2k&nbsp;&minus;&nbsp;1)-edge-connected for k = 2 but has only 15 edges where 2·9 = 18 are needed. So (2k&nbsp;&minus;&nbsp;1)-edge-connectivity does <em>not</em> imply k edge-disjoint spanning trees, and the 2k in the corollary is best possible.</p>
+    <p><strong>Resolution, again.</strong> Look at where the exhaustive scan first dips below the line. It is not r = 10. Petersen is already short at r = 8, two resolutions before the headcount notices anything.</p>
+  </div>
+</div></section>
+
+<!-- ======================= 08 ESSENCE ======================= -->
+<section class="beat"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">08 — the essence</div>
+    <h2>What the theorem actually says</h2>
+  </div>
+  <div class="split">
+    <div>
+      <p class="prose">A packing of k spanning trees can fail for exactly one reason: some way of clustering the vertices is too sparsely stitched together. Not &ldquo;too few edges&rdquo; — the island graph has plenty. Not &ldquo;a thin cut&rdquo; — the island graph's cuts are all wide enough. A <strong>clustering</strong>, at some particular number of parts, whose crossing edges cannot pay k(r&nbsp;&minus;&nbsp;1).</p>
+      <p class="prose">That is why the condition quantifies over every r, and why you cannot sample the ends of the range and go home. Sparsity is not a property of a graph at one scale. It is a property of a graph <em>at a resolution</em>, and it can hide in the middle.</p>
+    </div>
+    <div class="statement" style="margin-top:0">
+      <div class="cap">the whole theorem, once more</div>
+      <div class="texblock" id="tex-final"></div>
+      <div class="note">Necessity is the toll argument of §01 — three lines. Sufficiency is the deep half: it says the toll argument is the <em>only</em> way a packing can fail.</div>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Built offline: <span style="font-family:var(--mono)">Cytoscape.js</span> for the clustered graphs and quotients,
+  <span style="font-family:var(--mono)">Apache ECharts</span> for the resolution scans and tolls,
+  <span style="font-family:var(--mono)">KaTeX</span> for the notation. Every number on this page is computed in your browser at load time —
+  minimum cuts by exhaustive bipartition enumeration, minimum cross-edge counts by exact branch-and-bound over all partitions.
+</div></footer>
+
+<script src="lib/katex.min.js"></script>
+<script src="lib/cytoscape.min.js"></script>
+<script src="lib/echarts.min.js"></script>
+<script>
+"use strict";
+/* ==========================================================================
+   0.  small helpers
+   ========================================================================== */
+const $ = (id) => document.getElementById(id);
+const CSSV = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {
+  ink: '#e9edf5', ink2: '#a3aebf', ink3: '#7c8699',
+  grid: '#232c3b', base: '#333e52', panel: '#161c28', panel2: '#1c2432',
+  s1: '#3987e5', s2: '#d95926', good: '#0ca30c', warn: '#fab219', crit: '#d03b3b'
+};
+const SANS = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const fmt = (x) => x.toLocaleString('en-US').replace(/,/g, '\u2009');
+
+function tex(node, str, display) {
+  if (typeof node === 'string') node = $(node);
+  if (!node) return;
+  katex.render(str, node, { throwOnError: false, displayMode: !!display });
+}
+
+/* ==========================================================================
+   1.  MATH CORE — every number on this page comes from here
+   ========================================================================== */
+
+/** complete graph on the given vertex ids */
+function completeEdges(ids) {
+  const e = [];
+  for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) e.push([ids[i], ids[j]]);
+  return e;
+}
+
+function adjacency(g) {
+  const a = Array.from({ length: g.n }, () => []);
+  for (const [u, v] of g.edges) { a[u].push(v); a[v].push(u); }
+  return a;
+}
+
+/** number of edges with endpoints in different parts */
+function crossCount(g, part) {
+  let c = 0;
+  for (const [u, v] of g.edges) if (part[u] !== part[v]) c++;
+  return c;
+}
+function crossEdgeIdx(g, part) {
+  const out = [];
+  for (let i = 0; i < g.edges.length; i++) { const [u, v] = g.edges[i]; if (part[u] !== part[v]) out.push(i); }
+  return out;
+}
+function partsOf(part) { return Array.from(new Set(part)).sort((a, b) => a - b); }
+function rOf(part) { return new Set(part).size; }
+
+/** relabel a partition to canonical 0,1,2,... in order of first appearance */
+function normalize(part) {
+  const map = new Map(); const out = new Array(part.length);
+  for (let i = 0; i < part.length; i++) {
+    if (!map.has(part[i])) map.set(part[i], map.size);
+    out[i] = map.get(part[i]);
+  }
+  return out;
+}
+
+/** exhaustive minimum cut: enumerate all 2^(n-1)-1 bipartitions */
+function minCutExhaustive(g) {
+  let best = Infinity, bestMask = 0, checked = 0;
+  const lim = 1 << (g.n - 1);
+  for (let mask = 1; mask < lim; mask++) {
+    let c = 0;
+    for (const [u, v] of g.edges) if (((mask >> u) & 1) !== ((mask >> v) & 1)) c++;
+    checked++;
+    if (c < best) { best = c; bestMask = mask; }
+  }
+  const part = new Array(g.n);
+  for (let i = 0; i < g.n; i++) part[i] = (bestMask >> i) & 1;
+  return { min: best, part, checked };
+}
+
+/** cut size of a single part: edges with exactly one end in the part */
+function partDegrees(g, part) {
+  const ids = partsOf(part);
+  const deg = new Map(ids.map((p) => [p, 0]));
+  for (const [u, v] of g.edges) {
+    if (part[u] !== part[v]) { deg.set(part[u], deg.get(part[u]) + 1); deg.set(part[v], deg.get(part[v]) + 1); }
+  }
+  return ids.map((p) => ({ p, size: part.filter((q) => q === p).length, deg: deg.get(p) }));
+}
+
+/** randomised local search: a good (not certified) partition into exactly r parts */
+function heuristicMinR(g, adj, r, restarts, rng) {
+  const n = g.n;
+  if (r < 1 || r > n) return { min: Infinity, part: null };
+  let best = Infinity, bestPart = null;
+  for (let t = 0; t < restarts; t++) {
+    const part = new Int32Array(n);
+    const perm = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) { const j = (rng() * (i + 1)) | 0; const s = perm[i]; perm[i] = perm[j]; perm[j] = s; }
+    for (let i = 0; i < n; i++) part[perm[i]] = i < r ? i : (rng() * r) | 0;
+    const sizes = new Int32Array(r); for (let i = 0; i < n; i++) sizes[part[i]]++;
+    let cur = crossCount(g, part);
+    let improved = true, guard = 0;
+    while (improved && guard++ < 200) {
+      improved = false;
+      for (let v = 0; v < n; v++) {
+        const p0 = part[v];
+        if (sizes[p0] === 1) continue;               // never empty a part
+        let d0 = 0; for (const u of adj[v]) if (part[u] !== p0) d0++;
+        let bp = p0, bd = d0;
+        for (let p = 0; p < r; p++) {
+          if (p === p0) continue;
+          let d1 = 0; for (const u of adj[v]) if (part[u] !== p) d1++;
+          if (d1 < bd) { bd = d1; bp = p; }
+        }
+        if (bp !== p0) { sizes[p0]--; sizes[bp]++; part[v] = bp; cur += bd - d0; improved = true; }
+      }
+    }
+    if (cur < best) { best = cur; bestPart = Array.from(part); }
+  }
+  return { min: best, part: bestPart };
+}
+
+/**
+ * EXACT minimum cross-edge count over ALL partitions into exactly r parts.
+ * DFS over restricted-growth strings (canonical, so no part-label symmetry).
+ * Branch and bound: the running cross count only ever grows, so any branch that
+ * already meets the incumbent can be discarded. `seedBest` must be the value of
+ * an actual partition (we take it from the local search) — it is used only as a
+ * pruning bound, never as an answer.
+ */
+function exactMinR(g, adj, r, seedBest, nodeBudget) {
+  const n = g.n;
+  const part = new Int32Array(n).fill(-1);
+  const adjLo = adj.map((lst, v) => lst.filter((u) => u < v));
+  let bound = seedBest + 1, bestPart = null, nodes = 0, complete = true, found = false;
+  function dfs(v, used, cross) {
+    if (++nodes > nodeBudget) { complete = false; return; }
+    if (cross >= bound) return;                 // cannot beat the incumbent
+    if (used + (n - v) < r) return;             // cannot still reach r parts
+    if (v === n) { if (used === r) { bound = cross; bestPart = Array.from(part); found = true; } return; }
+    const lim = Math.min(used + 1, r);
+    for (let p = 0; p < lim; p++) {
+      part[v] = p;
+      let d = 0; const av = adjLo[v];
+      for (let i = 0; i < av.length; i++) if (part[av[i]] !== p) d++;
+      dfs(v + 1, p === used ? used + 1 : used, cross + d);
+      if (!complete) { part[v] = -1; return; }
+    }
+    part[v] = -1;
+  }
+  dfs(0, 0, 0);
+  return { min: found ? bound : seedBest, part: bestPart, complete, nodes, found };
+}
+
+/** brute force over EVERY partition (small n only): min cross edges per r */
+function fullScan(g) {
+  const n = g.n, part = new Int32Array(n);
+  const mins = new Array(n + 1).fill(Infinity), args = new Array(n + 1).fill(null);
+  let total = 0;
+  (function dfs(v, used) {
+    if (v === n) {
+      total++;
+      const c = crossCount(g, part);
+      if (c < mins[used]) { mins[used] = c; args[used] = Array.from(part); }
+      return;
+    }
+    for (let p = 0; p <= used; p++) { part[v] = p; dfs(v + 1, p === used ? used + 1 : used); }
+  })(0, 0);
+  return { mins, args, total };
+}
+
+/** disjoint set union */
+function makeDSU(n) {
+  const p = Array.from({ length: n }, (_, i) => i);
+  const find = (x) => { while (p[x] !== x) { p[x] = p[p[x]]; x = p[x]; } return x; };
+  return { find, union: (a, b) => { a = find(a); b = find(b); if (a === b) return false; p[a] = b; return true; } };
+}
+
+/** randomised first-fit packer — a heuristic, never a proof of impossibility */
+function greedyPack(g, k, tries, rng) {
+  let bestScore = -1, best = null;
+  const m = g.edges.length, target = k * (g.n - 1);
+  for (let t = 0; t < tries; t++) {
+    const order = Array.from({ length: m }, (_, i) => i);
+    for (let i = m - 1; i > 0; i--) { const j = (rng() * (i + 1)) | 0; const s = order[i]; order[i] = order[j]; order[j] = s; }
+    const ds = Array.from({ length: k }, () => makeDSU(g.n));
+    const cnt = new Array(k).fill(0), col = new Array(m).fill(-1);
+    for (const ei of order) {
+      const [u, v] = g.edges[ei];
+      for (let c = 0; c < k; c++) if (cnt[c] < g.n - 1 && ds[c].union(u, v)) { cnt[c]++; col[ei] = c; break; }
+    }
+    const score = cnt.reduce((a, b) => a + b, 0);
+    if (score > bestScore) { bestScore = score; best = { col, cnt: cnt.slice() }; }
+    if (bestScore === target) break;
+  }
+  return Object.assign({ score: bestScore, target, tries }, best);
+}
+
+/** deterministic xorshift so every reload reports the same numbers */
+function makeRNG(seed) {
+  let s = seed >>> 0 || 1;
+  return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+}
+
+/** full exact scan of a graph: exact min cross edges for every r in 2..n */
+function resolutionScan(g, restarts, seed) {
+  const adj = adjacency(g), rng = makeRNG(seed);
+  const rows = []; let nodes = 0, allComplete = true;
+  const t0 = performance.now();
+  for (let r = 2; r <= g.n; r++) {
+    const h = heuristicMinR(g, adj, r, restarts, rng);
+    const e = exactMinR(g, adj, r, h.min, 9e7);
+    nodes += e.nodes; if (!e.complete) allComplete = false;
+    rows.push({ r, min: e.min, part: normalize(e.part || h.part), complete: e.complete, nodes: e.nodes });
+  }
+  return { rows, nodes, complete: allComplete, ms: performance.now() - t0 };
+}
+
+/* ==========================================================================
+   2.  GRAPH CONSTRUCTIONS  (+ hand-authored layouts)
+   ========================================================================== */
+
+function buildCycle(n, R) {
+  const edges = [], pos = [];
+  for (let i = 0; i < n; i++) {
+    edges.push([i, (i + 1) % n]);
+    const a = (-90 + (360 / n) * i) * Math.PI / 180;
+    pos.push([R * Math.cos(a), R * Math.sin(a)]);
+  }
+  return { id: 'c6', name: 'C\u2086 \u00b7 the 6-cycle', n, edges, pos, labels: Array.from({ length: n }, (_, i) => 'v' + i) };
+}
+
+/** three K5 islands at the corners of a triangle, joined pairwise by `b` bridges */
+function buildIslands(b) {
+  const n = 15, R = 205, pr = 66;
+  const centers = [0, 1, 2].map((i) => {
+    const a = (-90 + i * 120) * Math.PI / 180;
+    return [R * Math.cos(a), R * Math.sin(a)];
+  });
+  const pos = [], groups = [[], [], []];
+  for (let gi = 0; gi < 3; gi++) {
+    for (let i = 0; i < 5; i++) {
+      const a = (-90 + gi * 120 + 36 + i * 72) * Math.PI / 180;
+      pos.push([centers[gi][0] + pr * Math.cos(a), centers[gi][1] + pr * Math.sin(a)]);
+      groups[gi].push(gi * 5 + i);
+    }
+  }
+  const edges = [];
+  for (const g of groups) edges.push(...completeEdges(g));
+  const firstBridge = edges.length;
+  // choose bridge endpoints geometrically: the unused vertices nearest the target island
+  const used = [new Set(), new Set(), new Set()];
+  const d2 = (p, q) => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2;
+  const pick = (gi, target, count) =>
+    groups[gi].filter((v) => !used[gi].has(v))
+      .sort((x, y) => d2(pos[x], target) - d2(pos[y], target))
+      .slice(0, count);
+  for (const [x, y] of [[0, 1], [1, 2], [2, 0]]) {
+    const px = pick(x, centers[y], b), py = pick(y, centers[x], b);
+    for (let i = 0; i < b; i++) { used[x].add(px[i]); used[y].add(py[i]); edges.push([px[i], py[i]]); }
+  }
+  const labels = [];
+  for (let gi = 0; gi < 3; gi++) for (let i = 0; i < 5; i++) labels.push('ABC'[gi] + i);
+  const bridgeIdx = [];
+  for (let i = firstBridge; i < edges.length; i++) bridgeIdx.push(i);
+  return {
+    id: 'isl' + b, b, n, edges, pos, labels, groups, bridgeIdx,
+    name: b === 1 ? '3 \u00d7 K\u2085, one bridge per pair' : '3 \u00d7 K\u2085, ' + b + ' bridges per pair'
+  };
+}
+
+function buildPetersen() {
+  const edges = [], pos = [];
+  for (let i = 0; i < 5; i++) {
+    edges.push([i, (i + 1) % 5]);
+    edges.push([5 + i, 5 + ((i + 2) % 5)]);
+    edges.push([i, 5 + i]);
+  }
+  for (let i = 0; i < 5; i++) { const a = (-90 + 72 * i) * Math.PI / 180; pos.push([150 * Math.cos(a), 150 * Math.sin(a)]); }
+  for (let i = 0; i < 5; i++) { const a = (-90 + 72 * i) * Math.PI / 180; pos.push([72 * Math.cos(a), 72 * Math.sin(a)]); }
+  return {
+    id: 'pet', name: 'the Petersen graph', n: 10, edges, pos,
+    labels: ['v0', 'v1', 'v2', 'v3', 'v4', 'u0', 'u1', 'u2', 'u3', 'u4']
+  };
+}
+
+const G = {
+  c6: buildCycle(6, 130),
+  isl1: buildIslands(1),
+  isl2: buildIslands(2),
+  pet: buildPetersen()
+};
+
+/* ==========================================================================
+   3.  CYTOSCAPE VIEWS
+       Cluster identity is carried by a labelled box, NOT by colour, so the
+       entire colour budget goes to the one thing that matters: which edges
+       cross. Cross edges are blue while the toll is paid and status-critical
+       red when it is not — always alongside a written verdict.
+   ========================================================================== */
+
+const CY_STYLE = [
+  { selector: 'node.v', style: {
+      'background-color': '#55637b', 'width': 19, 'height': 19,
+      'border-width': 1.5, 'border-color': '#10151f',
+      'label': 'data(label)', 'font-family': SANS, 'font-size': 8,
+      'color': '#d5dde9', 'text-valign': 'center', 'text-halign': 'center', 'z-index': 20
+  } },
+  { selector: 'node.v.nolabel', style: { 'label': '' } },
+  { selector: 'node.qn', style: {
+      'background-color': '#26314a', 'border-width': 2, 'border-color': '#4a5a78',
+      'width': 40, 'height': 40, 'label': 'data(label)', 'font-family': SANS,
+      'font-size': 11, 'color': '#cdd6e4', 'text-valign': 'center', 'text-halign': 'center'
+  } },
+  { selector: 'node.cluster', style: {
+      'background-color': '#232d3f', 'background-opacity': 0.5,
+      'border-width': 1.5, 'border-color': '#3d4a63', 'border-style': 'solid',
+      'shape': 'round-rectangle', 'padding': '15px',
+      'label': 'data(label)', 'font-family': SANS, 'font-size': 10.5, 'font-weight': 600,
+      'color': '#8d99ad', 'text-valign': 'top', 'text-halign': 'center', 'text-margin-y': -3,
+      'z-index': 1
+  } },
+  { selector: 'edge', style: {
+      'width': 1.4, 'line-color': '#36435a', 'opacity': 0.95,
+      'curve-style': 'straight', 'z-index': 5
+  } },
+  { selector: 'edge.multi', style: { 'curve-style': 'bezier' } },
+  { selector: 'edge.emph', style: { 'width': 2.6, 'line-color': '#7c8699', 'z-index': 9 } },
+  { selector: 'edge.cross', style: { 'width': 4, 'line-color': C.s1, 'opacity': 1, 'z-index': 12 } },
+  { selector: 'edge.cross.short', style: { 'line-color': C.crit } },
+  { selector: 'edge.t0', style: { 'width': 3.2, 'line-color': C.s1, 'opacity': 1, 'z-index': 12 } },
+  { selector: 'edge.t1', style: { 'width': 3.2, 'line-color': C.s2, 'opacity': 1, 'z-index': 12 } },
+  { selector: 'edge.dim', style: { 'width': 1, 'line-color': '#232c3b', 'opacity': 0.5 } }
+];
+
+/**
+ * A clustered-graph widget. Vertices sit at fixed hand-authored positions;
+ * a partition is drawn as cytoscape compound parent boxes, and re-clustering
+ * re-parents the vertices.
+ */
+function makeGraphView(hostId, graph, opts) {
+  opts = opts || {};
+  const cy = cytoscape({
+    container: $(hostId),
+    style: CY_STYLE,
+    layout: { name: 'preset' },
+    userZoomingEnabled: false, userPanningEnabled: false,
+    autoungrabify: true, boxSelectionEnabled: false,
+    elements: []
+  });
+  const nodes = graph.pos.map((p, i) => ({
+    group: 'nodes',
+    data: { id: 'v' + i, label: graph.labels ? graph.labels[i] : String(i) },
+    position: { x: p[0], y: p[1] },
+    classes: 'v' + (opts.hideLabels ? ' nolabel' : '')
+  }));
+  const edges = graph.edges.map(([u, v], i) => ({
+    group: 'edges', data: { id: 'e' + i, source: 'v' + u, target: 'v' + v, idx: i }
+  }));
+  cy.add(nodes); cy.add(edges);
+  let part = new Array(graph.n).fill(0);
+  let short = false;
+
+  function fit() { cy.resize(); cy.fit(cy.elements(), 34); }
+
+  function apply() {
+    const ids = partsOf(part);
+    if (opts.noBoxes) {                            // static specimen view: no clustering shown
+      cy.batch(() => cy.edges().forEach((e) => {
+        e.removeClass('cross short t0 t1 dim');
+        e.toggleClass('emph', !!(opts.emphasize && opts.emphasize.indexOf(e.data('idx')) >= 0));
+      }));
+      fit(); return;
+    }
+    // 1. make sure a parent box exists for every used part
+    ids.forEach((p, i) => {
+      const id = 'p' + p;
+      if (cy.getElementById(id).empty()) {
+        cy.add({ group: 'nodes', data: { id, label: '' }, classes: 'cluster' });
+      }
+      cy.getElementById(id).data('label', ids.length > 1 ? 'V' + (i + 1) : 'V');
+    });
+    // 2. re-parent
+    for (let i = 0; i < graph.n; i++) {
+      const nd = cy.getElementById('v' + i);
+      if (nd.data('parent') !== 'p' + part[i]) nd.move({ parent: 'p' + part[i] });
+    }
+    // 3. drop empty boxes
+    cy.nodes('.cluster').forEach((pn) => { if (pn.children().empty()) pn.remove(); });
+    // 4. paint edges
+    cy.batch(() => {
+      cy.edges().forEach((e) => {
+        const [u, v] = graph.edges[e.data('idx')];
+        const isCross = part[u] !== part[v];
+        e.removeClass('t0 t1 dim');
+        e.toggleClass('cross', isCross);
+        e.toggleClass('short', isCross && short);
+      });
+    });
+    fit();
+  }
+
+  const api = {
+    cy,
+    get part() { return part.slice(); },
+    setPartition(p, isShort) { part = normalize(p); short = !!isShort; apply(); },
+    setShort(v) {
+      short = !!v;
+      cy.batch(() => cy.edges('.cross').forEach((e) => e.toggleClass('short', short)));
+    },
+    paintTrees(col) {
+      cy.batch(() => cy.edges().forEach((e) => {
+        const c = col[e.data('idx')];
+        e.removeClass('cross short t0 t1 dim');
+        if (c === 0) e.addClass('t0'); else if (c === 1) e.addClass('t1'); else e.addClass('dim');
+      }));
+    },
+    clearTrees() { apply(); },
+    fit
+  };
+  if (opts.onVertexTap) cy.on('tap', 'node.v', (ev) => opts.onVertexTap(parseInt(ev.target.id().slice(1), 10)));
+  api.setPartition(part);
+  return api;
+}
+
+/** the contracted multigraph G/P — r points, one per cluster, cross edges only */
+function makeQuotientView(hostId) {
+  const cy = cytoscape({
+    container: $(hostId), style: CY_STYLE, layout: { name: 'preset' },
+    userZoomingEnabled: false, userPanningEnabled: false, autoungrabify: true,
+    boxSelectionEnabled: false, elements: []
+  });
+  return {
+    render(graph, part, short) {
+      const ids = partsOf(part), r = ids.length;
+      const index = new Map(ids.map((p, i) => [p, i]));
+      const els = [];
+      const R = r === 1 ? 0 : (r <= 3 ? 78 : r <= 6 ? 92 : 110);
+      ids.forEach((p, i) => {
+        const a = (-90 + (360 / Math.max(r, 1)) * i) * Math.PI / 180;
+        els.push({ group: 'nodes', data: { id: 'q' + i, label: 'V' + (i + 1) },
+          position: { x: R * Math.cos(a), y: R * Math.sin(a) }, classes: 'qn' });
+      });
+      let n = 0;
+      for (const [u, v] of graph.edges) {
+        if (part[u] === part[v]) continue;
+        els.push({ group: 'edges', data: { id: 'qe' + (n++), source: 'q' + index.get(part[u]), target: 'q' + index.get(part[v]) },
+          classes: 'cross multi' + (short ? ' short' : '') });
+      }
+      cy.elements().remove(); cy.add(els); cy.resize(); cy.fit(cy.elements(), 30);
+    },
+    cy
+  };
+}
+
+/* ==========================================================================
+   4.  ECHARTS — the resolution scan and the live toll meter
+   ========================================================================== */
+
+const AXIS_TXT = { color: C.ink3, fontSize: 11, fontFamily: SANS };
+const TIP = {
+  backgroundColor: '#111722', borderColor: '#2c374a', borderWidth: 1,
+  textStyle: { color: C.ink, fontSize: 12.5, fontFamily: SANS }, padding: [9, 12]
+};
+
+/** verdict wording, reused everywhere so colour is never the only channel */
+function verdict(min, req) {
+  if (min < req) return { key: 'fail', gl: '\u2715', word: 'short \u2014 no packing', col: C.crit };
+  if (min === req) return { key: 'tight', gl: '=', word: 'exactly on the toll', col: C.warn };
+  return { key: 'pass', gl: '\u2713', word: 'clears the toll', col: C.s1 };
+}
+
+/**
+ * Two stacked grids on one shared category axis (r):
+ *   top    — bars: exact minimum cross edges;  dashed line: the toll k(r-1)
+ *   bottom — the slack min - k(r-1), diverging about zero
+ */
+function scanOption(rows, k, opt) {
+  opt = opt || {};
+  const cats = rows.map((d) => String(d.r));
+  const reqs = rows.map((d) => k * (d.r - 1));
+  const slack = rows.map((d, i) => d.min - reqs[i]);
+  const barData = rows.map((d, i) => {
+    const V = verdict(d.min, reqs[i]);
+    return { value: d.min, itemStyle: { color: V.col, borderRadius: [4, 4, 0, 0] } };
+  });
+  const slackData = slack.map((s) => ({
+    value: s,
+    itemStyle: { color: s < 0 ? C.crit : (s === 0 ? C.warn : C.s1),
+      borderRadius: s < 0 ? [0, 0, 4, 4] : [4, 4, 0, 0] }
+  }));
+  const failIdx = slack.map((s, i) => (s < 0 ? i : -1)).filter((i) => i >= 0);
+  return {
+    animationDuration: 420,
+    backgroundColor: 'transparent',
+    textStyle: { fontFamily: SANS },
+    grid: [
+      { left: 54, right: 22, top: 26, height: opt.tall ? '52%' : '48%' },
+      { left: 54, right: 22, bottom: 54, height: '19%' }
+    ],
+    axisPointer: { link: [{ xAxisIndex: 'all' }], lineStyle: { color: '#3a4761' },
+      label: { backgroundColor: '#26314a', color: C.ink, fontFamily: SANS } },
+    tooltip: {
+      trigger: 'axis', axisPointer: { type: 'shadow' }, ...TIP,
+      formatter: (ps) => {
+        const i = ps[0].dataIndex, d = rows[i], req = reqs[i], V = verdict(d.min, req);
+        return '<b>r = ' + d.r + ' parts</b><br>'
+          + 'cheapest clustering crosses <b>' + d.min + '</b> edges<br>'
+          + 'the toll k(r\u22121) = ' + k + '\u00b7' + (d.r - 1) + ' = <b>' + req + '</b><br>'
+          + '<span style="color:' + V.col + '">\u25cf</span> ' + V.gl + ' ' + V.word
+          + ' (slack ' + (slack[i] >= 0 ? '+' : '') + slack[i] + ')'
+          + (opt.clickable ? '<br><span style="color:#7c8699">click to load this clustering</span>' : '');
+      }
+    },
+    xAxis: [
+      { type: 'category', gridIndex: 0, data: cats, boundaryGap: true,
+        axisLine: { lineStyle: { color: C.base } }, axisTick: { show: false }, axisLabel: { show: false } },
+      { type: 'category', gridIndex: 1, data: cats, boundaryGap: true,
+        axisLine: { lineStyle: { color: C.base } }, axisTick: { show: false }, axisLabel: AXIS_TXT,
+        name: 'number of parts   r', nameLocation: 'middle', nameGap: 30,
+        nameTextStyle: { color: C.ink3, fontSize: 11.5, fontFamily: SANS } }
+    ],
+    yAxis: [
+      { type: 'value', gridIndex: 0, splitLine: { lineStyle: { color: C.grid } },
+        axisLine: { show: false }, axisTick: { show: false }, axisLabel: AXIS_TXT,
+        name: 'edges', nameTextStyle: { color: C.ink3, fontSize: 11, fontFamily: SANS, align: 'left' },
+        nameGap: 12 },
+      { type: 'value', gridIndex: 1, splitLine: { lineStyle: { color: C.grid } },
+        axisLine: { show: false }, axisTick: { show: false }, axisLabel: AXIS_TXT,
+        name: 'slack', nameTextStyle: { color: C.ink3, fontSize: 11, fontFamily: SANS, align: 'left' },
+        nameGap: 12 }
+    ],
+    series: [
+      { name: 'cheapest clustering', type: 'bar', xAxisIndex: 0, yAxisIndex: 0,
+        barWidth: '58%', data: barData, z: 3,
+        // annotate only the FIRST resolution that comes up short \u2014 that is the lesson
+        markPoint: failIdx.length ? {
+          symbol: 'pin', symbolSize: 0, silent: true,
+          label: { formatter: (p) => 'first failure:  r = ' + rows[p.data.xAxis].r + ',  '
+              + rows[p.data.xAxis].min + ' < ' + reqs[p.data.xAxis] + '   \u2715',
+            color: C.ink, fontSize: 11.5, fontFamily: SANS, fontWeight: 600,
+            backgroundColor: '#2a1618', borderColor: C.crit, borderWidth: 1,
+            borderRadius: 6, padding: [5, 8], offset: [0, -18] },
+          data: [{ xAxis: failIdx[0], yAxis: reqs[failIdx[0]] }]
+        } : undefined
+      },
+      { name: 'the toll  k(r\u22121)', type: 'line', xAxisIndex: 0, yAxisIndex: 0,
+        data: reqs, symbol: 'none', z: 6,
+        lineStyle: { color: C.ink2, width: 2, type: 'dashed' },
+        endLabel: { show: false } },
+      { name: 'slack', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
+        barWidth: '58%', data: slackData, z: 3,
+        label: { show: true, position: 'inside', formatter: (p) => (p.value === 0 ? '0' : ''),
+          color: '#241a05', fontSize: 10, fontWeight: 700, fontFamily: SANS } }
+    ]
+  };
+}
+
+const LEGEND_HTML = (extra) => `
+  <div class="it"><span class="sw" style="background:${C.s1}"></span>clears the toll &nbsp;<span style="font-family:var(--mono)">\u2713</span></div>
+  <div class="it"><span class="sw" style="background:${C.warn}"></span>exactly on the toll &nbsp;<span style="font-family:var(--mono)">=</span></div>
+  <div class="it"><span class="sw" style="background:${C.crit}"></span>short &mdash; packing impossible &nbsp;<span style="font-family:var(--mono)">\u2715</span></div>
+  <div class="it"><span class="sw line" style="width:22px"></span>the toll k(r&minus;1)</div>` + (extra || '');
+
+/** the live toll meter: one bar, one reference line */
+function meterOption(cross, req, k, r) {
+  const V = verdict(cross, req);
+  const max = Math.max(cross, req) * 1.32 + 1;
+  return {
+    animationDuration: 300, backgroundColor: 'transparent',
+    textStyle: { fontFamily: SANS },
+    grid: { left: 108, right: 26, top: 16, bottom: 34 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'none' }, ...TIP,
+      formatter: () => 'crossing edges available: <b>' + cross + '</b><br>toll k(r\u22121) = ' + k + '\u00b7' + (r - 1) + ' = <b>' + req + '</b><br>'
+        + '<span style="color:' + V.col + '">\u25cf</span> ' + V.gl + ' ' + V.word },
+    xAxis: { type: 'value', min: 0, max, splitLine: { lineStyle: { color: C.grid } },
+      axisLine: { show: false }, axisTick: { show: false }, axisLabel: AXIS_TXT },
+    yAxis: { type: 'category', data: ['toll  k(r\u22121)', 'crossing edges'],
+      axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { color: C.ink2, fontSize: 12, fontFamily: SANS } },
+    series: [{
+      type: 'bar', barWidth: 20, z: 3,
+      data: [
+        { value: req, itemStyle: { color: '#3a4761', borderRadius: [0, 4, 4, 0] } },
+        { value: cross, itemStyle: { color: V.col, borderRadius: [0, 4, 4, 0] } }
+      ],
+      label: { show: true, position: 'right', color: C.ink, fontSize: 13, fontWeight: 600, fontFamily: SANS }
+    }]
+  };
+}
+
+/* ==========================================================================
+   5.  KaTeX statements
+   ========================================================================== */
+tex('tex-main',
+  '\\begin{aligned}' +
+  '&G \\text{ has } k \\text{ pairwise edge-disjoint spanning trees}\\\\[4pt]' +
+  '&\\quad\\Longleftrightarrow\\quad e_G(\\mathcal{P})\\ \\ge\\ k\\,(r-1)\\\\[4pt]' +
+  '&\\qquad\\text{for } \\textbf{every}\\text{ partition } \\mathcal{P}=\\{V_1,\\dots,V_r\\} \\text{ of } V \\text{ into } r \\text{ nonempty parts},\\ \\ 1\\le r\\le |V|' +
+  '\\end{aligned}', true);
+tex('tex-eG', 'e_G(\\mathcal{P})');
+tex('tex-krm1', 'k(r-1)');
+tex('tex-toll',
+  '\\begin{aligned}' +
+  'T \\text{ a spanning tree} \\;&\\Longrightarrow\\; T/\\mathcal{P} \\text{ spans and connects } r \\text{ points}\\\\[2pt]' +
+  '&\\Longrightarrow\\; \\bigl|E(T)\\cap\\delta(\\mathcal{P})\\bigr| \\ \\ge\\ r-1\\\\[7pt]' +
+  'T_1,\\dots,T_k \\text{ disjoint} \\;&\\Longrightarrow\\; e_G(\\mathcal{P}) \\ \\ge\\ \\textstyle\\sum_{i=1}^{k}(r-1)\\\\[2pt]' +
+  '&\\phantom{\\Longrightarrow\\;} \\hphantom{e_G(\\mathcal{P})}\\ =\\ k(r-1)' +
+  '\\end{aligned}', true);
+tex('tex-t1',
+  '\\begin{aligned} r=2:\\quad e_G(\\mathcal{P}) &= |\\delta(S)| \\ \\ge\\ k(2-1)=k\\\\[3pt]' +
+  '&\\Longleftrightarrow\\ G \\text{ is } k\\text{-edge-connected}\\end{aligned}', true);
+tex('tex-t2', 'r=n:\\quad e_G(\\mathcal{P}) = |E| \\ \\ge\\ k(n-1)', true);
+tex('tex-cor',
+  '\\begin{aligned}\\textbf{Corollary.}\\;\\; & G \\text{ is } 2k\\text{-edge-connected}\\\\[3pt]' +
+  '&\\Longrightarrow\\ G \\text{ has } k \\text{ edge-disjoint spanning trees.}\\end{aligned}', true);
+tex('tex-dbl',
+  'e_G(\\mathcal{P}) \\;=\\; \\tfrac12\\sum_{i=1}^{r}\\bigl|\\delta(V_i)\\bigr| \\;\\ge\\; \\tfrac12\\cdot 2k\\,r \\;=\\; k\\,r \\;>\\; k\\,(r-1)', true);
+tex('tex-final',
+  '\\exists\\, k \\text{ edge-disjoint spanning trees} \\iff \\min_{\\mathcal{P}}\\ \\bigl[\\, e_G(\\mathcal{P}) - k(r_\\mathcal{P}-1) \\,\\bigr] \\ \\ge\\ 0', true);
+
+/* ==========================================================================
+   6.  SECTION 01 — the toll, on C6
+   ========================================================================== */
+const lab1 = (() => {
+  const graph = G.c6;
+  let k = 2, part = [0, 0, 1, 1, 2, 2];
+  const view = makeGraphView('cy-c6', graph, { onVertexTap: (v) => { cycle(v); } });
+  const quot = makeQuotientView('cy-c6q');
+  const meter = echarts.init($('ch-c6meter'), null, { renderer: 'canvas' });
+  $('l1-name').textContent = graph.name;
+
+  function cycle(v) {
+    const r = rOf(part);
+    const p = part.slice();
+    p[v] = (part[v] + 1) % (r + 1);
+    part = normalize(p);
+    draw();
+  }
+  function draw() {
+    const r = rOf(part), cross = crossCount(graph, part), req = k * (r - 1);
+    const V = verdict(cross, req);
+    view.setPartition(part, cross < req);
+    quot.render(graph, part, cross < req);
+    meter.setOption(meterOption(cross, req, k, r), true);
+    $('l1-stats').innerHTML =
+      stat('parts  r', r) + stat('cross edges', cross) + stat('toll k(r\u22121)', req) +
+      stat('slack', (cross - req >= 0 ? '+' : '') + (cross - req));
+    $('l1-verdict').innerHTML = chip(V);
+    $('l1-k').textContent = 'k = ' + k + ', r = ' + r;
+  }
+  $('l1-kseg').innerHTML = [1, 2, 3].map((v) => '<button class="btn' + (v === k ? ' on' : '') + '" data-k="' + v + '">' + v + '</button>').join('');
+  $('l1-kseg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    k = +b.dataset.k;
+    $('l1-kseg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', +x.dataset.k === k));
+    draw();
+  });
+  document.querySelectorAll('[data-preset^="c6-"]').forEach((b) => b.addEventListener('click', () => {
+    const p = b.dataset.preset;
+    part = p === 'c6-1' ? [0, 0, 0, 0, 0, 0]
+      : p === 'c6-2' ? [0, 0, 0, 1, 1, 1]
+        : p === 'c6-3' ? [0, 0, 1, 1, 2, 2]
+          : [0, 1, 2, 3, 4, 5];
+    draw();
+  }));
+  return { draw, resize: () => { meter.resize(); view.fit(); quot.cy.resize(); quot.cy.fit(quot.cy.elements(), 30); } };
+})();
+
+function stat(k, v, small) {
+  return '<div class="stat"><div class="k">' + k + '</div><div class="v' + (small ? ' small' : '') + '">' + v + '</div></div>';
+}
+function chip(V) {
+  return '<span class="chip ' + V.key + '"><span class="dot"></span><span class="gl">' + V.gl + '</span>' + V.word + '</span>';
+}
+lab1.draw();
+
+/* ==========================================================================
+   7.  DEFERRED HEAVY COMPUTATION  (chunked so the page paints first)
+   ========================================================================== */
+const jobs = [];
+const RESULT = {};
+
+function busy(id, msg) { const el = $(id); if (el) el.innerHTML = '<div class="busy">' + (msg || 'computing\u2026') + '</div>'; }
+['ch-c6scan', 'ch-islscan', 'ch-petscan', 'ch-cmp'].forEach((id) => busy(id));
+['log-c6', 'log-cut', 'log-cnt', 'log-search', 'log-pet'].forEach((id) => { $(id).textContent = 'computing\u2026'; });
+
+/* ---- C6: complete brute force over every partition ---- */
+jobs.push(() => {
+  const g = G.c6, k = 2;
+  const t0 = performance.now();
+  const fs = fullScan(g);
+  const mc = minCutExhaustive(g);
+  const ms = performance.now() - t0;
+  const rows = [];
+  for (let r = 2; r <= g.n; r++) rows.push({ r, min: fs.mins[r], part: normalize(fs.args[r]) });
+  RESULT.c6 = { rows, mc, fs, ms };
+
+  const ch = echarts.init($('ch-c6scan'));
+  ch.setOption(scanOption(rows, k, {}), true);
+  RESULT.c6.chart = ch;
+  $('lg-c6').innerHTML = LEGEND_HTML();
+
+  let L = '<b>C\u2086 \u2014 complete brute force</b>\n';
+  L += 'bipartitions enumerated : ' + fmt(mc.checked) + '   \u2192 minimum cut = <b>' + mc.min + '</b>\n';
+  L += 'partitions enumerated   : ' + fmt(fs.total) + '   (= Bell(6), every single one)\n';
+  L += 'elapsed                 : ' + ms.toFixed(1) + ' ms\n\n';
+  L += ' r | min cross | toll 2(r\u22121) | slack | verdict\n';
+  L += '---+-----------+-------------+-------+---------\n';
+  for (const d of rows) {
+    const req = k * (d.r - 1), s = d.min - req;
+    const cls = s < 0 ? 'r' : (s === 0 ? 'y' : 'g');
+    L += String(d.r).padStart(2) + ' | ' + String(d.min).padStart(9) + ' | ' + String(req).padStart(11) + ' | '
+      + ((s >= 0 ? '+' : '') + s).padStart(5) + ' | <span class="' + cls + '">' + (s < 0 ? '\u2715 SHORT' : (s === 0 ? '= tight' : '\u2713 ok')) + '</span>\n';
+  }
+  L += '\n<span class="r">first failure at r = 3</span>: the cheapest 3-clustering crosses 3 edges, the toll is 4.\n';
+  L += '<span class="r">also fails at r = 6</span>: 6 edges &lt; 2\u00b75 = 10 \u2014 so a headcount catches C\u2086 too.';
+  $('log-c6').innerHTML = L;
+});
+
+/* ---- the island graph: exact scan by branch and bound ---- */
+jobs.push(() => {
+  const g = G.isl1;
+  const mc = minCutExhaustive(g);
+  const scan = resolutionScan(g, 260, 20250724);
+  RESULT.isl = { mc, scan, g };
+
+  // section 03 test cards
+  const k = 2;
+  $('log-cut').innerHTML =
+    'vertices n              : ' + g.n + '\n' +
+    'edges    m              : ' + g.edges.length + '   (3\u00b710 inside the islands + 3 bridges)\n' +
+    'bipartitions enumerated : ' + fmt(mc.checked) + '   (all 2\u207f\u207b\u00b9\u22121 of them)\n' +
+    'minimum cut             : <b>' + mc.min + '</b>\n' +
+    'required for k = 2      : ' + k;
+  $('v-cut').innerHTML = chip(verdict(mc.min, k)) +
+    ' <span style="font-size:13px;color:var(--ink3)">&nbsp;the graph is exactly 2-edge-connected</span>';
+  $('log-cnt').innerHTML =
+    'edges     |E|           : <b>' + g.edges.length + '</b>\n' +
+    'required  k(n\u22121)        : ' + k + '\u00b7' + (g.n - 1) + ' = <b>' + k * (g.n - 1) + '</b>\n' +
+    'slack                   : +' + (g.edges.length - k * (g.n - 1));
+  $('v-cnt').innerHTML = chip(verdict(g.edges.length, k * (g.n - 1))) +
+    ' <span style="font-size:13px;color:var(--ink3)">&nbsp;five edges to spare</span>';
+
+  const r3 = scan.rows.find((d) => d.r === 3);
+  $('cert-line').innerHTML = '<span style="font-family:var(--mono);font-size:14px">'
+    + 'r = 3 &nbsp;\u2192&nbsp; e<sub>G</sub>(P) = ' + r3.min + ' &nbsp;&lt;&nbsp; k(r\u22121) = 2\u00b72 = 4</span> &nbsp; '
+    + '<span style="font-size:13.5px;color:var(--ink3)">(exact minimum over all partitions of 15 vertices into 3 parts)</span>';
+});
+
+/* ---- section 04 wiring ---- */
+jobs.push(() => {
+  const g = G.isl1, scan = RESULT.isl.scan;
+  let k = 2;
+  const view0 = makeGraphView('cy-isl0', g, { noBoxes: true, emphasize: g.bridgeIdx });
+  $('isl-name').textContent = g.name + ' \u00b7 n = 15, m = 33';
+  RESULT.view0 = view0;
+
+  const view = makeGraphView('cy-isl', g, { onVertexTap: (v) => cycle(v) });
+  const quot = makeQuotientView('cy-islq');
+  const meter = echarts.init($('ch-islmeter'));
+  const chart = echarts.init($('ch-islscan'));
+  let part = scan.rows.find((d) => d.r === 3).part.slice();
+
+  function cycle(v) {
+    const r = rOf(part), p = part.slice();
+    p[v] = (part[v] + 1) % (r + 1);
+    part = normalize(p); draw();
+  }
+  function draw() {
+    const r = rOf(part), cross = crossCount(g, part), req = k * (r - 1);
+    const V = verdict(cross, req);
+    view.setPartition(part, cross < req);
+    quot.render(g, part, cross < req);
+    meter.setOption(meterOption(cross, req, k, r), true);
+    $('l2-stats').innerHTML = stat('parts  r', r) + stat('cross edges', cross) +
+      stat('toll k(r\u22121)', req) + stat('slack', (cross - req >= 0 ? '+' : '') + (cross - req));
+    $('l2-verdict').innerHTML = chip(V) + (r === 3 && cross === 3 && k === 2
+      ? ' <span style="font-size:13px;color:var(--ink3)">&nbsp;this is the certificate</span>' : '');
+    $('l2-k').textContent = 'k = ' + k + ', r = ' + r;
+    $('l2-name').textContent = g.name;
+  }
+  function redrawScan() {
+    chart.setOption(scanOption(scan.rows, k, { clickable: true, tall: true }), true);
+    const bad = scan.rows.filter((d) => d.min < k * (d.r - 1)).map((d) => d.r);
+    $('scan-cap').textContent = '3 \u00d7 K\u2085 \u00b7 exact minima \u00b7 k = ' + k + ' \u00b7 '
+      + (bad.length ? bad.length + ' resolution' + (bad.length > 1 ? 's' : '') + ' short: r = ' + bad.join(', ') : 'every resolution clears the toll');
+  }
+  chart.on('click', (p) => {
+    const row = scan.rows[p.dataIndex];
+    if (!row) return;
+    part = row.part.slice(); draw();
+    $('cy-isl').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  $('l2-kseg').innerHTML = [1, 2, 3].map((v) => '<button class="btn' + (v === k ? ' on' : '') + '" data-k="' + v + '">' + v + '</button>').join('');
+  $('l2-kseg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    k = +b.dataset.k;
+    $('l2-kseg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', +x.dataset.k === k));
+    draw(); redrawScan();
+  });
+  document.querySelectorAll('[data-preset^="isl-"]').forEach((b) => b.addEventListener('click', () => {
+    const p = b.dataset.preset;
+    if (p === 'isl-1') part = new Array(g.n).fill(0);
+    else if (p === 'isl-n') part = Array.from({ length: g.n }, (_, i) => i);
+    else part = scan.rows.find((d) => d.r === (p === 'isl-2' ? 2 : 3)).part.slice();
+    draw();
+  }));
+  $('lg-isl').innerHTML = LEGEND_HTML();
+  redrawScan(); draw();
+  RESULT.isl.redraw = () => { chart.resize(); meter.resize(); view.fit(); view0.fit(); quot.cy.resize(); quot.cy.fit(quot.cy.elements(), 30); };
+});
+
+/* ---- section 05: the honest search log ---- */
+jobs.push(() => {
+  const { mc, scan, g } = RESULT.isl;
+  const rng = makeRNG(7);
+  const gp = greedyPack(g, 2, 6000, rng);
+  RESULT.greedy1 = gp;
+  let L = '<b>graph: 3 \u00d7 K\u2085 joined pairwise by one edge  (n = 15, m = 33)</b>\n\n';
+  L += '<b>1. minimum cut \u2014 EXHAUSTIVE</b>\n';
+  L += '   enumerated all ' + fmt(mc.checked) + ' bipartitions of 15 vertices  \u2192  min cut = ' + mc.min + '\n';
+  L += '   proves: every r = 2 partition crosses \u2265 2 edges.\n\n';
+  L += '<b>2. minimum cross edges at each r \u2014 EXACT, by branch and bound</b>\n';
+  L += '   search space  : all set partitions of 15 vertices, Bell(15) = ' + fmt(1382958545) + '\n';
+  L += '   method        : DFS over restricted-growth strings (canonical \u2014 no label symmetry),\n';
+  L += '                   pruned whenever the partial cross count already meets the incumbent.\n';
+  L += '   seeded with   : randomised local search, 260 restarts per r (used ONLY as a pruning bound)\n';
+  L += '   DFS nodes kept: ' + fmt(scan.nodes) + '   elapsed: ' + scan.ms.toFixed(1) + ' ms\n';
+  L += '   truncated?    : <span class="' + (scan.complete ? 'g">no \u2014 every branch was resolved, the minima below are exact'
+    : 'r">YES \u2014 a node budget was hit, values below are upper bounds') + '</span>\n\n';
+  L += '   r  | min cross | toll 2(r\u22121) | slack | DFS nodes\n';
+  L += '   ---+-----------+-------------+-------+-----------\n';
+  for (const d of scan.rows) {
+    const req = 2 * (d.r - 1), s = d.min - req;
+    const cls = s < 0 ? 'r' : (s === 0 ? 'y' : 'g');
+    L += '   ' + String(d.r).padStart(2) + ' | ' + String(d.min).padStart(9) + ' | ' + String(req).padStart(11)
+      + ' | <span class="' + cls + '">' + ((s >= 0 ? '+' : '') + s).padStart(5) + '</span> | ' + fmt(d.nodes).padStart(9) + '\n';
+  }
+  L += '\n<b>3. greedy packer \u2014 HEURISTIC, not a proof</b>\n';
+  L += '   randomised first-fit, ' + fmt(gp.tries) + ' restarts  \u2192  best ' + gp.score + ' of ' + gp.target + ' tree edges\n';
+  L += '   (' + gp.cnt.map((c, i) => 'tree ' + (i + 1) + ': ' + c + '/' + (g.n - 1)).join(', ') + ')\n';
+  L += '   a failure here proves nothing. The r = 3 certificate is what proves impossibility.\n';
+  $('log-search').innerHTML = L;
+});
+
+/* ---- section 06: the 2k corollary, live ---- */
+jobs.push(() => {
+  let b = 1, k = 2;
+  const scans = {
+    1: RESULT.isl.scan,
+    2: resolutionScan(G.isl2, 260, 20250724)
+  };
+  const cuts = { 1: RESULT.isl.mc, 2: minCutExhaustive(G.isl2) };
+  RESULT.thick = { scans, cuts };
+
+  let view = null, part = null;
+  const cmp = echarts.init($('ch-cmp'));
+
+  function graph() { return b === 1 ? G.isl1 : G.isl2; }
+
+  function mount() {
+    $('cy-thick').innerHTML = '';
+    view = makeGraphView('cy-thick', graph(), { onVertexTap: (v) => { const r = rOf(part), p = part.slice(); p[v] = (part[v] + 1) % (r + 1); part = normalize(p); draw(); } });
+    draw();
+  }
+  function draw() {
+    const g = graph(), r = rOf(part), cross = crossCount(g, part), req = k * (r - 1);
+    view.setPartition(part, cross < req);
+    $('dc-cap').textContent = graph().name + ' \u00b7 min cut ' + cuts[b].min + ' \u00b7 2k = ' + (2 * k);
+    // per-part tally
+    const rowsD = partDegrees(g, part);
+    const sum = rowsD.reduce((a, d) => a + d.deg, 0);
+    let H = '<table class="tbl"><thead><tr><th>part</th><th>|V\u1d62|</th><th>\u03b4(V\u1d62)</th><th>\u2265 2k = ' + 2 * k + ' ?</th></tr></thead><tbody>';
+    rowsD.forEach((d, i) => {
+      const ok = d.deg >= 2 * k;
+      H += '<tr><td class="em">V' + (i + 1) + '</td><td>' + d.size + '</td><td class="em">' + d.deg + '</td><td>'
+        + '<span style="color:' + (ok ? '#2fbf4f' : C.crit) + '">' + (ok ? '\u2713' : '\u2715') + '</span> '
+        + (ok ? 'yes' : 'no') + '</td></tr>';
+    });
+    H += '<tr class="foot"><td>\u03a3 \u03b4(V\u1d62)</td><td></td><td>' + sum + '</td><td>= 2 \u00b7 ' + cross + ' = 2 e<sub>G</sub>(P)</td></tr>';
+    H += '<tr class="foot"><td>e<sub>G</sub>(P) = \u00bd\u03a3</td><td></td><td>' + cross + '</td><td>'
+      + (cross >= k * r ? '\u2265 kr = ' + k * r : '&lt; kr = ' + k * r) + ' \u00b7 toll k(r\u22121) = ' + req + '</td></tr>';
+    H += '</tbody></table>';
+    H += '<div class="hint" style="margin-top:12px">' + (b === 2
+      ? 'Every part is one side of a cut, and the graph is ' + cuts[b].min + '-edge-connected \u2265 2k = ' + 2 * k
+        + ', so every \u03b4(V\u1d62) clears 2k and the double count forces e<sub>G</sub>(P) \u2265 kr &gt; k(r\u22121).'
+      : 'With one bridge per pair the graph is only ' + cuts[b].min + '-edge-connected, well below 2k = ' + 2 * k
+        + '. Parts whose \u03b4 falls short break the double count \u2014 and at r = 3 the conclusion really does fail.')
+      + '</div>';
+    $('dc-table').innerHTML = H;
+  }
+  function drawCmp() {
+    const rows1 = scans[1].rows, rows2 = scans[2].rows;
+    const cats = rows1.map((d) => String(d.r));
+    const reqs = rows1.map((d) => k * (d.r - 1));
+    cmp.setOption({
+      animationDuration: 420, backgroundColor: 'transparent', textStyle: { fontFamily: SANS },
+      grid: { left: 52, right: 20, top: 22, bottom: 52 },
+      tooltip: { trigger: 'axis', ...TIP,
+        formatter: (ps) => {
+          const i = ps[0].dataIndex;
+          const a = rows1[i].min, c = rows2[i].min, q = reqs[i];
+          return '<b>r = ' + cats[i] + ' parts</b><br>toll k(r\u22121) = <b>' + q + '</b><br>'
+            + '<span style="color:' + C.s2 + '">\u25cf</span> 1 bridge per pair: ' + a + (a < q ? ' <b>\u2715 short</b>' : ' \u2713') + '<br>'
+            + '<span style="color:' + C.s1 + '">\u25cf</span> 2 bridges per pair: ' + c + (c < q ? ' <b>\u2715 short</b>' : ' \u2713');
+        } },
+      xAxis: { type: 'category', data: cats, axisLine: { lineStyle: { color: C.base } }, axisTick: { show: false },
+        axisLabel: AXIS_TXT, name: 'number of parts   r', nameLocation: 'middle', nameGap: 30,
+        nameTextStyle: { color: C.ink3, fontSize: 11.5, fontFamily: SANS } },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: C.grid } }, axisLine: { show: false },
+        axisTick: { show: false }, axisLabel: AXIS_TXT, name: 'edges', nameGap: 12,
+        nameTextStyle: { color: C.ink3, fontSize: 11, fontFamily: SANS, align: 'left' } },
+      series: [
+        { name: '1 bridge per pair', type: 'line', data: rows1.map((d) => d.min), symbol: 'circle', symbolSize: 8,
+          lineStyle: { color: C.s2, width: 2 }, itemStyle: { color: C.s2 }, z: 4,
+          markPoint: { symbol: 'pin', symbolSize: 0, silent: true,
+            label: { formatter: rows1[1].min + ' < ' + reqs[1] + '  ✕  short at r = 3',
+              color: C.ink, fontSize: 11, fontFamily: SANS, fontWeight: 600,
+              backgroundColor: '#2a1618', borderColor: C.crit, borderWidth: 1,
+              borderRadius: 6, padding: [4, 7], offset: [100, 2] },
+            data: [{ xAxis: 1, yAxis: rows1[1].min }] } },
+        { name: '2 bridges per pair', type: 'line', data: rows2.map((d) => d.min), symbol: 'circle', symbolSize: 8,
+          lineStyle: { color: C.s1, width: 2 }, itemStyle: { color: C.s1 }, z: 4,
+          markPoint: { symbol: 'pin', symbolSize: 0, silent: true,
+            label: { formatter: rows2[1].min + ' ≥ ' + reqs[1] + '  ✓',
+              color: C.ink, fontSize: 11, fontFamily: SANS, fontWeight: 600,
+              backgroundColor: '#14243a', borderColor: C.s1, borderWidth: 1,
+              borderRadius: 6, padding: [4, 7], offset: [52, -26] },
+            data: [{ xAxis: 1, yAxis: rows2[1].min }] } },
+        { name: 'the toll k(r\u22121)', type: 'line', data: reqs, symbol: 'none',
+          lineStyle: { color: C.ink2, width: 2, type: 'dashed' }, z: 6 }
+      ]
+    }, true);
+    $('lg-cmp').innerHTML =
+      '<div class="it"><span class="sw" style="background:' + C.s2 + '"></span>1 bridge per pair &mdash; min cut ' + cuts[1].min + ' &nbsp;<span style="font-family:var(--mono)">\u2715 fails at r = 3</span></div>' +
+      '<div class="it"><span class="sw" style="background:' + C.s1 + '"></span>2 bridges per pair &mdash; min cut ' + cuts[2].min + ' = 2k &nbsp;<span style="font-family:var(--mono)">\u2713 clears every r</span></div>' +
+      '<div class="it"><span class="sw line" style="width:22px"></span>the toll k(r&minus;1)</div>';
+  }
+
+  $('thick-seg').innerHTML = [1, 2].map((v) =>
+    '<button class="btn' + (v === b ? ' on' : '') + '" data-b="' + v + '">' + v + '</button>').join('');
+  $('thick-seg').addEventListener('click', (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    b = +btn.dataset.b;
+    $('thick-seg').querySelectorAll('button').forEach((x) => x.classList.toggle('on', +x.dataset.b === b));
+    part = scans[b].rows.find((d) => d.r === 3).part.slice();
+    mount(); $('log-pack').textContent = 'not run yet.'; $('pack-out').textContent = '';
+  });
+  document.querySelectorAll('[data-preset^="th-"]').forEach((btn) => btn.addEventListener('click', () => {
+    const p = btn.dataset.preset;
+    if (p === 'th-n') part = Array.from({ length: 15 }, (_, i) => i);
+    else part = scans[b].rows.find((d) => d.r === (p === 'th-2' ? 2 : 3)).part.slice();
+    draw();
+  }));
+
+  part = scans[1].rows.find((d) => d.r === 3).part.slice();
+  mount(); drawCmp();
+  $('log-pack').textContent = 'not run yet.';
+
+  $('btn-pack').addEventListener('click', () => {
+    const g = graph();
+    const t0 = performance.now();
+    const gp = greedyPack(g, 2, 6000, makeRNG(31337));
+    const ms = performance.now() - t0;
+    const ok = gp.score === gp.target;
+    view.paintTrees(gp.col);
+    $('pack-out').innerHTML = ok
+      ? '<span class="chip pass" style="padding:4px 11px"><span class="dot"></span><span class="gl">\u2713</span>found two edge-disjoint spanning trees</span>'
+      : '<span class="chip fail" style="padding:4px 11px"><span class="dot"></span><span class="gl">\u2715</span>best effort ' + gp.score + ' / ' + gp.target + ' \u2014 heuristic, not a proof</span>';
+    let L = 'graph                : ' + g.name + '  (m = ' + g.edges.length + ')\n';
+    L += 'minimum cut          : ' + cuts[b].min + '   vs 2k = 4 required by the corollary\n';
+    L += 'randomised restarts  : ' + fmt(gp.tries) + '     elapsed: ' + ms.toFixed(1) + ' ms\n';
+    L += 'edges placed         : ' + gp.cnt.map((c, i) => 'tree ' + (i + 1) + ' = ' + c + '/' + (g.n - 1)).join(',  ') + '\n';
+    L += 'total                : ' + gp.score + ' / ' + gp.target + '\n\n';
+    L += ok
+      ? '<span class="g">Two spanning trees, no shared edge \u2014 painted on the graph above in blue and orange.\nThe corollary predicted this: min cut ' + cuts[b].min + ' \u2265 2k = 4.</span>'
+      : '<span class="r">The packer cannot finish. It is a heuristic, so this alone proves nothing \u2014\nbut the r = 3 certificate above already proved the packing is impossible.</span>';
+    $('log-pack').innerHTML = L;
+  });
+
+  RESULT.thick.redraw = () => { cmp.resize(); if (view) view.fit(); };
+});
+
+/* ---- section 07: Petersen, complete brute force ---- */
+jobs.push(() => {
+  const g = G.pet, k = 2;
+  const view = makeGraphView('cy-pet', g, { noBoxes: true });
+  const mc = minCutExhaustive(g);
+  const t0 = performance.now();
+  const fs = fullScan(g);
+  const ms = performance.now() - t0;
+  const rows = [];
+  for (let r = 2; r <= g.n; r++) rows.push({ r, min: fs.mins[r], part: normalize(fs.args[r]) });
+  const ch = echarts.init($('ch-petscan'));
+  ch.setOption(scanOption(rows, k, {}), true);
+  $('lg-pet').innerHTML = LEGEND_HTML();
+  const first = rows.find((d) => d.min < k * (d.r - 1));
+  $('log-pet').innerHTML =
+    'n, m                    : ' + g.n + ', ' + g.edges.length + '\n' +
+    'bipartitions enumerated : ' + fmt(mc.checked) + '  \u2192 edge-connectivity = <b>' + mc.min + '</b> = 2k\u22121 for k = 2\n' +
+    'partitions enumerated   : ' + fmt(fs.total) + '  (= Bell(10), every single one)   ' + ms.toFixed(1) + ' ms\n' +
+    'headcount at r = n      : ' + g.edges.length + ' &lt; ' + k * (g.n - 1) + ' = 2\u00b79  <span class="r">\u2715</span>\n' +
+    'first resolution short  : <b>r = ' + first.r + '</b>  (' + first.min + ' &lt; ' + k * (first.r - 1) + ')  <span class="r">\u2715</span>\n' +
+    'cut test at r = 2       : ' + mc.min + ' \u2265 2  <span class="g">\u2713</span>  \u2014 the obstruction is not at r = 2';
+  RESULT.pet = { redraw: () => { ch.resize(); view.fit(); } };
+});
+
+/* ---- run the queue, one job per frame so the page stays responsive ---- */
+(function runJobs() {
+  let i = 0;
+  function step() {
+    if (i >= jobs.length) { window.addEventListener('resize', onResize); return; }
+    try { jobs[i](); } catch (err) { console.error('job ' + i + ' failed', err); }
+    i++;
+    setTimeout(step, 0);
+  }
+  setTimeout(step, 30);
+})();
+
+let rzT = null;
+function onResize() {
+  clearTimeout(rzT);
+  rzT = setTimeout(() => {
+    lab1.resize();
+    if (RESULT.isl && RESULT.isl.redraw) RESULT.isl.redraw();
+    if (RESULT.c6 && RESULT.c6.chart) RESULT.c6.chart.resize();
+    if (RESULT.thick && RESULT.thick.redraw) RESULT.thick.redraw();
+    if (RESULT.pet) RESULT.pet.redraw();
+  }, 140);
+}
+</script>
+</body>
+</html>

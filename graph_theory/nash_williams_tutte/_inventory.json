@@ -1,0 +1,2805 @@
+{
+  "theorem": "Nash-Williams–Tutte tree-packing theorem",
+  "topic": "graph_theory",
+  "concepts": [
+    {
+      "concept": "01-color-the-trees",
+      "dir": "01-color-the-trees",
+      "angle": "Paint each edge with one of k colors so every color class is a spanning tree; K4 with k=2 succeeds and is exactly tight (6 = 2*3) while Petersen fails, and the failure hands you a one-line partition certificate — making concrete that the ONLY obstruction to packing k spanning trees is a clustering of the vertices whose k(r-1) toll cannot be paid."
+    },
+    {
+      "concept": "02-hidden-resolution",
+      "dir": "02-hidden-resolution",
+      "angle": "Sweep the clustering resolution r from 2 to n and compare the exact minimum cross-edge count against the toll k(r-1): three K5 islands joined by three single bridges pass the cut test (r=2) AND the headcount test (r=n) yet fail at r=3, proving that the Nash-Williams-Tutte condition genuinely quantifies over every partition because sparsity can hide at an intermediate resolution — then 2k-edge-connectivity is shown to be the cheap sufficient condition via double counting."
+    },
+    {
+      "concept": "03-contract-and-count",
+      "dir": "03-contract-and-count",
+      "angle": "Contraction as a physical camera: the user drags vertices into blobs and pulls the camera back until each blob collapses to a supernode, so that a pre-verified packing of k edge-disjoint spanning trees is seen leaving behind at least r-1 cross edges per colour (each tree's image is a connected spanning submultigraph of G/P, never necessarily a tree), which sums by edge-disjointness to the partition condition e_G(P) >= k(r-1) — the necessity half proved in the user's hands, plus the connected-parts reduction discovered by building a deliberately disconnected part, and an explicit refusal to claim the converse."
+    },
+    {
+      "concept": "04-certificate-duality",
+      "dir": "04-certificate-duality",
+      "angle": "The hard direction of Nash-Williams–Tutte as a good characterisation (TONCAS): a real k-forest packing algorithm runs live, greedily grows, runs a breadth-first exchange/augmenting search over EDGES when an edge fits nowhere, applies swap chains end-first — and when the search finally closes with nothing found, the set A of edges it reached is collapsed into the partition P = components of (V,A), whose cross-edge count is then recounted from scratch by a verifier sharing no code with the solver and shown to fall below k(r-1). The user watches an algorithm's failure turn into a short, independently checkable proof of impossibility, and lands on the dichotomy: either k labelled spanning trees or one sparse partition, never neither and never both, both witnesses polynomially checkable."
+    },
+    {
+      "concept": "05-glue-budget",
+      "dir": "05-glue-budget",
+      "angle": "Nash-Williams–Tutte as ONE continuous family of tests indexed by resolution: a 3-D tower holds every partition-size r at once — level r is the quotient graph after clustering V into r parts, trunks are the nesting relation, and a budget ladder beside it draws e_G(P) against the toll k(r-1) at every level; because the toll is linear in r the ladder's toll ticks form a straight dashed line while the cross counts form a rising curve, so the tower's SIDE FACE is literally the f(r) vs k(r-1) chart while its TOP VIEW is the graph collapsing into clusters. Scrolling descends the tower. The payload is that r=2 (k-edge-connectivity) and r=n (|E| >= k(n-1)) are merely the bottom and top of that one continuum, that neither endpoint nor both together suffice, and that a graph can be sparse only at an intermediate scale — demonstrated by four presets that fail at the coarse end only, the fine end only, the middle only, and nowhere."
+    }
+  ],
+  "libraries": [
+    {
+      "name": "katex",
+      "versions": [
+        "0.16.11"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      ],
+      "used_by": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "roles_by_concept": {
+        "01-color-the-trees": "renders every mathematical statement on the page: the iff-statement in the hero, the tight budget identity |E(K4)| = k(n-1), the Petersen certificate 15 < 2*(10-1), the contraction/toll implication chain, the 3xK5 intermediate-partition inequality, the boxed final theorem, and the 2k-edge-connectivity corollary",
+        "02-hidden-resolution": "renders the iff-statement of the theorem, the contraction/toll implication chain T -> T/P -> >= r-1, the r=2 specialisation to k-edge-connectivity, the r=n headcount, the 2k-edge-connectivity corollary, the double-counting line e_G(P) = 1/2 sum |delta(V_i)| >= kr > k(r-1), and the closing min-over-partitions restatement",
+        "03-contract-and-count": "all notation: the iff statement of the theorem with the definition of e_G(P), the definition of a packing, the three-line necessity chain (T_i connected -> T_i/P connected on r supernodes -> |T_i n E(P)| >= r-1), the summation line e_G(P) = |E(P)| >= sum |T_i n E(P)| >= k(r-1) where edge-disjointness is spent, the connected-parts reduction as an aligned block (e_G(P')=e_G(P), r'=r+j-1 => k(r'-1)>k(r-1)), the contrapositive for the 3xK5 certificate, and both directions of the theorem side by side in the honesty section. Rendered by a single [data-tex]/[data-tex-d] sweep with throwOnError:false.",
+        "04-certificate-duality": "all notation, via one [data-tex] (inline) / [data-tex-d] (display) sweep with throwOnError:false and an idempotence guard. Renders: the theorem as an iff with \\underbrace-labelled 'witness A' / 'no witness B exists' halves, the definition of e_G(P), the toll k(r-1) decomposed by \\underbrace into trees x welds, the three-line necessity chain, the quoted exchange identity sum|F_i| = (|E|-|A|) + k(n-c(A)), its rearrangement into |E|-|A| < k(r-1), and the O(|E| alpha) / O(|E|) checking costs on the two dichotomy cards. All 20 .woff2 faces vendored.",
+        "05-glue-budget": "all notation, via one [data-tex] (inline) / [data-tex-d] (display) sweep with throwOnError:false and a data-done idempotence guard, plus imperative katex.render calls for the two live statements that change on every interaction (the toll k(r-1)=k*(r-1)=N, and the level inequality e_G(P)=X >= or < k(r-1)=Y). Renders the theorem as an iff, the definition of e_G(P), the two-line necessity chain with the sum over T_i, the two endpoint identities (min over |P|=2 <=> lambda(G) >= k, and e_G(P)=|E| >= k(n-1)), the monotonicity f(r-1) <= f(r), and the max-packing formula min floor(f(r)/(r-1)). All 20 .woff2 faces vendored."
+      },
+      "concept_count": 5
+    },
+    {
+      "name": "animejs",
+      "versions": [
+        "3.2.2"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"
+      ],
+      "used_by": [
+        "04-certificate-duality"
+      ],
+      "roles_by_concept": {
+        "04-certificate-duality": "the only animation engine. (1) The §3 flood: anime.timeline() with a shared `update` callback chaining four tweens on a plain state object {t, shown} — reached-set highlight, blob hardening (t drives both the Minkowski pad and the interior-edge opacity), cross-edge reveal, then a round:1 count-in of cross edges — writing back into the 'harden' range input each frame so the manual slider and the playback are the same control. (2) The §1 weld arcs staggered in by (treeIndex*(r-1)+weldIndex)*55ms. (3) A short opacity pulse on the main SVG at every swap/found step. Chosen over GSAP (claimed by artifact 03) and over d3.transition (would duplicate D3's job)."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "chart.js",
+      "versions": [
+        "4.4.1"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"
+      ],
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "roles_by_concept": {
+        "05-glue-budget": "the one statistical panel (§4): a mixed scatter+line chart carrying the partition CLOUD (one bubble per distinct (r, e(P)) with radius scaled by log of how many partitions share it — up to 678,570 partitions binned for the exhaustive graphs, a stated 40,000-partition sample otherwise), the true minimum f(r) as a line, the tower's nested chain as a dashed line, the toll k(r-1) as a neutral dashed reference line, and failing resolutions as oversized crossRot status markers. Supplies the axes, legend, and a custom tooltip that reports partition counts. A different job from Three (chart vs scene), so no overlap; D3/ECharts/Paper.js/Cytoscape are claimed by artifacts 01-04."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "cytoscape",
+      "versions": [
+        "3.30.2"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"
+      ],
+      "used_by": [
+        "02-hidden-resolution"
+      ],
+      "roles_by_concept": {
+        "02-hidden-resolution": "renders every clustered graph view: a partition is drawn as cytoscape COMPOUND PARENT NODES (one labelled box per part) with the vertices at hand-authored preset positions, re-clustering is node.move({parent}) plus empty-parent removal, cross vs internal edges are edge classes recoloured on every change, click-to-recluster is a tap handler on node.v, and the contracted quotient multigraph G/P is a second instance using curve-style:bezier so parallel cross edges fan out"
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "d3",
+      "versions": [
+        "7.9.0"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"
+      ],
+      "used_by": [
+        "04-certificate-duality"
+      ],
+      "roles_by_concept": {
+        "04-certificate-duality": "the only DOM/data-join layer. Every SVG scene is a pure function of a step snapshot re-rendered through selection.join with stable keys: edges keyed by edge index (stroke = forest colour, stroke-dasharray = forest dash, a separate low-alpha halo layer for 'reached by the search' and a stronger one for the F_i-cycle currently being walked), vertices keyed by vertex id, partition blobs keyed by part id, and the BFS search structure keyed by edge id. Also supplies d3.polygonHull (input to the rounded-hull blob path), d3.line().curve(d3.curveCatmullRom.alpha(0.6)) for the augmenting-chain overlay through edge midpoints, d3.group for BFS depth rows, d3.range/d3.mean, and the survey/brute-force table joins. d3.transition is DELIBERATELY UNUSED so it never overlaps Anime.js."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "echarts",
+      "versions": [
+        "5.5.1"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"
+      ],
+      "used_by": [
+        "02-hidden-resolution"
+      ],
+      "roles_by_concept": {
+        "02-hidden-resolution": "the centrepiece resolution-scan chart (two stacked grids sharing one category axis r: bars of exact minimum cross edges + dashed toll line k(r-1) on top, diverging slack bars below, linked axisPointer, per-item status colours, a markPoint annotating only the FIRST failing r, and a click handler that loads that r's minimising partition into the graph); also the live toll meters (horizontal 2-bar comparison of cross edges vs toll) and the 1-bridge-vs-2-bridges comparison line chart"
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "gsap",
+      "versions": [
+        "3.12.5"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"
+      ],
+      "used_by": [
+        "03-contract-and-count"
+      ],
+      "roles_by_concept": {
+        "03-contract-and-count": "the two timelines. (1) The camera tween: gsap.to(state, {t:0->1, duration:0.95, ease:'power2.inOut', onUpdate:draw}) driven by the contract/expand buttons and mirrored back into the range input; touching the canvas while t>0 fires the reverse tween instead of starting a drag. (2) The weld playback: a monotone gsap.to on a scalar whose onUpdate ceils to an integer reveal count, stepping one colour's surviving edges into the quotient one at a time (duration scales with the edge count) and re-running the union-find replay on each step. Killed and restarted whenever the user grabs the reveal slider."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "paper",
+      "versions": [
+        "0.12.18"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-core.min.js"
+      ],
+      "used_by": [
+        "03-contract-and-count"
+      ],
+      "roles_by_concept": {
+        "03-contract-and-count": "every canvas on the page, via one paper.PaperScope per <canvas> (paper-core, not paper-full — PaperScript is unused). Draws: organic part blobs as round-join outward offsets of a monotone-chain convex hull fed through Path.smooth({type:'continuous'}); cross edges as Path.quadraticCurveTo whose perpendicular control offset is (fanIndex - (m-1)/2) * FAN * smoothstep(t), so parallel quotient edges physically fan apart as the contraction proceeds and are countable at t=1; interior edges as dashed lines whose opacity dissolves to 0 by t=0.55; supernodes as circles whose radius grows with part size and whose alpha follows smoothstep(0.30,0.86,t); the lasso as a live open path plus a translucent closed twin; and PointText labels for vertices, part letters and loop-deletion badges. Whole scene is cleared and rebuilt with project.clear() on every frame — the drawing is a pure function of (positions, part map, t). Also supplies view.viewToProject for pointer hit-testing and view.zoom/view.center for fitting a logical coordinate box to any canvas size."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "three",
+      "versions": [
+        "0.149.0"
+      ],
+      "builds": [
+        "umd"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"
+      ],
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "roles_by_concept": {
+        "05-glue-budget": "the only spatial engine, driving all three scenes. (1) THE TOWER: for r = 2..n a Group per level holding cluster spheres (radius 0.042+0.050*sqrt(|part|), colour = a low-chroma identity ramp keyed to the cluster's minimum member index so an island keeps its hue as it forms), quotient cross edges as oriented cylinders with a lateral fan offset per parallel edge, a rung to the ladder, a cross-count bar, a hatched shortfall segment, a toll tick, a red RingGeometry halo on failing levels, and a canvas-texture Sprite 'r=..'; plus trunk cylinders to the next coarser level (chain mode only), two polylines (Line for the e(P) profile, LineDashedMaterial + computeLineDistances for the straight k(r-1) toll line) and a live readout Sprite redrawn on focus change. Focus is expressed purely as per-level material opacity (1.0 vs 0.20) plus lazily built 'focus extras' — original vertex dots, faint interior edges, and RingGeometry cluster hulls for parts of size >= 2. (2) §1 TOLL WIDGET: r cluster spheres on a ring and k stars of r-1 QuadraticBezierCurve3 weld arcs, each tree bowed to its own height. (3) §5 TREES: the wiring at y=0 and one Group per spanning tree, separated purely by group.position.y so the peel slider never rebuilds geometry. Chosen because the stack-of-resolutions IS a spatial object with two meaningful projections; flattening it would need three separate 2-D pictures."
+      },
+      "concept_count": 1
+    },
+    {
+      "name": "three OrbitControls (globalised)",
+      "versions": [
+        "0.137.5"
+      ],
+      "builds": [
+        "global"
+      ],
+      "sources": [
+        "https://cdn.jsdelivr.net/npm/three@0.137.5/examples/js/controls/OrbitControls.js"
+      ],
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "roles_by_concept": {
+        "05-glue-budget": "orbit + dolly + damping for all three scenes, attached per renderer with enableDamping and per-scene min/max distance; enablePan only on the tower and the tree stack. Programmatic camera presets are tweened by lerping camera.position and controls.target together in the rAF loop, then handed back to the controls. Vendored from three 0.137.5 because r149 deleted examples/js entirely; it touches only stable core APIs (Vector3, Quaternion, Spherical, EventDispatcher, MOUSE, TOUCH) and runs unchanged against r149."
+      },
+      "concept_count": 1
+    }
+  ],
+  "library_role_matrix": {
+    "katex": {
+      "concept_count": 5,
+      "used_by": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "shared": true
+    },
+    "animejs": {
+      "concept_count": 1,
+      "used_by": [
+        "04-certificate-duality"
+      ],
+      "shared": false
+    },
+    "chart.js": {
+      "concept_count": 1,
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "shared": false
+    },
+    "cytoscape": {
+      "concept_count": 1,
+      "used_by": [
+        "02-hidden-resolution"
+      ],
+      "shared": false
+    },
+    "d3": {
+      "concept_count": 1,
+      "used_by": [
+        "04-certificate-duality"
+      ],
+      "shared": false
+    },
+    "echarts": {
+      "concept_count": 1,
+      "used_by": [
+        "02-hidden-resolution"
+      ],
+      "shared": false
+    },
+    "gsap": {
+      "concept_count": 1,
+      "used_by": [
+        "03-contract-and-count"
+      ],
+      "shared": false
+    },
+    "paper": {
+      "concept_count": 1,
+      "used_by": [
+        "03-contract-and-count"
+      ],
+      "shared": false
+    },
+    "three": {
+      "concept_count": 1,
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "shared": false
+    },
+    "three OrbitControls (globalised)": {
+      "concept_count": 1,
+      "used_by": [
+        "05-glue-budget"
+      ],
+      "shared": false
+    }
+  },
+  "building_blocks_all": {
+    "CY_STYLE: cytoscape stylesheet with node.v / node.cluster (round-rectangle compound box, top-anchored label) / node.qn (quotient super-node) / edge / edge.cross / edge.cross.short / edge.emph / edge.t0 / edge.t1 / edge.dim": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "ContractionScene(canvas, graph, opts): THE component. Owns {part, pos, t, k, focus, drag, lasso, hoverTarget, nextId}; full-redraw draw(); pointerdown/move/up/dblclick interaction (drag-to-merge with live drop-target highlighting, lasso-to-group, double-click-to-free, auto-return of the camera when the user edits while zoomed out); API {setPart, setK, setFocus, setT(v, animate), resetPositions, analysis, newId, fit}; opts {static, pad, onChange(api, A), onT(t)}": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "DSU(n): path-compressed disjoint-set forest with find/union/count()/labels(); labels() returns {part:Int32Array, r} with parts renumbered 0..r-1 in first-appearance order — one primitive reused for per-forest component tests, for components of (V,A), and for both independent verifiers": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "DSU(n): path-compressed disjoint-set with find/union/comps()": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "GraphView(selector): the reusable scene. Layer order blob / halo / edge / chain / hit / vertex / note; setGraph(g) also stamps g.view onto the svg viewBox; render(st) takes {owner, reached:Set, path:Set, chain, blobs, blobT, crossSet(+crossSet.rank), crossShown, note, hover} and rebuilds everything by data-join. Interior edges fade with blobT, cross edges are revealed one at a time by rank, and a transparent 14px stroke per edge carries the hover tooltip": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "LEGEND_HTML(extra): plain-HTML swatch legend pairing every status colour with its glyph and words": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "SearchTree(selector): the growing BFS structure — edges grouped by depth into rows, node width fitted to the widest row, links drawn as vertical cubics coloured by the forest whose cycle was walked, node border coloured by the edge's current owner, the edge being examined filled black": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "analyse(gid) cache: picks exhaustive vs search by n <= EXHAUSTIVE_LIMIT (11), attaches the chain, the min cut, and a PROSE methodText that literally describes what ran — so the epistemics travel with the data instead of being a static paragraph": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "analyze(g, rawPartMap, k) -> {q (canonical vertex->part), r, members, rawOf, cross, loops, fanIdx, fanCnt, perColor, spare, partComps, totalCross, toll, k, ktrees, pass, hasDisconnected}: the single recompute-everything entry point; perColor iterates g.ktrees (the trees ACTUALLY loaded), never the toll parameter k, so raising k cannot conjure a nonexistent tree": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "applyChain end-first: for s = len-1 down to 0, owner[chain[s].edge] = chain[s].to — valid because BFS yields a SHORTEST chain in the exchange digraph and therefore one with no shortcuts": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "arcTube(a,b,lift,mat,thick,group): a QuadraticBezierCurve3 sampled into tube segments — the weld arcs, bowed per tree so k parallel quotient edges stay individually visible": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "blobPath(pts,pad): exact Minkowski sum of the convex hull with a disc — hull orientation fixed by signed area, outward normal (dy,-dx)/|d| per edge, an SVG A-arc of radius pad at every joint, with explicit circle (1 point) and stadium (2 points / degenerate hull) cases": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "blobPts(pts, pad): organic part outline — circle for 1 point, stadium for 2 or collinear, otherwise a true round-join outward offset of the hull (edge normals oriented by signed area, arcs sampled at each joint)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "bruteForceMin(g,k) -> {slack, r, cross, need, part, enumerated}: exhaustive restricted-growth enumeration of all set partitions (n<=11), the ground-truth cross-check for the emitted certificate": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "buildCertificate(g,k,reachedSet) -> {part, r, members, crossE, interiorE, cross, need, deficit, violated, A}: collapse components of (V,A) into parts, split E into interior/cross, compute k(r-1)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "buildCycle(n, R): cycle graph on a regular n-gon": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "buildDSUs(g,k,owner) -> [DSU x k]: rebuild all per-forest union-finds from the flat owner array, so forest state is never stored redundantly and a scrubbed snapshot is always self-consistent": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "buildIslands(b): three K5 islands at the corners of a triangle joined pairwise by b bridges, with bridge endpoints chosen geometrically as the unused vertices nearest the target island's centre, returning bridgeIdx so the bridges can be emphasised": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "buildPetersen(): outer 5-cycle + inner pentagram + spokes on two concentric polar rings": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "camera preset tween: {from,to,tf,tt,t} lerped in the rAF loop across camera.position and controls.target simultaneously, with cubic ease-out, then control returned to OrbitControls": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "canon(part) -> {part:Int32Array, r}: relabel any partition to 0..r-1 in first-appearance order; the only way part counts are ever derived, so r and the labels can never disagree": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "certBlobs(g,cert): part member positions + centroid + label, with the size suffix suppressed for singleton parts (the degenerate all-singletons certificate would otherwise be ten '(1)' labels)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "chapter rail: one button per chapter, jumping to the first step with that chapter, auto-disabled when a run contains no such step (e.g. a graph that packs successfully has no 'maximum' phase)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "checklist primitive (ul.chk): 20px glyph column + claim + right-aligned tabular value, glyph ✓/✗ coloured by status — used for both witness verifiers and the shown/waved lists": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "circlePts / stadiumPts: the degenerate blob cases": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "classStats(n, edges, idxs): per-color-class report {m, comps, redundant[], isForest, isSpanningTree} where redundant[] lists the edges that closed a cycle": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "completeEdges(ids), adjacency(g): edge list of a clique on given ids; adjacency lists with multiplicity": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "completeEdges(ids), edgeIndexMap(edges), paintTrees(edges, [[[u,v],...],...]): clique edge lists and painting a hand-authored tree decomposition onto edge indices by endpoint pair": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "componentCount(n, edges, idxs) and isConnectedSpanning(n, edges, idxs) built on DSU": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "convexHull(points): Andrew monotone chain, with singleton and 2-point degeneracies rendered as dot/capsule via a fat round-joined stroke on the hull path": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "crossCount(g, part) and crossEdgeIdx(g, part): cross-edge count and index list for an arbitrary vertex->part map": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "crossCount(g,part): the single primitive the whole page rests on — count edges whose endpoints carry different labels. Loops never cross; parallel edges count with multiplicity because the edge list stores duplicates": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "crossEdges(graph, partArray) and partCount(partArray): cross-edge index list and r for an arbitrary vertex->part map": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "debounced onResize that calls chart.resize() and cy.resize()+cy.fit() on every live instance": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "deferred job queue: heavy computations pushed onto a jobs[] array and run one per setTimeout tick after first paint, with .busy placeholders swapped in beforehand": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "disposeGroup(gr): full traversal disposing materials, their maps and geometries while skipping the two shared singletons (_cyl, _sph) — required because every graph/k/mode change rebuilds an entire tower": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "drawQuotient(graph, part, coloring, r, cross): contracted multigraph on r circle-placed nodes with parallel cross edges fanned out as quadratic arcs, each arc colored by its tree": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "edgeCurve(S, p1, p2, off): straight line when off ~ 0, quadratic bezier with perpendicular control offset otherwise — the single primitive that turns contraction into a visible fan of parallel edges": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "exchange-search labelling: Map(edge -> {parent, forest, depth}) where `forest` is the forest whose cycle was walked to reach this edge (== the forest the edge currently sits in, i.e. the one it would be evicted from); the label map unwinds directly into the swap chain [{edge, from, to}]": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive2Packing(graph, collectLimit): enumerate every (n-1)-subset, count spanning trees, test complement connectivity, collect canonical decompositions, return elapsed ms": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "exhaustiveCuts(graph, k): enumerate all 2^(n-1)-1 bipartitions, return min cut and how many violate k(2-1)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "fan indexing: for each cross edge, its index and the multiplicity among all cross edges joining the same unordered pair of parts — the data that makes parallel quotient edges drawable and countable": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "fitDist(h,w): frame a world-space box at the live fov and aspect, taking the max of the vertical and horizontal constraints — the reason every camera preset frames every preset graph (n = 5 to 16) without hand-tuned numbers": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "fold-down page skeleton: hero + numbered .beat sections separated by hairlines, .split / .split.even / .split.rightwide two-column grids with `min-width:0` children collapsing at 1000px, a `.sticky` left column so the live graph stays on screen while the right column is read, and an IntersectionObserver reveal whose failsafe adds BOTH `.in` and `.instant` (transition:none) so a screenshot or a misfiring observer can never leave the page blank or mid-fade": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "fold-down page skeleton: hero + numbered .beat sections separated by hairlines, .split / .split.wide-left / .split.three grids whose children carry min-width:0 and collapse to one column at 1040px, and NO scroll-reveal animation anywhere (so a screenshot or a misfiring observer can never catch the page mid-fade)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "fold-down page skeleton: hero + numbered .beat sections, .split / .split.wide-left / .split.wide-right two-column grids (with `min-width:0` on the children so nowrap table content cannot squeeze an fr track) collapsing at 960px, plus .panel / .callout / .log / .statrow / .totalline / .pchip primitives and an IntersectionObserver reveal with a 4s failsafe": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number / title / thesis) and an optional .split (wide-left / wide-right) grid collapsing at 900px, plus .panel / .callout / .log / .readout primitives": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number/title/thesis) and an optional .split left/right grid that collapses at 880px": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "forEachSubset(m, k, cb): allocation-free enumeration of all C(m,k) index subsets into a reused Int32Array": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "forestPath(g,owner,i,a,b) -> [edgeIdx] | null: the unique a..b path inside forest i, by BFS over only the edges owned by i — this is the 'cycle that adding f to F_i would close', i.e. the eviction candidate list": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "forestSwatch(i,w) / legendHTML(k,extra): forest identity as colour + dash pattern + glyph (bullet/square/triangle), so identity is never colour-alone; extra slots for the search-halo and cross-edge roles": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "forestVertexPath(g,owner,i,a,b) -> [vertexIdx]: same path as a vertex sequence, for drawing": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "fullScan(g): complete brute force over every set partition (Bell(n)) returning min cross edges and an argmin per r — the cross-check for small graphs": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "graph descriptor object {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, view:[minx,miny,w,h], r} with hand-authored layouts for K4 (planar triangle+center), Petersen (pentagon + pentagram + spokes via polar()), and 3xK5 (three pentagon blobs joined by nearest-vertex cross edges)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "graph descriptor {id, n, world:[w,h], labels[], pos:[[x,y]], edges:[[u,v]], color:Int32Array(-1 = owned by no tree), k, ktrees (derived), presets:[{name, part:[]}]}": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "graph descriptor {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, groups?, bridgeIdx?} with hand-authored preset layouts": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "greedyChain(g) -> chain[r]: deterministic agglomerative average-linkage coarsening — merge the pair maximising w/(|A||B|), ties by larger w then lowest key. The ratio (not raw weight) is load-bearing: raw-weight linkage with index tie-breaks walks a bridge out of a finished clique instead of building the next one, and misses the island structure entirely": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "greedyPack(g, k, tries, rng): randomised first-fit edge-disjoint forest packer returning {col, cnt, score, target}, explicitly labelled a heuristic": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "greedyPack(graph, k, tries): randomized first-fit forest-growing heuristic returning a coloring plus its score, explicitly labelled non-proof": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "groupButtons(container, attr, fn): radio-style .btn group wiring": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "heuristicMinR(g, adj, r, restarts, rng): randomised restart + single-vertex-move local search for a low-cross partition into exactly r parts, never emptying a part; returns a genuine partition (used only as a pruning seed)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "hullOf(pts): monotone-chain convex hull": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "islandsGraph(cnt,label): geometry-first construction — place cnt pentagon centres on a ring, orient each pentagon so one vertex faces the centroid, emit the cliques, then choose each bridge as the geometrically nearest cross-island vertex pair. The edge list is DERIVED from the layout, so the drawing and the combinatorics can never disagree": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "labelSprite(text,opts) -> Sprite with .userData.redraw(text,colour): canvas-texture sprite with configurable size/alignment and depthTest:false, redrawable in place so a live readout costs no allocation per frame": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "legendHTML(g, k, extra): swatch + glyph + stroke-style legend, the secondary encoding for the tree colours": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "lerp / smoothstep: the easing primitives the morph is written against": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "makeBoard(host, graph, opts): SVG graph widget with layered groups (blobs / edges / cycle-marks / fat transparent hit-lines / vertices), per-edge click cycling, optional per-vertex click, readonly mode, and API {setK, cycle, clear, set, setFromTrees, setPartition, render}": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "makeDSU(n): path-compressed disjoint-set forest": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "makeDSU(n): path-compressed union-by-rank disjoint-set forest returning {find, union}": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "makeGraphView(hostId, graph, opts): cytoscape clustered-graph widget — preset positions, compound cluster boxes created/removed on demand, setPartition(part, isShort), setShort(v), paintTrees(col), noBoxes/emphasize options for static specimen views, onVertexTap callback, fit()": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "makeQuotientView(hostId): cytoscape contracted-multigraph widget, .render(graph, part, short) placing r super-nodes on a circle and fanning the cross edges as bezier parallel edges": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "makeRNG(seed): xorshift32 so every reload reports identical numbers": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "makeScene(el,opts) -> {scene,camera,renderer,controls,resize,isVisible}: the reusable Three bootstrap — antialiased WebGLRenderer at capped pixel ratio, sRGB output, hemisphere + two directional lights, a ResizeObserver that resizes renderer and camera together, and an IntersectionObserver so an off-screen scene stops rendering while its rAF loop keeps running": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "maxKof(minCross,n) -> {k,r}: the Nash-Williams-Tutte formula min_{r>=2} floor(f(r)/(r-1)), plus the argmin resolution, cross-checked in testing against what packTrees actually achieves": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "meter primitive: a bar with an absolute .mfill to the actual count, a diagonally hatched .mdef shortfall band, and a .mtick at the toll carrying its own label — scaled by levelScale(gid,k), the max of (cross, need) over ALL levels, so bars are comparable between resolutions": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "meterOption(cross, req, k, r): ECharts horizontal 2-bar toll meter with value labels and a status-coloured actual bar": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "minCut(g) -> {value, part}: Stoer-Wagner global minimum cut on a dense weight matrix built from the multigraph, exact, used both for the r=2 endpoint identity and to pin the search's r=2 value": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "minCutExhaustive(g): enumerate all 2^(n-1)-1 bipartitions, return {min, part, checked}": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "mkGraph(o): graph descriptor {id, name, n, edges:[[u,v]], pos:[[x,y]], labels[], blurb} + derived lab(v), ename(e) ('u–v'), and view:[x,y,w,h] — a viewBox computed from the position bounding box with padding, so each preset fills its panel instead of sharing one guessed world box": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "mkScope(canvas) / fitBox(S, canvas, box) / viewBoxOf(g, pad): one PaperScope per canvas plus fitting an arbitrary logical bounding box (derived from the graph's own extent, with room to drag into) to the canvas via view.zoom and view.center": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "normalize(part) / partsOf(part) / rOf(part): canonical relabelling of a partition to 0,1,2,... in order of first appearance, sorted part ids, and r": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "partColor(i): hue-ramp cluster palette": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "partComps: components of each part's induced subgraph, driving the disconnected-part warning chips and the refine button": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "partDegrees(g, part): per-part {p, size, deg} where deg = |delta(V_i)|, the double-counting tally": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "pill(kind,txt) and ul.chk checklist: dot-glyph status chip and a glyph/claim/right-aligned-value list, so verdicts never rely on hue alone": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "pill(ok|bad|neu): dot-glyph-plus-words status chip so verdicts never rely on hue alone": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "pointInPoly(p, poly): ray-cast containment, used for lasso capture and for drop-into-blob hit testing": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "polyPos(cx,cy,R,m,phase) and ellipsePos(cx,cy,rx,ry,m,phase): regular polygon / ellipse vertex layouts (the ellipse fills a landscape canvas far better than a circle)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "refine(p,r) / offer(p,r): the reusable local-search + best-keeper pair — move one vertex to another part while the part count is held fixed, accept only strict gains, then canonicalise, recount from scratch and keep if better": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "refinePartition(g, raw, A, nextIdFn): splits every disconnected part into its components, provably preserving the cross count while raising r": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "renderCertBar(cert): the e_G(P) vs k(r-1) meter — a fill to the actual count, a hatched deficit band with a critical-red leading edge, an ink tick at the toll, plus a per-unit tally row of k(r-1) squares (filled = a real cross edge, dashed outline = the shortfall)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "renderLedger(g, A, {stats, table, total, loops}): the accounting panel — four stat cards (r, r-1, k, k(r-1)), one row per loaded tree (spend bar, kept, owes, pays?, image connected?), the total line against k(r-1), and the loop-deletion tally; text adapts to whether a packing is loaded and to whether the toll parameter matches the number of loaded trees": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "renderLedger(hostId, bannerId, graph, coloring, k): live per-color card with swatch, status chip, n-1 pip slots (filled / cycle-red), edges/components/forest stats, plus a global banner covering win, dead-on-arrival and in-progress states": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "renderMath(root): one-pass KaTeX sweep over [data-tex] (inline) and [data-tex-d] (display) with an idempotence guard": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "renderMath(root): one-pass KaTeX sweep over [data-tex] / [data-tex-d] with a data-done idempotence guard": {
+      "concepts": [
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 2
+    },
+    "resolutionScan(g, restarts, seed): heuristic-seeded exact scan for every r in 2..n, aggregating DFS node counts, completeness and elapsed ms": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "ring(cnt,cx,cy,R,phase) and clique(ids): the two layout/edge-list primitives every preset is built from": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "runPacking(g,k) -> {steps, owner, status:'packed'|'stuck', cert, target, reached}: THE ENGINE. Greedy growth, then multi-source BFS over the exchange digraph on EDGES seeded with every unused edge, then end-first application of the augmenting swap chain, then the certificate. Every step is pushed with a full Int32Array snapshot of owner plus the live reached-set labelling, so timeline scrubbing is an exact pure function of step index and no state is replayed": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "sampleCloud(g,N,seed) -> dens[r]: two-family sampler, because neither family alone covers the axis — half uniform-ish random restricted-growth labellings (these concentrate on MANY parts) and half random edge-contraction chains (each chain visits every r from n down to 1). Reports its own total": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "scanOption(rows, k, opt): ECharts option for the two-grid resolution scan (bars + dashed toll line + diverging slack strip, shared axisPointer, first-failure markPoint, optional click-to-load)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "searchByR(g,restarts,seed) -> {minCross[r], argPart[r], exact:false}: stated upper bound for graphs too big to enumerate. Two deterministic linkages (average + heaviest-edge), 500 randomised restarts alternating between them with random tie-breaks and occasional random merges, single-vertex-move local search at each r (refine), a downward pass merging each level-(r+1) solution and re-refining it at r, endpoints pinned exact (Stoer-Wagner at r=2, non-loop edge count at r=n), and an explicit merge repair enforcing f(r-1) <= f(r)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "spendBar(surv, need, scaleMax): two absolutely positioned segments (the forced r-1 solid, the surplus at 40% opacity, 2px surface gap) with a 2px tick at the obligation line — no charting library": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "stat(label, value) / chip(verdict): stat tile and verdict pill (dot + glyph + text)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "statCard(k, v, tone) and renderPartList(g, A, el): stat tile and part chips with a disconnected-part warning state": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "step trace vocabulary {kind, chapter, head, body, owner, idx, total, target, ...}: kinds init | add | block | search-start | expand | found | swap | augmented | exhausted | dead | cert | done, grouped into 6 chapters (grow, block, search, swap, dead, cert) that drive a chapter rail; head/body are human narration generated from the real numbers": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "sticky scroll-scrub: a .track (360vh) wrapping a position:sticky .stick (100vh) enabled only above 1040x660 by media query; scroll fraction maps to r = n - round(p*(n-2)); the slider writes back via window.scrollTo behind a `syncing` flag so the two controls share one source of truth and never feed back": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution"
+      ],
+      "concept_count": 2
+    },
+    "textAt(S, str, x, y, size, colour, weight): centred PointText helper": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "thumbSVG(graph, trees): tiny inline-SVG preview of a decomposition, used as a clickable chip that loads the coloring onto the board": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "transport controller {run, at, playing, timer, speed}: first/back/play/forward/last + a 5-position speed table + a scrub range, with per-step dwell time longer on swap/block/found/dead steps than on greedy adds": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "tube(p1,p2,mat,thick): one shared open CylinderGeometry positioned at the midpoint, oriented by setFromUnitVectors(+Y, dir) and scaled (thick, len, thick) — every edge, bar, tick, rung and trunk in all three scenes is this one call, so line thickness is real geometry instead of the ignored GL linewidth": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "updateBudget(graph, coloring, k): stacked edge-budget bar with a k(n-1) threshold marker and a slack readout": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "validateSearch(): runs the heuristic beside exhaustive truth on every preset small enough to enumerate and compares at every r, rendered on load as an honesty credential rather than claimed in copy": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "verdict strip: one clickable cell per r coloured from the TRUE f(r) (never the chain), current cell ringed — the entire theorem's verdict for a graph in one row, and the clearest single view of 'both ends pass, the middle fails'": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "verdict(min, req) -> {key, glyph, word, colour}: the single source of truth for pass / exactly-on-the-toll / short, reused by chips, tooltips, bars and logs so colour is never the only channel": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "verdictHTML(ok, exact, textOK, textNO): pass / exactly-on-the-toll / short pill with a dot AND a glyph AND words, so status is never colour-alone": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "verifyForestsOnly(g,k,owner) -> {per:[{size,comps,acyclic,spanning}], allAcyclic, total}: the from-scratch integrity re-check run after every augmentation (throws on a cycle) and also the data source for the forest ledger": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "verifyPacking(g) -> {perColor:[{c, edges, m, need, acyclic, comps, spanning, ok}], ok, disjoint}: proves or disproves in-page that each colour class is a spanning tree and that no edge carries two colours": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "verifyPackingWitness(g,k,owner) and verifyCertificateWitness(g,k,part): the two INDEPENDENT verifiers — they share no code path with runPacking, take only the witness, and return {ok, notes:[{t,ok,v}]} rendered as a checklist. This pair is the whole 'good characterisation' payload": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    }
+  },
+  "building_blocks_recurring_themes": {
+    "katex-statement-renderer": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false"
+        ],
+        "02-hidden-resolution": [
+          "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false"
+        ],
+        "03-contract-and-count": [
+          "renderMath(root): one-pass KaTeX sweep over [data-tex] (inline) and [data-tex-d] (display) with an idempotence guard"
+        ],
+        "04-certificate-duality": [
+          "renderMath(root): one-pass KaTeX sweep over [data-tex] / [data-tex-d] with a data-done idempotence guard"
+        ],
+        "05-glue-budget": [
+          "renderMath(root): one-pass KaTeX sweep over [data-tex] / [data-tex-d] with a data-done idempotence guard"
+        ]
+      }
+    },
+    "union-find / forest-membership engine": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "makeDSU(n): path-compressed union-by-rank disjoint-set forest returning {find, union}",
+          "componentCount(n, edges, idxs) and isConnectedSpanning(n, edges, idxs) built on DSU"
+        ],
+        "02-hidden-resolution": [
+          "makeDSU(n): path-compressed disjoint-set forest"
+        ],
+        "03-contract-and-count": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+          "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree",
+          "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out"
+        ],
+        "04-certificate-duality": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/count()/labels(); labels() returns {part:Int32Array, r} with parts renumbered 0..r-1 in first-appearance order — one primitive reused for per-forest component tests, for components of (V,A), and for both independent verifiers",
+          "buildDSUs(g,k,owner) -> [DSU x k]: rebuild all per-forest union-finds from the flat owner array, so forest state is never stored redundantly and a scrubbed snapshot is always self-consistent"
+        ],
+        "05-glue-budget": [
+          "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)",
+          "DSU(n): path-compressed disjoint-set with find/union/comps()"
+        ]
+      }
+    },
+    "partition state (vertex->part map) + cross-edge counter": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "exhaustiveCuts(graph, k): enumerate all 2^(n-1)-1 bipartitions, return min cut and how many violate k(2-1)",
+          "crossEdges(graph, partArray) and partCount(partArray): cross-edge index list and r for an arbitrary vertex->part map",
+          "makeBoard(host, graph, opts): SVG graph widget with layered groups (blobs / edges / cycle-marks / fat transparent hit-lines / vertices), per-edge click cycling, optional per-vertex click, readonly mode, and API {setK, cycle, clear, set, setFromTrees, setPartition, render}",
+          "graph descriptor object {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, view:[minx,miny,w,h], r} with hand-authored layouts for K4 (planar triangle+center), Petersen (pentagon + pentagram + spokes via polar()), and 3xK5 (three pentagon blobs joined by nearest-vertex cross edges)",
+          "drawQuotient(graph, part, coloring, r, cross): contracted multigraph on r circle-placed nodes with parallel cross edges fanned out as quadratic arcs, each arc colored by its tree"
+        ],
+        "02-hidden-resolution": [
+          "crossCount(g, part) and crossEdgeIdx(g, part): cross-edge count and index list for an arbitrary vertex->part map",
+          "normalize(part) / partsOf(part) / rOf(part): canonical relabelling of a partition to 0,1,2,... in order of first appearance, sorted part ids, and r",
+          "minCutExhaustive(g): enumerate all 2^(n-1)-1 bipartitions, return {min, part, checked}",
+          "heuristicMinR(g, adj, r, restarts, rng): randomised restart + single-vertex-move local search for a low-cross partition into exactly r parts, never emptying a part; returns a genuine partition (used only as a pruning seed)",
+          "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly",
+          "fullScan(g): complete brute force over every set partition (Bell(n)) returning min cross edges and an argmin per r — the cross-check for small graphs",
+          "makeGraphView(hostId, graph, opts): cytoscape clustered-graph widget — preset positions, compound cluster boxes created/removed on demand, setPartition(part, isShort), setShort(v), paintTrees(col), noBoxes/emphasize options for static specimen views, onVertexTap callback, fit()",
+          "makeQuotientView(hostId): cytoscape contracted-multigraph widget, .render(graph, part, short) placing r super-nodes on a circle and fanning the cross edges as bezier parallel edges",
+          "CY_STYLE: cytoscape stylesheet with node.v / node.cluster (round-rectangle compound box, top-anchored label) / node.qn (quotient super-node) / edge / edge.cross / edge.cross.short / edge.emph / edge.t0 / edge.t1 / edge.dim",
+          "meterOption(cross, req, k, r): ECharts horizontal 2-bar toll meter with value labels and a status-coloured actual bar"
+        ],
+        "03-contract-and-count": [
+          "analyze(g, rawPartMap, k) -> {q (canonical vertex->part), r, members, rawOf, cross, loops, fanIdx, fanCnt, perColor, spare, partComps, totalCross, toll, k, ktrees, pass, hasDisconnected}: the single recompute-everything entry point; perColor iterates g.ktrees (the trees ACTUALLY loaded), never the toll parameter k, so raising k cannot conjure a nonexistent tree",
+          "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree",
+          "fan indexing: for each cross edge, its index and the multiplicity among all cross edges joining the same unordered pair of parts — the data that makes parallel quotient edges drawable and countable",
+          "refinePartition(g, raw, A, nextIdFn): splits every disconnected part into its components, provably preserving the cross count while raising r",
+          "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out"
+        ],
+        "04-certificate-duality": [
+          "buildCertificate(g,k,reachedSet) -> {part, r, members, crossE, interiorE, cross, need, deficit, violated, A}: collapse components of (V,A) into parts, split E into interior/cross, compute k(r-1)",
+          "bruteForceMin(g,k) -> {slack, r, cross, need, part, enumerated}: exhaustive restricted-growth enumeration of all set partitions (n<=11), the ground-truth cross-check for the emitted certificate",
+          "islandsGraph(cnt,label): geometry-first construction — place cnt pentagon centres on a ring, orient each pentagon so one vertex faces the centroid, emit the cliques, then choose each bridge as the geometrically nearest cross-island vertex pair. The edge list is DERIVED from the layout, so the drawing and the combinatorics can never disagree",
+          "GraphView(selector): the reusable scene. Layer order blob / halo / edge / chain / hit / vertex / note; setGraph(g) also stamps g.view onto the svg viewBox; render(st) takes {owner, reached:Set, path:Set, chain, blobs, blobT, crossSet(+crossSet.rank), crossShown, note, hover} and rebuilds everything by data-join. Interior edges fade with blobT, cross edges are revealed one at a time by rank, and a transparent 14px stroke per edge carries the hover tooltip",
+          "renderCertBar(cert): the e_G(P) vs k(r-1) meter — a fill to the actual count, a hatched deficit band with a critical-red leading edge, an ink tick at the toll, plus a per-unit tally row of k(r-1) squares (filled = a real cross edge, dashed outline = the shortfall)",
+          "forestSwatch(i,w) / legendHTML(k,extra): forest identity as colour + dash pattern + glyph (bullet/square/triangle), so identity is never colour-alone; extra slots for the search-halo and cross-edge roles"
+        ],
+        "05-glue-budget": [
+          "crossCount(g,part): the single primitive the whole page rests on — count edges whose endpoints carry different labels. Loops never cross; parallel edges count with multiplicity because the edge list stores duplicates",
+          "canon(part) -> {part:Int32Array, r}: relabel any partition to 0..r-1 in first-appearance order; the only way part counts are ever derived, so r and the labels can never disagree",
+          "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms",
+          "searchByR(g,restarts,seed) -> {minCross[r], argPart[r], exact:false}: stated upper bound for graphs too big to enumerate. Two deterministic linkages (average + heaviest-edge), 500 randomised restarts alternating between them with random tie-breaks and occasional random merges, single-vertex-move local search at each r (refine), a downward pass merging each level-(r+1) solution and re-refining it at r, endpoints pinned exact (Stoer-Wagner at r=2, non-loop edge count at r=n), and an explicit merge repair enforcing f(r-1) <= f(r)",
+          "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)",
+          "maxKof(minCross,n) -> {k,r}: the Nash-Williams-Tutte formula min_{r>=2} floor(f(r)/(r-1)), plus the argmin resolution, cross-checked in testing against what packTrees actually achieves",
+          "camera preset tween: {from,to,tf,tt,t} lerped in the rAF loop across camera.position and controls.target simultaneously, with cubic ease-out, then control returned to OrbitControls",
+          "meter primitive: a bar with an absolute .mfill to the actual count, a diagonally hatched .mdef shortfall band, and a .mtick at the toll carrying its own label — scaled by levelScale(gid,k), the max of (cross, need) over ALL levels, so bars are comparable between resolutions"
+        ]
+      }
+    },
+    "toll / budget meter vs k(r-1)": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "updateBudget(graph, coloring, k): stacked edge-budget bar with a k(n-1) threshold marker and a slack readout"
+        ],
+        "02-hidden-resolution": [
+          "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly",
+          "verdict(min, req) -> {key, glyph, word, colour}: the single source of truth for pass / exactly-on-the-toll / short, reused by chips, tooltips, bars and logs so colour is never the only channel",
+          "scanOption(rows, k, opt): ECharts option for the two-grid resolution scan (bars + dashed toll line + diverging slack strip, shared axisPointer, first-failure markPoint, optional click-to-load)",
+          "meterOption(cross, req, k, r): ECharts horizontal 2-bar toll meter with value labels and a status-coloured actual bar"
+        ],
+        "03-contract-and-count": [
+          "analyze(g, rawPartMap, k) -> {q (canonical vertex->part), r, members, rawOf, cross, loops, fanIdx, fanCnt, perColor, spare, partComps, totalCross, toll, k, ktrees, pass, hasDisconnected}: the single recompute-everything entry point; perColor iterates g.ktrees (the trees ACTUALLY loaded), never the toll parameter k, so raising k cannot conjure a nonexistent tree",
+          "renderLedger(g, A, {stats, table, total, loops}): the accounting panel — four stat cards (r, r-1, k, k(r-1)), one row per loaded tree (spend bar, kept, owes, pays?, image connected?), the total line against k(r-1), and the loop-deletion tally; text adapts to whether a packing is loaded and to whether the toll parameter matches the number of loaded trees",
+          "spendBar(surv, need, scaleMax): two absolutely positioned segments (the forced r-1 solid, the surplus at 40% opacity, 2px surface gap) with a 2px tick at the obligation line — no charting library",
+          "verdictHTML(ok, exact, textOK, textNO): pass / exactly-on-the-toll / short pill with a dot AND a glyph AND words, so status is never colour-alone"
+        ],
+        "04-certificate-duality": [
+          "buildCertificate(g,k,reachedSet) -> {part, r, members, crossE, interiorE, cross, need, deficit, violated, A}: collapse components of (V,A) into parts, split E into interior/cross, compute k(r-1)",
+          "renderCertBar(cert): the e_G(P) vs k(r-1) meter — a fill to the actual count, a hatched deficit band with a critical-red leading edge, an ink tick at the toll, plus a per-unit tally row of k(r-1) squares (filled = a real cross edge, dashed outline = the shortfall)"
+        ],
+        "05-glue-budget": [
+          "tube(p1,p2,mat,thick): one shared open CylinderGeometry positioned at the midpoint, oriented by setFromUnitVectors(+Y, dir) and scaled (thick, len, thick) — every edge, bar, tick, rung and trunk in all three scenes is this one call, so line thickness is real geometry instead of the ignored GL linewidth",
+          "meter primitive: a bar with an absolute .mfill to the actual count, a diagonally hatched .mdef shortfall band, and a .mtick at the toll carrying its own label — scaled by levelScale(gid,k), the max of (cross, need) over ALL levels, so bars are comparable between resolutions"
+        ]
+      }
+    },
+    "graph model + hand-authored preset layout": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "exhaustive2Packing(graph, collectLimit): enumerate every (n-1)-subset, count spanning trees, test complement connectivity, collect canonical decompositions, return elapsed ms",
+          "graph descriptor object {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, view:[minx,miny,w,h], r} with hand-authored layouts for K4 (planar triangle+center), Petersen (pentagon + pentagram + spokes via polar()), and 3xK5 (three pentagon blobs joined by nearest-vertex cross edges)"
+        ],
+        "02-hidden-resolution": [
+          "graph descriptor {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, groups?, bridgeIdx?} with hand-authored preset layouts",
+          "completeEdges(ids), adjacency(g): edge list of a clique on given ids; adjacency lists with multiplicity",
+          "makeGraphView(hostId, graph, opts): cytoscape clustered-graph widget — preset positions, compound cluster boxes created/removed on demand, setPartition(part, isShort), setShort(v), paintTrees(col), noBoxes/emphasize options for static specimen views, onVertexTap callback, fit()"
+        ],
+        "03-contract-and-count": [
+          "graph descriptor {id, n, world:[w,h], labels[], pos:[[x,y]], edges:[[u,v]], color:Int32Array(-1 = owned by no tree), k, ktrees (derived), presets:[{name, part:[]}]}",
+          "polyPos(cx,cy,R,m,phase) and ellipsePos(cx,cy,rx,ry,m,phase): regular polygon / ellipse vertex layouts (the ellipse fills a landscape canvas far better than a circle)",
+          "ContractionScene(canvas, graph, opts): THE component. Owns {part, pos, t, k, focus, drag, lasso, hoverTarget, nextId}; full-redraw draw(); pointerdown/move/up/dblclick interaction (drag-to-merge with live drop-target highlighting, lasso-to-group, double-click-to-free, auto-return of the camera when the user edits while zoomed out); API {setPart, setK, setFocus, setT(v, animate), resetPositions, analysis, newId, fit}; opts {static, pad, onChange(api, A), onT(t)}"
+        ],
+        "04-certificate-duality": [
+          "mkGraph(o): graph descriptor {id, name, n, edges:[[u,v]], pos:[[x,y]], labels[], blurb} + derived lab(v), ename(e) ('u–v'), and view:[x,y,w,h] — a viewBox computed from the position bounding box with padding, so each preset fills its panel instead of sharing one guessed world box",
+          "islandsGraph(cnt,label): geometry-first construction — place cnt pentagon centres on a ring, orient each pentagon so one vertex faces the centroid, emit the cliques, then choose each bridge as the geometrically nearest cross-island vertex pair. The edge list is DERIVED from the layout, so the drawing and the combinatorics can never disagree",
+          "ring(cnt,cx,cy,R,phase) and clique(ids): the two layout/edge-list primitives every preset is built from",
+          "certBlobs(g,cert): part member positions + centroid + label, with the size suffix suppressed for singleton parts (the degenerate all-singletons certificate would otherwise be ten '(1)' labels)"
+        ],
+        "05-glue-budget": [
+          "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms",
+          "validateSearch(): runs the heuristic beside exhaustive truth on every preset small enough to enumerate and compares at every r, rendered on load as an honesty credential rather than claimed in copy",
+          "fitDist(h,w): frame a world-space box at the live fov and aspect, taking the max of the vertical and horizontal constraints — the reason every camera preset frames every preset graph (n = 5 to 16) without hand-tuned numbers",
+          "camera preset tween: {from,to,tf,tt,t} lerped in the rAF loop across camera.position and controls.target simultaneously, with cubic ease-out, then control returned to OrbitControls"
+        ]
+      }
+    },
+    "quotient / contraction builder (parallel edges kept)": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "05-glue-budget"
+      ],
+      "concept_count": 4,
+      "named_as": {
+        "01-color-the-trees": [
+          "drawQuotient(graph, part, coloring, r, cross): contracted multigraph on r circle-placed nodes with parallel cross edges fanned out as quadratic arcs, each arc colored by its tree"
+        ],
+        "02-hidden-resolution": [
+          "makeQuotientView(hostId): cytoscape contracted-multigraph widget, .render(graph, part, short) placing r super-nodes on a circle and fanning the cross edges as bezier parallel edges",
+          "CY_STYLE: cytoscape stylesheet with node.v / node.cluster (round-rectangle compound box, top-anchored label) / node.qn (quotient super-node) / edge / edge.cross / edge.cross.short / edge.emph / edge.t0 / edge.t1 / edge.dim"
+        ],
+        "03-contract-and-count": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+          "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree",
+          "fan indexing: for each cross edge, its index and the multiplicity among all cross edges joining the same unordered pair of parts — the data that makes parallel quotient edges drawable and countable",
+          "edgeCurve(S, p1, p2, off): straight line when off ~ 0, quadratic bezier with perpendicular control offset otherwise — the single primitive that turns contraction into a visible fan of parallel edges",
+          "ContractionScene(canvas, graph, opts): THE component. Owns {part, pos, t, k, focus, drag, lasso, hoverTarget, nextId}; full-redraw draw(); pointerdown/move/up/dblclick interaction (drag-to-merge with live drop-target highlighting, lasso-to-group, double-click-to-free, auto-return of the camera when the user edits while zoomed out); API {setPart, setK, setFocus, setT(v, animate), resetPositions, analysis, newId, fit}; opts {static, pad, onChange(api, A), onT(t)}",
+          "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out"
+        ],
+        "05-glue-budget": [
+          "minCut(g) -> {value, part}: Stoer-Wagner global minimum cut on a dense weight matrix built from the multigraph, exact, used both for the r=2 endpoint identity and to pin the search's r=2 value",
+          "sampleCloud(g,N,seed) -> dens[r]: two-family sampler, because neither family alone covers the axis — half uniform-ish random restricted-growth labellings (these concentrate on MANY parts) and half random edge-contraction chains (each chain visits every r from n down to 1). Reports its own total",
+          "arcTube(a,b,lift,mat,thick,group): a QuadraticBezierCurve3 sampled into tube segments — the weld arcs, bowed per tree so k parallel quotient edges stay individually visible"
+        ]
+      }
+    },
+    "blob / convex-hull cluster outline": {
+      "concepts": [
+        "01-color-the-trees",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 4,
+      "named_as": {
+        "01-color-the-trees": [
+          "makeBoard(host, graph, opts): SVG graph widget with layered groups (blobs / edges / cycle-marks / fat transparent hit-lines / vertices), per-edge click cycling, optional per-vertex click, readonly mode, and API {setK, cycle, clear, set, setFromTrees, setPartition, render}",
+          "graph descriptor object {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, view:[minx,miny,w,h], r} with hand-authored layouts for K4 (planar triangle+center), Petersen (pentagon + pentagram + spokes via polar()), and 3xK5 (three pentagon blobs joined by nearest-vertex cross edges)",
+          "convexHull(points): Andrew monotone chain, with singleton and 2-point degeneracies rendered as dot/capsule via a fat round-joined stroke on the hull path"
+        ],
+        "03-contract-and-count": [
+          "hullOf(pts): monotone-chain convex hull",
+          "blobPts(pts, pad): organic part outline — circle for 1 point, stadium for 2 or collinear, otherwise a true round-join outward offset of the hull (edge normals oriented by signed area, arcs sampled at each joint)",
+          "circlePts / stadiumPts: the degenerate blob cases",
+          "pointInPoly(p, poly): ray-cast containment, used for lasso capture and for drop-into-blob hit testing",
+          "ContractionScene(canvas, graph, opts): THE component. Owns {part, pos, t, k, focus, drag, lasso, hoverTarget, nextId}; full-redraw draw(); pointerdown/move/up/dblclick interaction (drag-to-merge with live drop-target highlighting, lasso-to-group, double-click-to-free, auto-return of the camera when the user edits while zoomed out); API {setPart, setK, setFocus, setT(v, animate), resetPositions, analysis, newId, fit}; opts {static, pad, onChange(api, A), onT(t)}",
+          "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out"
+        ],
+        "04-certificate-duality": [
+          "blobPath(pts,pad): exact Minkowski sum of the convex hull with a disc — hull orientation fixed by signed area, outward normal (dy,-dx)/|d| per edge, an SVG A-arc of radius pad at every joint, with explicit circle (1 point) and stadium (2 points / degenerate hull) cases",
+          "GraphView(selector): the reusable scene. Layer order blob / halo / edge / chain / hit / vertex / note; setGraph(g) also stamps g.view onto the svg viewBox; render(st) takes {owner, reached:Set, path:Set, chain, blobs, blobT, crossSet(+crossSet.rank), crossShown, note, hover} and rebuilds everything by data-join. Interior edges fade with blobT, cross edges are revealed one at a time by rank, and a transparent 14px stroke per edge carries the hover tooltip",
+          "certBlobs(g,cert): part member positions + centroid + label, with the size suffix suppressed for singleton parts (the degenerate all-singletons certificate would otherwise be ten '(1)' labels)",
+          "forestSwatch(i,w) / legendHTML(k,extra): forest identity as colour + dash pattern + glyph (bullet/square/triangle), so identity is never colour-alone; extra slots for the search-halo and cross-edge roles"
+        ],
+        "05-glue-budget": [
+          "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch"
+        ]
+      }
+    },
+    "exhaustive or branch-and-bound partition search": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 4,
+      "named_as": {
+        "01-color-the-trees": [
+          "forEachSubset(m, k, cb): allocation-free enumeration of all C(m,k) index subsets into a reused Int32Array",
+          "exhaustive2Packing(graph, collectLimit): enumerate every (n-1)-subset, count spanning trees, test complement connectivity, collect canonical decompositions, return elapsed ms",
+          "exhaustiveCuts(graph, k): enumerate all 2^(n-1)-1 bipartitions, return min cut and how many violate k(2-1)",
+          "greedyPack(graph, k, tries): randomized first-fit forest-growing heuristic returning a coloring plus its score, explicitly labelled non-proof"
+        ],
+        "02-hidden-resolution": [
+          "normalize(part) / partsOf(part) / rOf(part): canonical relabelling of a partition to 0,1,2,... in order of first appearance, sorted part ids, and r",
+          "minCutExhaustive(g): enumerate all 2^(n-1)-1 bipartitions, return {min, part, checked}",
+          "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly",
+          "fullScan(g): complete brute force over every set partition (Bell(n)) returning min cross edges and an argmin per r — the cross-check for small graphs",
+          "greedyPack(g, k, tries, rng): randomised first-fit edge-disjoint forest packer returning {col, cnt, score, target}, explicitly labelled a heuristic"
+        ],
+        "04-certificate-duality": [
+          "runPacking(g,k) -> {steps, owner, status:'packed'|'stuck', cert, target, reached}: THE ENGINE. Greedy growth, then multi-source BFS over the exchange digraph on EDGES seeded with every unused edge, then end-first application of the augmenting swap chain, then the certificate. Every step is pushed with a full Int32Array snapshot of owner plus the live reached-set labelling, so timeline scrubbing is an exact pure function of step index and no state is replayed",
+          "exchange-search labelling: Map(edge -> {parent, forest, depth}) where `forest` is the forest whose cycle was walked to reach this edge (== the forest the edge currently sits in, i.e. the one it would be evicted from); the label map unwinds directly into the swap chain [{edge, from, to}]",
+          "bruteForceMin(g,k) -> {slack, r, cross, need, part, enumerated}: exhaustive restricted-growth enumeration of all set partitions (n<=11), the ground-truth cross-check for the emitted certificate"
+        ],
+        "05-glue-budget": [
+          "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms",
+          "searchByR(g,restarts,seed) -> {minCross[r], argPart[r], exact:false}: stated upper bound for graphs too big to enumerate. Two deterministic linkages (average + heaviest-edge), 500 randomised restarts alternating between them with random tie-breaks and occasional random merges, single-vertex-move local search at each r (refine), a downward pass merging each level-(r+1) solution and re-refining it at r, endpoints pinned exact (Stoer-Wagner at r=2, non-loop edge count at r=n), and an explicit merge repair enforcing f(r-1) <= f(r)",
+          "sampleCloud(g,N,seed) -> dens[r]: two-family sampler, because neither family alone covers the axis — half uniform-ish random restricted-growth labellings (these concentrate on MANY parts) and half random edge-contraction chains (each chain visits every r from n down to 1). Reports its own total",
+          "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch",
+          "analyse(gid) cache: picks exhaustive vs search by n <= EXHAUSTIVE_LIMIT (11), attaches the chain, the min cut, and a PROSE methodText that literally describes what ran — so the epistemics travel with the data instead of being a static paragraph",
+          "validateSearch(): runs the heuristic beside exhaustive truth on every preset small enough to enumerate and compares at every r, rendered on load as an honesty credential rather than claimed in copy"
+        ]
+      }
+    },
+    "spanning-tree packing solver (greedy + exchange)": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "makeDSU(n): path-compressed union-by-rank disjoint-set forest returning {find, union}",
+          "classStats(n, edges, idxs): per-color-class report {m, comps, redundant[], isForest, isSpanningTree} where redundant[] lists the edges that closed a cycle",
+          "exhaustive2Packing(graph, collectLimit): enumerate every (n-1)-subset, count spanning trees, test complement connectivity, collect canonical decompositions, return elapsed ms",
+          "greedyPack(graph, k, tries): randomized first-fit forest-growing heuristic returning a coloring plus its score, explicitly labelled non-proof",
+          "renderLedger(hostId, bannerId, graph, coloring, k): live per-color card with swatch, status chip, n-1 pip slots (filled / cycle-red), edges/components/forest stats, plus a global banner covering win, dead-on-arrival and in-progress states"
+        ],
+        "02-hidden-resolution": [
+          "makeDSU(n): path-compressed disjoint-set forest",
+          "greedyPack(g, k, tries, rng): randomised first-fit edge-disjoint forest packer returning {col, cnt, score, target}, explicitly labelled a heuristic",
+          "deferred job queue: heavy computations pushed onto a jobs[] array and run one per setTimeout tick after first paint, with .busy placeholders swapped in beforehand"
+        ],
+        "03-contract-and-count": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+          "verifyPacking(g) -> {perColor:[{c, edges, m, need, acyclic, comps, spanning, ok}], ok, disjoint}: proves or disproves in-page that each colour class is a spanning tree and that no edge carries two colours",
+          "renderLedger(g, A, {stats, table, total, loops}): the accounting panel — four stat cards (r, r-1, k, k(r-1)), one row per loaded tree (spend bar, kept, owes, pays?, image connected?), the total line against k(r-1), and the loop-deletion tally; text adapts to whether a packing is loaded and to whether the toll parameter matches the number of loaded trees"
+        ],
+        "04-certificate-duality": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/count()/labels(); labels() returns {part:Int32Array, r} with parts renumbered 0..r-1 in first-appearance order — one primitive reused for per-forest component tests, for components of (V,A), and for both independent verifiers",
+          "buildDSUs(g,k,owner) -> [DSU x k]: rebuild all per-forest union-finds from the flat owner array, so forest state is never stored redundantly and a scrubbed snapshot is always self-consistent",
+          "forestPath(g,owner,i,a,b) -> [edgeIdx] | null: the unique a..b path inside forest i, by BFS over only the edges owned by i — this is the 'cycle that adding f to F_i would close', i.e. the eviction candidate list",
+          "forestVertexPath(g,owner,i,a,b) -> [vertexIdx]: same path as a vertex sequence, for drawing",
+          "runPacking(g,k) -> {steps, owner, status:'packed'|'stuck', cert, target, reached}: THE ENGINE. Greedy growth, then multi-source BFS over the exchange digraph on EDGES seeded with every unused edge, then end-first application of the augmenting swap chain, then the certificate. Every step is pushed with a full Int32Array snapshot of owner plus the live reached-set labelling, so timeline scrubbing is an exact pure function of step index and no state is replayed",
+          "step trace vocabulary {kind, chapter, head, body, owner, idx, total, target, ...}: kinds init | add | block | search-start | expand | found | swap | augmented | exhausted | dead | cert | done, grouped into 6 chapters (grow, block, search, swap, dead, cert) that drive a chapter rail; head/body are human narration generated from the real numbers",
+          "exchange-search labelling: Map(edge -> {parent, forest, depth}) where `forest` is the forest whose cycle was walked to reach this edge (== the forest the edge currently sits in, i.e. the one it would be evicted from); the label map unwinds directly into the swap chain [{edge, from, to}]",
+          "applyChain end-first: for s = len-1 down to 0, owner[chain[s].edge] = chain[s].to — valid because BFS yields a SHORTEST chain in the exchange digraph and therefore one with no shortcuts",
+          "verifyForestsOnly(g,k,owner) -> {per:[{size,comps,acyclic,spanning}], allAcyclic, total}: the from-scratch integrity re-check run after every augmentation (throws on a cycle) and also the data source for the forest ledger",
+          "verifyPackingWitness(g,k,owner) and verifyCertificateWitness(g,k,part): the two INDEPENDENT verifiers — they share no code path with runPacking, take only the witness, and return {ok, notes:[{t,ok,v}]} rendered as a checklist. This pair is the whole 'good characterisation' payload",
+          "SearchTree(selector): the growing BFS structure — edges grouped by depth into rows, node width fitted to the widest row, links drawn as vertical cubics coloured by the forest whose cycle was walked, node border coloured by the edge's current owner, the edge being examined filled black",
+          "forestSwatch(i,w) / legendHTML(k,extra): forest identity as colour + dash pattern + glyph (bullet/square/triangle), so identity is never colour-alone; extra slots for the search-halo and cross-edge roles",
+          "transport controller {run, at, playing, timer, speed}: first/back/play/forward/last + a 5-position speed table + a scrub range, with per-step dwell time longer on swap/block/found/dead steps than on greedy adds"
+        ],
+        "05-glue-budget": [
+          "greedyChain(g) -> chain[r]: deterministic agglomerative average-linkage coarsening — merge the pair maximising w/(|A||B|), ties by larger w then lowest key. The ratio (not raw weight) is load-bearing: raw-weight linkage with index tie-breaks walks a bridge out of a finished clique instead of building the next one, and misses the island structure entirely",
+          "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)",
+          "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch"
+        ]
+      }
+    },
+    "step/scrub timeline transport": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false"
+        ],
+        "02-hidden-resolution": [
+          "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false"
+        ],
+        "03-contract-and-count": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+          "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree",
+          "lerp / smoothstep: the easing primitives the morph is written against",
+          "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out",
+          "renderMath(root): one-pass KaTeX sweep over [data-tex] (inline) and [data-tex-d] (display) with an idempotence guard"
+        ],
+        "04-certificate-duality": [
+          "buildDSUs(g,k,owner) -> [DSU x k]: rebuild all per-forest union-finds from the flat owner array, so forest state is never stored redundantly and a scrubbed snapshot is always self-consistent",
+          "runPacking(g,k) -> {steps, owner, status:'packed'|'stuck', cert, target, reached}: THE ENGINE. Greedy growth, then multi-source BFS over the exchange digraph on EDGES seeded with every unused edge, then end-first application of the augmenting swap chain, then the certificate. Every step is pushed with a full Int32Array snapshot of owner plus the live reached-set labelling, so timeline scrubbing is an exact pure function of step index and no state is replayed",
+          "step trace vocabulary {kind, chapter, head, body, owner, idx, total, target, ...}: kinds init | add | block | search-start | expand | found | swap | augmented | exhausted | dead | cert | done, grouped into 6 chapters (grow, block, search, swap, dead, cert) that drive a chapter rail; head/body are human narration generated from the real numbers",
+          "transport controller {run, at, playing, timer, speed}: first/back/play/forward/last + a 5-position speed table + a scrub range, with per-step dwell time longer on swap/block/found/dead steps than on greedy adds",
+          "chapter rail: one button per chapter, jumping to the first step with that chapter, auto-disabled when a run contains no such step (e.g. a graph that packs successfully has no 'maximum' phase)"
+        ],
+        "05-glue-budget": [
+          "sticky scroll-scrub: a .track (360vh) wrapping a position:sticky .stick (100vh) enabled only above 1040x660 by media query; scroll fraction maps to r = n - round(p*(n-2)); the slider writes back via window.scrollTo behind a `syncing` flag so the two controls share one source of truth and never feed back"
+        ]
+      }
+    },
+    "scroll-driven section progression": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5,
+      "named_as": {
+        "01-color-the-trees": [
+          "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number/title/thesis) and an optional .split left/right grid that collapses at 880px"
+        ],
+        "02-hidden-resolution": [
+          "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number / title / thesis) and an optional .split (wide-left / wide-right) grid collapsing at 900px, plus .panel / .callout / .log / .readout primitives"
+        ],
+        "03-contract-and-count": [
+          "fold-down page skeleton: hero + numbered .beat sections, .split / .split.wide-left / .split.wide-right two-column grids (with `min-width:0` on the children so nowrap table content cannot squeeze an fr track) collapsing at 960px, plus .panel / .callout / .log / .statrow / .totalline / .pchip primitives and an IntersectionObserver reveal with a 4s failsafe"
+        ],
+        "04-certificate-duality": [
+          "fold-down page skeleton: hero + numbered .beat sections separated by hairlines, .split / .split.even / .split.rightwide two-column grids with `min-width:0` children collapsing at 1000px, a `.sticky` left column so the live graph stays on screen while the right column is read, and an IntersectionObserver reveal whose failsafe adds BOTH `.in` and `.instant` (transition:none) so a screenshot or a misfiring observer can never leave the page blank or mid-fade"
+        ],
+        "05-glue-budget": [
+          "makeScene(el,opts) -> {scene,camera,renderer,controls,resize,isVisible}: the reusable Three bootstrap — antialiased WebGLRenderer at capped pixel ratio, sRGB output, hemisphere + two directional lights, a ResizeObserver that resizes renderer and camera together, and an IntersectionObserver so an off-screen scene stops rendering while its rAF loop keeps running",
+          "sticky scroll-scrub: a .track (360vh) wrapping a position:sticky .stick (100vh) enabled only above 1040x660 by media query; scroll fraction maps to r = n - round(p*(n-2)); the slider writes back via window.scrollTo behind a `syncing` flag so the two controls share one source of truth and never feed back",
+          "fold-down page skeleton: hero + numbered .beat sections separated by hairlines, .split / .split.wide-left / .split.three grids whose children carry min-width:0 and collapse to one column at 1040px, and NO scroll-reveal animation anywhere (so a screenshot or a misfiring observer can never catch the page mid-fade)"
+        ]
+      }
+    },
+    "verdict / certificate panel (independent re-verification)": {
+      "concepts": [
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 4,
+      "named_as": {
+        "02-hidden-resolution": [
+          "verdict(min, req) -> {key, glyph, word, colour}: the single source of truth for pass / exactly-on-the-toll / short, reused by chips, tooltips, bars and logs so colour is never the only channel",
+          "stat(label, value) / chip(verdict): stat tile and verdict pill (dot + glyph + text)"
+        ],
+        "03-contract-and-count": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+          "verifyPacking(g) -> {perColor:[{c, edges, m, need, acyclic, comps, spanning, ok}], ok, disjoint}: proves or disproves in-page that each colour class is a spanning tree and that no edge carries two colours",
+          "verdictHTML(ok, exact, textOK, textNO): pass / exactly-on-the-toll / short pill with a dot AND a glyph AND words, so status is never colour-alone"
+        ],
+        "04-certificate-duality": [
+          "DSU(n): path-compressed disjoint-set forest with find/union/count()/labels(); labels() returns {part:Int32Array, r} with parts renumbered 0..r-1 in first-appearance order — one primitive reused for per-forest component tests, for components of (V,A), and for both independent verifiers",
+          "runPacking(g,k) -> {steps, owner, status:'packed'|'stuck', cert, target, reached}: THE ENGINE. Greedy growth, then multi-source BFS over the exchange digraph on EDGES seeded with every unused edge, then end-first application of the augmenting swap chain, then the certificate. Every step is pushed with a full Int32Array snapshot of owner plus the live reached-set labelling, so timeline scrubbing is an exact pure function of step index and no state is replayed",
+          "verifyForestsOnly(g,k,owner) -> {per:[{size,comps,acyclic,spanning}], allAcyclic, total}: the from-scratch integrity re-check run after every augmentation (throws on a cycle) and also the data source for the forest ledger",
+          "buildCertificate(g,k,reachedSet) -> {part, r, members, crossE, interiorE, cross, need, deficit, violated, A}: collapse components of (V,A) into parts, split E into interior/cross, compute k(r-1)",
+          "verifyPackingWitness(g,k,owner) and verifyCertificateWitness(g,k,part): the two INDEPENDENT verifiers — they share no code path with runPacking, take only the witness, and return {ok, notes:[{t,ok,v}]} rendered as a checklist. This pair is the whole 'good characterisation' payload",
+          "bruteForceMin(g,k) -> {slack, r, cross, need, part, enumerated}: exhaustive restricted-growth enumeration of all set partitions (n<=11), the ground-truth cross-check for the emitted certificate",
+          "certBlobs(g,cert): part member positions + centroid + label, with the size suffix suppressed for singleton parts (the degenerate all-singletons certificate would otherwise be ten '(1)' labels)",
+          "checklist primitive (ul.chk): 20px glyph column + claim + right-aligned tabular value, glyph ✓/✗ coloured by status — used for both witness verifiers and the shown/waved lists",
+          "pill(ok|bad|neu): dot-glyph-plus-words status chip so verdicts never rely on hue alone"
+        ],
+        "05-glue-budget": [
+          "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms",
+          "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)",
+          "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch",
+          "verdict strip: one clickable cell per r coloured from the TRUE f(r) (never the chain), current cell ringed — the entire theorem's verdict for a graph in one row, and the clearest single view of 'both ends pass, the middle fails'",
+          "pill(kind,txt) and ul.chk checklist: dot-glyph status chip and a glyph/claim/right-aligned-value list, so verdicts never rely on hue alone"
+        ]
+      }
+    },
+    "honesty / caveat callout block": {
+      "concepts": [
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "05-glue-budget"
+      ],
+      "concept_count": 3,
+      "named_as": {
+        "02-hidden-resolution": [
+          "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly"
+        ],
+        "03-contract-and-count": [
+          "mkScope(canvas) / fitBox(S, canvas, box) / viewBoxOf(g, pad): one PaperScope per canvas plus fitting an arbitrary logical bounding box (derived from the graph's own extent, with room to drag into) to the canvas via view.zoom and view.center"
+        ],
+        "05-glue-budget": [
+          "validateSearch(): runs the heuristic beside exhaustive truth on every preset small enough to enumerate and compares at every r, rendered on load as an honesty credential rather than claimed in copy"
+        ]
+      }
+    }
+  },
+  "building_blocks_one_off_themes": {},
+  "computations": {
+    "2 x K5 + 1 bridge, k=2: n=10, m=21 >= 18 so the headcount test passes; the search reaches 20 of the 21 edges, the components of (V,A) are the two islands, and the certificate is r=2 with e_G(P)=1 < 2·1=2": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "2xK5 + one bridge, k=2: 21 >= 18 passes but lambda = 1 < 2 — fails at r = 2 only, i.e. only at the coarse end": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "3 x K5 + 3 bridges, k=2: n=15, m=33 >= 28 so the headcount passes with slack and r=2 passes too; packing tops out at 27, the exhausted search reaches exactly the 30 island edges, the components of (V,A) are the three islands, and the certificate is r=3 with e_G(P)=3 < 2·2=4 — verified against the identity (33-30) + 2(15-3) = 27, exactly the packing achieved": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "3xK5 + 3 bridges, k=2 (n=15, m=33): the headcount passes (33 >= 28) AND the cut test passes (lambda = 2 = k), and the graph still fails at r=3 where the three islands leave only 3 cross edges against a toll of 4 — the intermediate-scale failure the two famous tests cannot see": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "3xK5 island graph built with bridge endpoints chosen geometrically (in each island, the vertex nearest the other island's centre), giving n=15, m=33; contracting the islands yields r=3 with exactly 3 surviving edges against a toll of 2*2=4, short by 1": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "C6, k=2: greedy consumes all 6 edges (F1 spanning, F2 a single edge), no homeless edge is left, so the search never wakes, A = empty, and the certificate degenerates to r=6 singletons with 6 < 2·5 = 10": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "EXACT minimum cross-edge count over all partitions into exactly r parts, for every r from 2 to 15 on 3xK5, by branch-and-bound over restricted-growth strings; every branch resolves (no node-budget truncation) so all 14 values are proved minima, with per-r surviving DFS node counts printed": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "K4, k=2: greedy fills F1={ab,ac,ad}, F2={bc,bd}, edge cd is blocked in both; the search walks the F1-path ac·ad and the F2-path bc·bd, finds ac addable to F2, and the two-link chain ac:F1->F2, cd->F1 completes the packing at 6 = 2·3 — a genuine augmentation on the very smallest example": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "K5, k=2: 8 = 2·4 packed out of 10 edges (2 spare), reached after 2 exchange searches": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "K6 at r=1: all 15 edges become loops, e_G(P)=0, toll 0 — the vacuous endpoint": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "K6 at r=2 (two triples): 9 cross, 6 loops, per colour 1 / 3 / 5 against a toll of 1 each": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "K6 at r=3 (three pairs): 12 cross edges, 3 loops deleted, toll 3*2=6, and per colour 2 / 5 / 5 — T1 pays exactly the minimum while T2 and T3 overpay by 3, with T2 producing genuinely parallel A-B quotient edges": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "K6 at r=6 (every vertex alone): 15 cross edges vs toll 3*5=15 — exactly on the line, the headcount endpoint m = k(n-1) with zero slack": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "K6, k=3: 15 = 3·5 packed using every one of the 15 edges — a perfect decomposition, found by 3 exchange searches and 9 swaps": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "K6: f = 0,5,9,12,14,15 for r = 1..6; every level clears k=2 and k=3; max packing = min floor(f(r)/(r-1)) = floor(14/4) = 3 at r=5, and the packing exhibits three edge-disjoint spanning trees using all 15 edges (three Hamiltonian paths)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Petersen, k=2: 14 greedy adds, then one successful exchange search consumes the 15th edge; all 15 edges spent against a target of 18, A = empty, certificate r=10 with 15 < 18": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "Petersen, k=2: 3-edge-connected so r=2 passes, but 15 < 18 — fails at r = 8, 9, 10, i.e. only at the fine end": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Q4 hypercube (n=16, m=32), k=2: the 2k-edge-connectivity corollary case — lambda = 4 = 2k, 32 >= 30, and the packing exhibits two edge-disjoint spanning trees of 15 edges each; max packing 2, attained at r=7 with f(7)=17": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Stoer-Wagner global minimum cut for every preset (5, 4, 3, 2, 2, 1, 4), used as the exact r=2 value and printed as the k-edge-connectivity identity": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Three districts (n=11, m=21, a genuine multigraph: K4 + K4 + a doubled K3, one bridge per pair): lambda = 2 = k passes, 21 >= 2*10 = 20 passes, and it fails at r = 3, 6 AND 9 — the same phenomenon on a graph small enough to certify EXHAUSTIVELY rather than by search": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "brute-force minimum of e_G(P) - k(r-1) over ALL set partitions for every preset with n <= 10 (K4 15, K5 52, K6 203, C6 203, Petersen 115975, 2xK5 115975 partitions), compared against the emitted slack — agreement on every row": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "cluster centroids per level, so the tower's geometry (where a supernode sits) is derived from the member vertices' layout rather than placed by hand": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "complete brute force over all Bell(10) = 115975 partitions of the Petersen graph: first resolution short is r = 8 (13 < 14), two resolutions before the r = 10 headcount (15 < 18)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "complete brute force over all Bell(6) = 203 partitions of C6: min cross per r = 2,3,4,5,6 for r = 2..6, failing from r=3 onward and also at r=6 (6 < 10)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "e_G(P) <= |E| - |A| verified numerically alongside it": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "edge budget m vs k(n-1) with slack, recomputed on every k change and every paint": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "exact resolution scan of the doubled-bridge graph 3xK5 with 2 bridges per pair: min cut rises to 4 = 2k and every r clears the toll with slack >= 2": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive enumeration of all 2^(n-1)-1 bipartitions: edge-connectivity 3 for Petersen (511 cuts) and 2 for 3xK5 (16383 cuts), confirming every r=2 partition passes k(2-1)=k": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive enumeration of all C(15,9)=5005 edge-subsets of the Petersen graph: 2000 spanning trees, 0 with a disjoint second spanning tree": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive enumeration of all C(6,3)=20 edge-subsets of K4: finds 16 spanning trees (matching Cayley 4^2) and 6 distinct decompositions K4 = T1 + T2": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive minimum cross-edge count over ALL set partitions, indexed by r, for every preset with n <= 11: K5 52 partitions, K6 203, Petersen 115,975, 2xK5+bridge 115,975, Three districts 678,570 — 912,772 partitions of ground truth enumerated on load in well under a second": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive minimum cut on 3xK5 by enumerating all 16383 bipartitions of 15 vertices -> min cut 2, so the graph is exactly 2-edge-connected and meets the r=2 requirement k=2 with zero slack": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "exhaustive minimum cut on C6 (31 bipartitions -> 2) and on Petersen (511 bipartitions -> 3 = 2k-1 for k=2)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "greedy agglomerative chain cross counts computed per r and plotted against f(r): on 3xK5 and Three districts the chain finds the island structure and attains f at the critical r, on Petersen it does NOT attain the minimum at r = 2..6 — the chain-vs-minimum gap is drawn rather than hidden": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "headcount test on 3xK5: m = 33 >= k(n-1) = 2*14 = 28, slack +5": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "independent re-verification of every successful packing: per forest, union-find over its edge class asserting n-1 edges, acyclic, exactly 1 component": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "independent re-verification of the emitted partition: r = number of distinct labels, a fresh pass over E counting crossings, the product k(r-1), and the strict inequality — computed from part[] alone with no reference to the forests or the search": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "induced-subgraph component detection per part, which fires on the octahedron's three antipodal (non-adjacent) pairs": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "live cross-edge count, r, toll k(r-1), slack and verdict recomputed on every user edit of the partition": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "live quotient construction on every drag/lasso: partition canonicalisation, split of E into cross edges and loops, and per-parallel-class multiplicity indexing, so |E(G/P)| = e_G(P) is displayed as an identity rather than asserted": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "matroid-union packing with independent post-hoc verification for every preset and k in {1,2,3}; packTrees' verdict agrees with min floor(f(r)/(r-1)) on all 21 combinations": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "monotonicity f(r-1) <= f(r) verified to hold at every r on every preset, and enforced by explicit merge repair inside the search": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "offline stress test behind the design (not shipped in the page): 3904 random multigraphs, n 3-8, k 1-3, solver verdict vs brute-force partition truth — 0 mismatches, and every emitted certificate was the minimum-slack partition, not merely a valid one": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "partition condition e_G(P) >= k(r-1) evaluated live for any user-built clustering, with slack and verdict": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "partition density histograms: for each r, how many partitions achieve each cross count — exhaustive for n <= 11, and a two-family 40,000-sample estimate otherwise": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "per-color cross-edge counts for the loaded K4 packing, verifying each individual tree crosses any partition at least r-1 times": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "per-colour survivor replay through a second union-find on the r supernodes: number kept, number of welds (always exactly r-1 when connected), number of surplus edges, and the component count — proving |T_i n E(P)| >= r-1 numerically for the user's own clustering": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "per-part double-counting tally on the live clustering: |V_i|, delta(V_i), the test delta(V_i) >= 2k, the identity sum delta(V_i) = 2 e_G(P), and the resulting bound e_G(P) >= kr > k(r-1)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "randomised first-fit packing, 6000 restarts: 27/28 tree edges on the one-bridge graph (labelled a heuristic, not a proof) and 28/28 on the two-bridge graph, delivering two explicit edge-disjoint spanning trees": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "randomized greedy packing (400 / 3000 / 2000 restarts) reported as a heuristic best-effort score, never as a proof": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "the 3xK5 certificate: r=n gives 33 >= 28 (pass), r=2 gives min cut 2 >= 2 (pass), r=3 gives 3 < 4 (fail)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "the certificate: exact minimum at r=3 on 3xK5 is 3 < k(r-1) = 4, and the minimiser returned by the search is exactly the three-island partition whose cross edges are the three bridges": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "the connected-parts reduction executed live on the octahedron: refining the three antipodal pairs gives r 3 -> 6 with e_G(P) unchanged at 12 while the requirement rises 2*2=4 -> 2*5=10, and at the hypothetical k=3 the same refinement flips a comfortable pass (12 >= 6) into a failure (12 < 15) — a computed certificate that no 3-packing exists": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "the exchange identity checked numerically on every stuck run: (|E|-|A|) + k(n-c(A)) printed beside the packing actually achieved, with a live pass/fail marker — it holds on all four failing presets": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the full k-forest packing algorithm: greedy growth by per-forest union-find, multi-source BFS exchange search over the edge exchange digraph, end-first swap-chain application, with a from-scratch acyclicity re-verification after EVERY augmentation that throws if a cycle was ever created": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the full k=2 scan on 3xK5 is 2,3,7,10,12,13,17,20,22,23,27,30,32,33 against tolls 2,4,6,...,28 — exactly one negative slack, at r=3": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "the same 3xK5 graph at r=15: 33 cross edges vs k(n-1)=28, which passes — demonstrated so the page can say plainly that clearing a resolution proves nothing": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "the search heuristic run in-page beside exhaustive truth on all five enumerable presets and compared at every r: agreement everywhere — reported on the page as evidence, with the explicit note that it is evidence and not proof": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "the toll widget: k(r-1) recomputed for r in 1..7, k in 1..3, with r-1 welds drawn per tree": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the unique F_i-cycle closed by each blocked edge, computed by BFS inside the forest and displayed edge by edge as the eviction candidate list": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "union-find per color class: edge count, component count, forest test, spanning-tree test, and identification of the exact edge that closed a cycle": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "union-find verification of K6's three Hamiltonian paths {01,12,23,34,45}, {13,35,05,02,24}, {03,04,14,15,25} as a perfect decomposition of all 15 edges into 3 spanning trees": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "union-find verification of the octahedron's {04,02,12,13,35} and {34,03,05,15,25} as edge-disjoint spanning trees leaving exactly 2 edges spare": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "union-find verification that K4's {12,23,34} and {13,14,24} are each spanning trees (3 = n-1 edges, acyclic, 1 component) and edge-disjoint — the full trace is printed": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    }
+  },
+  "interactions": {
+    "C6 cluster presets: all-one / two-halves / three-arcs / every-vertex-alone": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "Check every partition I can afford to check on 3xK5: runs the exhaustive r=n, r=2 and r=3 report plus a labelled greedy sanity check": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "Clear / Show a solution on the K4 board (the solution is drawn at random from the 6 exhaustively verified decompositions)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "Enumerate all decompositions button: prints the search log and renders 6 clickable thumbnails, each of which loads that packing onto the K4 board and scrolls to it": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "Run exhaustive search on Petersen: prints subsets enumerated, spanning trees found, packings found (0) and elapsed ms": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "camera slider (0-100%) morphs the contraction parameter t continuously: interior edges dissolve, vertices converge to their part centroid and fade, supernodes grow in, blob hulls shrink and fade, and cross edges fan apart into parallel quotient edges": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "click any K4 edge to cycle unpainted -> color 1 -> ... -> unpainted; updates the ledger, the cycle-closing dashed markers, the win banner and the section-02 budget bar": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "click any Petersen edge to paint; Greedy attempt and Best of 3000 greedy attempts fill the board with a real heuristic result (spanning tree + 6-edge, 4-piece forest)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "click any bar in the resolution scan to load that r's exact minimising clustering into the graph below and scroll to it": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "click any vertex in the C6 lab or the island lab to move it into the next cluster (a new cluster is created when you pass the last one); the cluster boxes, cross-edge highlighting, quotient multigraph, toll meter, four stat tiles and the verdict chip all recompute": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "contract / expand buttons play the same morph as a GSAP power2.inOut tween, writing back into the slider readout": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "contract the islands graph to watch 30 edges vanish as loops and exactly 3 bridges survive between the three supernodes": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "double-click a vertex to set it free as its own part": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "drag any vertex with the pointer: it moves freely and STAYS where dropped; while dragging, the vertex or blob under the cursor highlights as the drop target; releasing over a vertex or inside a blob joins that part, releasing in empty space makes it a fresh singleton — every drop recomputes the quotient, the per-colour tallies, the ledger, the part chips and the quotient canvas": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "draw a lasso on empty canvas: a live dashed path with a translucent fill; on release every enclosed vertex is merged into one new part": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "every partition change redraws the cluster blobs, ghosts the intra-cluster edges, rebuilds the quotient multigraph, and recomputes r, e_G(P), k(r-1), slack, verdict and the per-tree crossing counts": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "every resolution change updates: the tower focus (opacity, member dots, interior edges, cluster hulls), the in-scene ladder readout sprite, the meter with hatched shortfall and toll tick, the KaTeX inequality, the cluster-size chips and interior-edge count, narration that differs at r=n / r=2 / in between, and a note saying whether the shown clustering actually attains f(r) or whether some other partition at the same r is worse": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "every step simultaneously updates: the graph (forest colours and dashes, reached-set halos, the F_i-cycle path being walked, the augmenting-chain overlay through edge midpoints), the forest ledger (edges/n-1 spend bar and component count per forest), the total against k(n-1) with a status pill, the BFS search-structure panel, the narration panel and the scrolling trace log": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "hover any edge in either graph: tooltip with its name, its current forest, whether the search reached it, and whether it crosses the partition": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "hover the 1-bridge-vs-2-bridges comparison chart for a three-way tooltip (toll, 1 bridge, 2 bridges) with per-series pass/fail glyphs": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "hover the resolution scan for a linked crosshair tooltip giving r, the cheapest clustering's cross-edge count, the toll, the slack and the verdict": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "island presets: jump to the min cut (r=2), the three islands (r=3), every-vertex-alone (r=15), all-one": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "isolate T1 / T2 / T3 in section 2: dims every other colour simultaneously in the camera and in the quotient multigraph": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "partition explorer: click a VERTEX to move it to the next cluster (parts are renormalized), or use the presets every-vertex-alone / all-in-one / split-in-two; switch between K4 (carrying a verified 2-packing) and Petersen": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "per-graph presets (K6: all alone r=6 / three pairs r=3 / two triples r=2 / one blob r=1 / reset layout; octahedron: three antipodal pairs / all alone / two columns vs one; islands: three islands / all alone / one blob)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "pointing at the canvas while the camera is zoomed out tweens it back to 0 instead of starting a drag, so editing always happens on the un-blurred graph": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "refine (section 4): splits every disconnected part into its components; the log, the part chips, r, the toll and the ledger all move while the cross count visibly does not. Undo refine restores the previous partition": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "run the randomised packer (6000 restarts): the best packing is painted onto the graph as two edge-coloured spanning forests and the log reports edges placed per tree, elapsed ms, and whether the result is a genuine packing": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "section 06 clustering presets: cluster-by-island / min-cut / all-alone, each redrawing the per-part double-count table": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "section 3 reads section 2's live clustering: pick a colour, then either drag the 'edges fed in' slider or press 'play weld' to step that colour's surviving edges into the quotient one at a time — component blobs merge on screen, and the log names each edge as a weld or as surplus that closes a cycle in G/P": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "switch k in {1,2,3} in either lab: the toll line, the meter, the stats, the verdict and the scan-chart caption update while the exact-minimum bars stay put (they are properties of the graph, not of k)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "switch k in {1,2,3} on K4; colors beyond k are dropped and the budget bar shows k=3 as dead on arrival (9 > 6)": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "the caveat callout under the argument rewrites itself from the live numbers: it names whichever colour is currently overpaying and by how much, or reports that every colour is paying exactly r-1": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "toggle bridges per pair between 1 and 2 in section 06: the graph is rebuilt, the min cut readout and the per-part delta tally recompute, the clustering resets to r=3 and the packer log clears": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "toll for k = 1 / 2 / 3 (section 4): changes only the requirement k(r-1), never the loaded trees, and the ledger says so explicitly — a pass is labelled as proving nothing, a failure as a certificate of impossibility": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "§1 r slider (1-7) and k slider (1-3): redraws the cluster strip and the k(r-1) welding arcs, and rewrites the toll sentence (including the vacuous r=1 case)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§1: r slider (2-8) and k slider (1-3) rebuild r cluster discs and k stars of r-1 bowed weld arcs, and rewrite the toll in prose and in KaTeX; orbit and zoom the widget": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 'worst resolution' jumps to the argmin of f(r) - k(r-1)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 camera presets tower / ladder / look down, tweened over ~0.6 s: 'ladder' turns the tower edge-on so its side face reads as the f(r) vs k(r-1) chart; 'look down' looks straight down the stack at the focus level so it reads as a graph collapsing into clusters": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 chapter rail (grow / blocked / search / swap / maximum / verdict): jumps to the first step of a phase; chapters that never occur in the current run are disabled (a graph that packs has no 'maximum' phase)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§2 graph picker (7 presets) and k picker (1/2/3): re-analyses, rebuilds the whole tower, rescales the resolution slider to the new n, re-frames the camera, and cascades into the §3 survey, the §4 chart and the §5 packing": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 graph picker (K4 / K5 / K6 / C6 / Petersen / 2xK5+bridge / 3xK5+3bridges) and k picker (1/2/3): re-runs the entire algorithm, rebuilds the trace, rescales the timeline, relabels the legend, and cascades into §3's certificate scene and §4's dichotomy cards": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§2 levels mode 'nested chain' vs 'minimisers': in minimisers mode each level shows a partition attaining f(r) and THE TRUNKS DISAPPEAR — the visual proof that the per-r optima do not nest into a hierarchy": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 resolution slider from r = n down to r = 2; on wide screens SCROLLING the sticky section drives the same value, so descending the page is descending the resolutions, and the two controls stay synchronised": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§2 scrub slider over every step of the run (up to 149 steps on the 3-island graph) — an exact pure re-render from that step's snapshot, never a replay": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§2 transport: restart, step back, play/pause, step forward, jump to end; a 5-position speed control (0.4x-3.2x) with swap/block/found/dead steps dwelling ~2.3x longer than greedy adds": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§2 verdict strip: one clickable cell per resolution, coloured pass/fail from the true f(r), jumping the tower (and the page scroll) to that level": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§3 'flood the reached set' plays the Anime.js timeline: highlight A, harden the components into blobs while interior edges recede, then count the cross edges in one at a time against the toll": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§3 'harden' slider scrubs the same morph by hand at any position, cancelling the timeline; 'reset' returns to 0": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§3 survey table: computed for all 7 presets at the live k with the two endpoint tests broken out; clicking a row loads that graph into the tower and scrolls to it": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§4 dichotomy cards: whichever witness the live graph actually has lights up and fills with its verification checklist; the other is dimmed and stamped 'not this graph'": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§4 survey table: computed on load for all 7 presets; clicking any row loads that graph and k back into §2/§3 and scrolls to the machine": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "§4: toggle the partition cloud, toggle the nested chain, open a table view of r / f(r) / chain / toll / slack; hovering a cloud point reports how many partitions share that (r, e(P))": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§5 'peel apart' slider lifts each spanning tree into its own layer above the wiring (0 = all coincident and the graph reappears, 1 = fully separated), plus auto-rotate and orbit; when the current k is impossible the scene degrades to the largest packing that does exist and names the partition ruling the rest out": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "§5 'run the enumeration': runs the full set-partition brute force in-page for every preset with n <= 10 and tabulates partitions enumerated, true minimum slack, emitted slack, and agreement": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    }
+  },
+  "assets": {
+    "lib/OrbitControls.js (global, from three 0.137.5 examples/js)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "lib/anime.min.js (UMD, 3.2.2)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "lib/chart.umd.js (UMD, 4.4.1)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "lib/cytoscape.min.js (UMD)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "lib/d3.min.js (UMD, 7.9.0)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "lib/echarts.min.js (UMD)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic Bold/Regular, Fraktur Bold/Regular, Main Regular/Bold/Italic/BoldItalic, Math Italic/BoldItalic, SansSerif Regular/Bold/Italic, Script, Size1-4, Typewriter)": {
+      "concepts": [
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 3
+    },
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic, Fraktur, Main, Math, SansSerif, Script, Size1-4, Typewriter)": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution"
+      ],
+      "concept_count": 2
+    },
+    "lib/gsap.min.js (UMD, 3.12.5)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "lib/katex.min.css": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 5
+    },
+    "lib/katex.min.js (UMD)": {
+      "concepts": [
+        "01-color-the-trees",
+        "02-hidden-resolution"
+      ],
+      "concept_count": 2
+    },
+    "lib/katex.min.js (UMD, 0.16.11)": {
+      "concepts": [
+        "03-contract-and-count",
+        "04-certificate-duality",
+        "05-glue-budget"
+      ],
+      "concept_count": 3
+    },
+    "lib/paper-core.min.js (UMD, 0.12.18)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "lib/three.min.js (UMD, r149 / 0.149.0)": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    }
+  },
+  "gotchas": {
+    "B_12 = 4,213,597 is already several seconds of enumeration, so EXHAUSTIVE_LIMIT is 11 — which is exactly why the multigraph 'Three districts' (n=11, K4+K4+doubled-K3 with one bridge per pair) exists: it reproduces the 3xK5 middle-failure phenomenon at a size where every one of its 678,570 partitions can actually be enumerated in the page": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Chart.js legend order follows the dataset ARRAY order while z-stacking follows the `order` property; putting the cloud first for painting reasons buries f(r) at the end of the legend. The two must be set independently": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "D3 and Anime.js both animate, which violates the one-job-one-library rule if used naively. The split enforced here: D3 owns data-joins, scales, geometry and shape generators and NEVER calls .transition(); Anime.js owns every tween and drives D3 re-renders from its update callback. Without that discipline the two fight over the same attributes": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "ECharts multi-grid charts need explicit xAxisIndex/yAxisIndex on every series plus axisPointer.link to share the crosshair between the bar grid and the slack grid": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "ESM-only builds fail from file:// (origin null => CORS), so all three libraries are plain UMD dists loaded by classic <script> tags — animejs 3.2.2 is the last UMD line (v4 is ESM-only and would have failed); verified by loading in headless Chrome over file:// WITHOUT --allow-file-access-from-files and asserting zero exceptions and zero console errors": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "ESM-only builds fail from file:// (origin null => CORS), so all three libraries are plain UMD dists loaded by classic <script> tags; verified by loading the page in headless Chrome over file:// WITHOUT --allow-file-access-from-files and asserting zero exceptions and zero console errors": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "ESM-only builds fail from file:// (origin null => CORS). three.module.js is therefore unusable; the r149 UMD build/three.min.js still exists and is what is vendored. Verified by loading in headless Chrome over file:// WITHOUT --allow-file-access-from-files and asserting zero exceptions, zero console errors and zero failed requests": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "ESM-only packages fail from file:// (origin null triggers CORS), so all three libraries are the plain UMD dist builds loaded by classic <script> tags — verified by opening the page over file:// in headless Chrome with Runtime/Log domains enabled and asserting zero exceptions and zero console errors": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "ESM-only packages fail from file:// (origin null triggers CORS); KaTeX's dist/katex.min.js is UMD so a classic <script> tag loads offline — verified by opening the page with file:// in headless Chrome": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "GL linewidth is ignored on essentially every platform, so THREE.Line can only ever draw hairlines. Every edge, bar, tick, rung and trunk that needs real weight is a scaled CylinderGeometry mesh via tube(); Line is reserved for the two profile polylines where hairline is the correct weight anyway": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "KaTeX does not lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>": {
+      "concepts": [
+        "02-hidden-resolution",
+        "03-contract-and-count",
+        "04-certificate-duality"
+      ],
+      "concept_count": 3
+    },
+    "KaTeX refuses to lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "LineDashedMaterial silently renders solid unless computeLineDistances() is called on the Line after the geometry is set — the straight k(r-1) toll line is the whole point of the ladder, so this one omission would erase the artifact's central contrast": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "SVG lines are ~6px wide and hard to hit, so every edge has a duplicate transparent stroke-width:20 'hit' line in a layer above the visible edges but below the vertices": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "Sprite text with align:'right' ends at the sprite's own right edge, i.e. at position.x + scale/2 — placing a label at x = -1.55 with scale 1.15 puts its text at -0.98, inside a graph of radius 1.25. Labels must be offset by half the sprite scale, and the camera's framing width must then include them": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Three r149 has NO examples/js directory — it was deleted in r148, so the documented 'globalised OrbitControls' path 404s at that version. The fix is to vendor examples/js/controls/OrbitControls.js from three 0.137.5 (the last line that ships it); it defines THREE.OrbitControls via an IIFE and uses only stable core APIs, so it runs unchanged against r149": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "Web Workers cannot be used from file:// in Chrome (the worker script load is cross-origin), so the ~200 ms branch-and-bound and the ~120 ms Bell(10) brute force run on the main thread; they are pushed onto a jobs[] queue and drained one job per setTimeout(0) tick after first paint, with .busy placeholders in the chart hosts so nothing looks broken while they run": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "a Chart.js linear x-axis with min/max padding emits the bounds as ticks, so the axis read '… 14 15 15.4'; ticks.includeBounds:false removes it": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "a branch-and-bound seeded with a heuristic value will silently ECHO that seed if the seed is wrong (an early buggy local search returned impossible values like 0 cross edges for r=3 and the exact search dutifully reported them); fixed by pruning against seed+1 instead of seed and returning a found flag, so the reported minimum is always a partition the DFS actually built": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "a canvas with only a width:100% CSS rule and a height ATTRIBUTE feeds back on itself: paper writes canvas.width/height from getBoundingClientRect, the intrinsic aspect ratio then re-derives the CSS height, and the canvas grows on every resize (observed: a 360px-tall canvas reaching 736px). Fixed by giving every canvas an explicit CSS height (a --ch custom property) so the attribute never drives layout": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "a cytoscape compound parent with no children still renders as a stray node, so empty cluster boxes are removed explicitly after every re-parent": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "a rebuilt tower leaks GPU memory fast (7 graphs x 3 k x 2 modes, each ~700 meshes with per-level materials). disposeGroup must collect the traversal into an array BEFORE disposing (mutating during traverse skips children) and must skip the two shared singleton geometries, or the second rebuild renders nothing": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "a single guessed 760x560 world box wastes most of the panel for compact graphs; deriving the viewBox from each graph's own position bounding box plus padding is what makes every preset fill its stage. The padding must cover the widest blob offset AND its label, or the certificate blobs clip at the panel edge (54 was too tight; 64 works)": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "a singleton cluster's convex hull is a single point and 'M x y' alone paints nothing even with stroke-linecap:round, so the path is emitted as 'M x y L x y' to force a dot; 2-point hulls become capsules from the same fat round stroke": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "a sticky scroll-scrub and a slider bound to the same value feed back into each other forever unless the programmatic scroll is fenced. A `syncing` flag cleared on a short timeout, plus instant (never smooth) scrollTo, keeps one source of truth; the sticky behaviour is gated behind a min-width AND min-height media query and detected at runtime by reading getComputedStyle(...).position === 'sticky' rather than re-checking the breakpoint in JS": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "a stuck greedy run is not a proof, and it is very easy for a page like this to imply that it is. Both the failure callout in §2 and the two 'refuses to say' notes in §5 exist to block that reading, and the verdict text is always sourced from the recount, never from the solver's state": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "a toll parameter k and the number of trees actually painted on the graph are DIFFERENT numbers. Iterating the per-colour ledger over k invents a third tree with 0 edges and reports it as 'short' — a fabricated result. analyze() iterates g.ktrees for the tallies and uses k only for k(r-1), and the UI relabels the stat card and explains the mismatch when they differ": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "an outward polygon offset cannot be faked by scaling hull points away from the centroid — a nearly-collinear part gives a sliver that never thickens. Orienting each edge's normal by the polygon's signed area and sampling an arc at each joint is the version that works, with explicit circle and stadium cases for parts of size 1 and 2": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "an outward polygon offset cannot be faked by scaling hull points away from the centroid. The blob outline is a true Minkowski sum with a disc: hull orientation normalised by signed area, outward normal (dy,-dx)/|d| per hull edge, and an SVG A-arc at each joint — with explicit circle and stadium fallbacks, because the degenerate all-singletons certificate consists entirely of one-point parts": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "an upper bound on f(r) and a lower bound mean opposite things here, and conflating them would make the page dishonest: a bound that dips below the toll still PROVES failure (it exhibits a violating partition, and necessity does the rest), while a bound that stays above proves nothing. Graphs whose f(r) is only bounded are marked ·bound in the survey, and §5's success verdicts come from the exhibited trees rather than from f": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "annotating every failing r cluttered the Petersen chart (three overlapping markPoint labels), so only the FIRST failing r is annotated — which is also the pedagogically interesting one": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "any text drawn at fixed svg coordinates breaks once the viewBox is per-graph — the status note had to be anchored to view[0], view[1]+view[3] instead of (18,26), and moved to the BOTTOM of the box because at the top it collided with the first partition blob": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "at t=1 the contracted supernodes sit at part centroids, so a symmetric graph can put three supernodes exactly COLLINEAR (the octahedron drawn as three columns) and the A-C parallel bundle then runs straight through supernode B; the fix is in the source layout, offsetting the middle column vertically so the contracted triangle is non-degenerate": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "cluster hull rings drawn for EVERY part turn the r=n level (all singletons) into a field of identical tiny circles; drawing them only for parts of size >= 2 is what makes the finest level legible": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "colouring 15 clusters by identity would need far more categorical hues than any palette safely provides; sidestepped entirely by giving cluster identity to a labelled box and spending the whole colour budget on the one semantic distinction that matters (cross vs internal, paid vs short)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "cy.fit() must be called after re-parenting because the compound boxes change the bounding box; user zoom/pan are disabled and autoungrabify is on so the hand-authored positions stay meaningful": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "cytoscape's node.move({parent}) removes and re-adds the element, so the old reference is dead; every re-parent re-fetches by cy.getElementById, and moves are done OUTSIDE cy.batch() (only the class/style repaint is batched)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "fitting a hand-guessed 'world' rectangle wastes most of the canvas; deriving the view box from the graph's own bounding box plus a drag margin, and laying K6 out on an ELLIPSE rather than a circle, is what actually fills a landscape canvas": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "forEachSubset reuses one Int32Array for speed, so any subset that is retained (the 6 K4 decompositions) must be copied with Array.from before it is stored": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "graph drawing needed no network library: the three layouts are hand-authored (K4 planar, Petersen polar pentagon+pentagram, 3xK5 pentagon blobs with nearest-vertex joins), which keeps every edge a plain SVG element that can be recolored, re-weighted and hit-tested directly": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "green/red is the classic CVD-confusable pair and the dataviz validator flags it, so every status colour on the page is shipped with a glyph (check / equals / cross) and a written verdict, never as colour alone": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "green/red is the classic CVD-confusable pair, so every verdict on the page ships as dot + glyph (check / equals / cross) + words, and each tree carries a glyph and a stroke style (solid / dashed / dotted) alongside its hue; the three tree colours are the validated dark-mode categorical slots 1-3 and were re-run through the palette validator against this page's surface under --pairs all": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "hand-guessed camera positions frame exactly one graph. With presets from n=5 to n=16 the tower's height ranges 2x-9x and every preset was cropped or lost in space until fitDist(h,w) derived the distance from the live fov AND aspect (taking the max of the two constraints) — the aspect term is what stops the ladder falling off the side on wide panels": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "in a `grid-template-columns: 1.32fr 1fr` split, a child containing a nowrap table has a min-content width that overrides its fr share and silently squeezes the other column (the camera canvas measured 550px where 631px was intended); `.split > * { min-width: 0 }` is required, with the table itself in an overflow-x:auto box": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "in the §5 tree stack, camera elevation trades off against the thing being shown: at ~35 degrees the k layers separate cleanly and edge-disjointness is obvious; at ~50 degrees the layers project on top of one another and the whole point is lost. Low elevation wins even though it foreshortens each individual tree": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without all 20 faces vendored the maths silently falls back to a system font with wrong metrics": {
+      "concepts": [
+        "03-contract-and-count",
+        "04-certificate-duality"
+      ],
+      "concept_count": 2
+    },
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without all 20 faces vendored the maths silently falls back to a system font with wrong metrics. KaTeX also does not lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without vendoring all 20 faces the math silently falls back to a system font with wrong metrics": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without vendoring the .woff2 files math silently falls back to a system font with wrong metrics, so all 20 faces are included": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "long single-line KaTeX display formulas overflow narrow panel columns and get visually clipped even inside an overflow-x:auto box; fixed by breaking each statement into a \\begin{aligned} block of short lines AND scoping .panel .texblock .katex to 0.9em (0.82em under 1080px)": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "multiple canvases need one `new paper.PaperScope()` each plus scope.activate() before creating any item; the global `paper` object is just the last-activated scope, so every draw() must re-activate its own scope or items silently land in the wrong document": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "paper's project.clear() drops all layers, but adding an item afterwards recreates an active layer automatically, so a clear-and-rebuild draw() is safe and much less bug-prone than incremental item updates at this scale (~60 items per frame)": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "paper-full.min.js bundles the acorn parser for PaperScript, which is dead weight when you only use the JS API — paper-core.min.js is the correct dist and is 200KB rather than 300KB": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "parallel quotient edges drawn on top of each other are indistinguishable, so the fan offset must be keyed to the edge's index within its parallel class AND scaled by the contraction parameter — at t=0 the offset is 0 so the original graph is drawn with honest straight edges, and the fan opens exactly as the multigraph comes into existence": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "part labels placed above the blob work for a 5-vertex island and are unreadable clutter for ten singleton parts; the fix is centroid placement with a surface-coloured paint-order:stroke halo for multi-vertex parts, a short offset label for singletons, and no '(1)' size suffix on singletons": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "per-level opacity is only possible because each level allocates its OWN materials and stashes them in group.userData.mats; sharing one material across levels makes focus dimming impossible. That is why disposal discipline matters at all": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "performance.now() does not advance under headless Chrome's --virtual-time-budget, so timing readouts show 0.0 ms in a screenshot harness while being real in a normal browser": {
+      "concepts": [
+        "01-color-the-trees"
+      ],
+      "concept_count": 1
+    },
+    "performance.now() does not advance under headless Chrome's virtual time, so elapsed-time readouts show 0.0 ms in a screenshot harness while being real in a normal browser; the page says so": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "related: under --virtual-time-budget, computed styles on elements whose class changed after load can be read STALE (the chapter-rail button that lost .now still reported the .now font-weight and box-shadow, while the button that gained it reported none). classList was correct throughout — verify class state via a DOM probe, not by eyeballing a headless screenshot, and remove transitions from any element whose state you need to screenshot": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "scroll-reveal animations were deliberately omitted: under headless capture the class lands but the CSS transition never completes, and the page screenshots at partial opacity. No reveal means no failsafe needed": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "slot-3 aqua sits at 2.74:1 on the light surface, below the 3:1 bar, which triggers the relief rule — every forest is therefore directly labelled (F1/F2/F3 chips with glyph and dash in the legend and the ledger) and the survey table doubles as the table view": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "sticky left columns need `position:static` restored under the mobile breakpoint, or the graph pins itself awkwardly once the grid collapses to one column": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the agglomerative chain's TIE-BREAK is load-bearing, not cosmetic. With raw-weight linkage every pair starts at weight 1 and the lowest-index tie-break walks a bridge out of the first finished clique instead of starting the second, so the chain never finds the island structure and reports 7 cross edges at r=3 on 3xK5 where the truth is 3. Average linkage w/(|A||B|) fixes it: once a clique has 5 members its bridge ratio is 0.2 against 1.0 inside the next clique": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "the categorical slots #3987e5 / #d95926 / #199e70 were run through the palette validator under --pairs all --mode dark against BOTH page surfaces (#141821 cards and #0b0d12 plane) and pass every gate (worst CVD dE 9.4, worst normal-vision dE 20.9, all >= 3:1); status red #d03b3b is reserved for the shortfall and never used as a series, and every tree additionally carries a glyph and a direct label so identity is never colour-alone": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "the certificate construction has a degenerate branch that is easy to get wrong: when greedy consumes every edge there are no homeless edges, the search never runs, A is EMPTY, and the components of (V, empty) are the n singletons. That is still the correct optimum (C6 and Petersen both match brute force), and the resulting certificate is exactly the crude m >= k(n-1) test — the page names this rather than special-casing it away": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the exchange chain can only be applied wholesale because BFS yields a SHORTEST path in the exchange digraph (a shortcut would contradict minimality). A best-first or DFS search would silently produce chains whose earlier swaps invalidate later ones — the from-scratch acyclicity assertion after every augmentation exists precisely to catch that class of bug and was kept in the shipped code": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the fourth categorical slot (yellow) fails the all-pairs CVD and normal-vision floors against slot 2 (orange) on the light surface, so k is capped at 3 and status-red is reserved for the certificate/violation role and never used as a forest colour; the three forest colours were run through the palette validator under --pairs all --mode light against this page's surface (worst CVD dE 9.2, worst normal-vision dE 24.0) and each also carries a dash pattern and a glyph": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the greedy edge order matters for the narrative, not the answer: scanning edges in index order fills F1 to spanning first and only then struggles with F2, which is what produces interesting exchange searches instead of a symmetric fill. The final verdict is order-independent (confirmed against brute force), but the trace is not": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the local search must update its current part index after a move — keeping the pre-move index stale lets the size>1 guard pass twice and empties parts, silently returning partitions with fewer than r parts": {
+      "concepts": [
+        "02-hidden-resolution"
+      ],
+      "concept_count": 1
+    },
+    "the reveal-on-scroll pattern (opacity:0 until an IntersectionObserver fires) makes the entire page blank in a full-page screenshot and in any environment where the observer misfires; a setTimeout failsafe that force-adds the visible class after 4s is mandatory": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    },
+    "the reveal-on-scroll pattern leaves the page blank in full-page screenshots and wherever the IntersectionObserver misfires; a plain setTimeout failsafe is NOT enough either — under Chrome's --virtual-time-budget the class lands but the 0.55s CSS transition never completes, so the page screenshots at ~15% opacity. The failsafe must add BOTH the visible class and a `transition:none` class": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "the same distinction bites the SEARCH: seeding it only with average-linkage chains gave 19 at r=8 on 3xK5 where heaviest-edge linkage gives 17. Running both linkages, and alternating them across the randomised restarts, recovers the tighter bound — a single heuristic family silently reports looser bounds and nothing in the UI would reveal it": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "three K5 islands laid out on a ring of radius 180 with island radius 96 overlap visibly and put all three bridge endpoints in a crowded centre — the certificate's three-part structure becomes unreadable. Radius 198 with island radius 80 separates them cleanly and turns the three bridges into a legible central triangle, which is exactly the picture the certificate is about": {
+      "concepts": [
+        "04-certificate-duality"
+      ],
+      "concept_count": 1
+    },
+    "uniform random restricted-growth strings are a terrible sampler for this chart — they concentrate on many parts, so the whole small-r half of the cloud (exactly where the interesting failures live) came out empty. Half the sample must be random edge-contraction chains, since each chain passes through every r": {
+      "concepts": [
+        "05-glue-budget"
+      ],
+      "concept_count": 1
+    },
+    "when a partition has no packing to audit (or the toll is hypothetical), a PASSING total proves nothing at all — necessity can only ever rule a packing out. Both the no-packing and the k-mismatch notes had to be made conditional on pass/fail, or the page cheerfully calls a passing partition a 'proof of impossibility'": {
+      "concepts": [
+        "03-contract-and-count"
+      ],
+      "concept_count": 1
+    }
+  },
+  "counts": {
+    "concepts": 5,
+    "distinct_libraries": 10,
+    "total_building_blocks": 128,
+    "total_computations": 64,
+    "total_interactions": 55
+  }
+}

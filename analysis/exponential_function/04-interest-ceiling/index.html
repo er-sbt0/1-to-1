@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Interest-Rate Ceiling — growth in slow motion</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css">
+<style>
+:root{
+  /* ledger paper */
+  --paper:#f3eee2;
+  --paper2:#ece5d5;
+  --card:#fcfaf4;
+  --ink:#1c2530;
+  --ink2:#3d4a58;
+  --dim:#6d7a88;
+  --faint:#98a3ae;
+  --rule:#ddd2bb;
+  --rule2:#c9bb9e;
+  /* semantics: copper = discrete / finite n ; green = continuous / the limit ; red = the ceiling e & error */
+  --copper:#c2703a;
+  --copper-soft:rgba(194,112,58,.16);
+  --green:#2f6f52;
+  --green-soft:rgba(47,111,82,.14);
+  --red:#a33a35;
+  --red-soft:rgba(163,58,53,.12);
+  --gold:#9c7b16;
+  --blue:#2f5d8a;
+  --violet:#6a4f8f;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0 27px, rgba(47,111,82,.045) 27px 28px);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+/* ---------- sticky nav ---------- */
+#nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(243,238,226,.93);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule2);
+}
+#nav .wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:9px;padding-bottom:9px}
+#nav .brand{font-family:var(--sans);font-weight:700;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-right:12px}
+#nav a{
+  font-family:var(--sans);font-size:12.5px;color:var(--ink2);text-decoration:none;
+  padding:3px 9px;border-radius:20px;border:1px solid transparent;white-space:nowrap;
+}
+#nav a:hover{background:var(--copper-soft);border-color:var(--rule2);color:var(--ink)}
+
+/* ---------- header ---------- */
+header{padding:56px 0 30px}
+.eyebrow{font-family:var(--sans);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);font-weight:700}
+h1{font-size:clamp(30px,5.2vw,50px);line-height:1.08;margin:.28em 0 .18em;letter-spacing:-.018em;font-weight:600}
+h1 em{font-style:normal;color:var(--green)}
+.lede{font-size:20px;color:var(--ink2);max-width:66ch;margin:0 0 14px}
+.kicker{font-family:var(--sans);font-size:14px;color:var(--dim);max-width:70ch}
+
+/* ---------- sections ---------- */
+section{padding:34px 0 20px;border-top:1px solid var(--rule);margin-top:26px}
+.sec-num{font-family:var(--mono);font-size:12px;color:var(--copper);letter-spacing:.14em}
+h2{font-size:clamp(22px,3.2vw,31px);line-height:1.18;margin:.15em 0 .3em;font-weight:600;letter-spacing:-.012em}
+h3{font-family:var(--sans);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:700}
+.sub{color:var(--ink2);max-width:74ch;margin:0 0 18px}
+p{margin:0 0 14px}
+.narrow{max-width:74ch}
+
+/* ---------- cards & grids ---------- */
+.card{
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-radius:12px;
+  padding:18px 20px;
+  box-shadow:0 1px 0 rgba(0,0,0,.03), 0 10px 26px -22px rgba(28,37,48,.5);
+}
+.grid{display:grid;gap:20px}
+.g-hero{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr)}
+.g-half{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.g-6040{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:940px){.g-hero,.g-half,.g-6040{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;margin:0 0 14px}
+.ctl{min-width:190px;flex:1 1 220px}
+.ctl label{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--sans);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:700;margin-bottom:5px}
+.ctl .val{font-family:var(--mono);font-size:14px;color:var(--copper);text-transform:none;letter-spacing:0}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--rule2);border-radius:3px}
+input[type=range]::-moz-range-track{height:4px;background:var(--rule2);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--copper);
+  border:2px solid var(--card);box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-6.5px;
+}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--copper);border:2px solid var(--card)}
+.btn{
+  font-family:var(--sans);font-size:13px;font-weight:600;
+  background:var(--card);color:var(--ink);border:1px solid var(--rule2);
+  border-radius:7px;padding:7px 14px;cursor:pointer;transition:.14s;
+}
+.btn:hover{background:var(--copper-soft);border-color:var(--copper)}
+.btn.on{background:var(--green);color:#fff;border-color:var(--green)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hint{font-family:var(--sans);font-size:12.5px;color:var(--faint)}
+
+/* ---------- canvases / charts ---------- */
+.canvas-holder{width:100%;line-height:0;border-radius:10px;overflow:hidden;background:var(--card);border:1px solid var(--rule)}
+.chart-box{position:relative;width:100%;height:330px}
+.chart-box.tall{height:390px}
+
+/* ---------- ledger table ---------- */
+.ledger-scroll{max-height:392px;overflow:auto;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+table.ledger{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+table.ledger thead th{
+  position:sticky;top:0;background:var(--paper2);z-index:2;
+  font-family:var(--sans);font-size:10.5px;letter-spacing:.03em;color:var(--dim);
+  font-weight:700;padding:8px 6px;border-bottom:1.5px solid var(--rule2);text-align:right;white-space:nowrap;
+}
+table.ledger thead th:first-child{text-align:left}
+table.ledger td{padding:5px 6px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap;color:var(--ink2)}
+table.ledger td:first-child{text-align:left;color:var(--faint)}
+table.ledger tbody tr:nth-child(even){background:rgba(47,111,82,.035)}
+table.ledger tbody tr.hot{background:var(--copper-soft)!important}
+table.ledger tbody tr.hot td{color:var(--ink)}
+table.ledger tr.gap td{text-align:center;color:var(--faint);font-style:italic;background:var(--paper2)}
+table.ledger tfoot td{
+  padding:7px 9px;border-top:2px solid var(--rule2);font-weight:700;color:var(--ink);text-align:right;background:var(--paper2);
+}
+table.ledger tfoot td:first-child{text-align:left;font-family:var(--sans);font-size:11px;letter-spacing:.02em;font-weight:700;color:var(--dim);white-space:normal}
+.num-copper{color:var(--copper)!important}
+.num-green{color:var(--green)!important}
+.num-red{color:var(--red)!important}
+
+/* generic data table */
+table.data{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+table.data th{
+  font-family:var(--sans);font-size:11px;letter-spacing:.02em;color:var(--dim);
+  font-weight:700;padding:8px 8px;border-bottom:1.5px solid var(--rule2);text-align:right;white-space:nowrap
+}
+table.data th:first-child{text-align:left}
+table.data td{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap;color:var(--ink2)}
+table.data td:first-child{text-align:left}
+table.data tbody tr:hover{background:var(--copper-soft)}
+
+/* ---------- misc bits ---------- */
+.tag{
+  display:inline-block;font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;padding:2px 7px;border-radius:4px;vertical-align:1px;
+}
+.tag.exact{background:var(--green-soft);color:var(--green);border:1px solid rgba(47,111,82,.3)}
+.tag.hp{background:rgba(47,93,138,.12);color:var(--blue);border:1px solid rgba(47,93,138,.28)}
+.tag.dbl{background:var(--red-soft);color:var(--red);border:1px solid rgba(163,58,53,.28)}
+
+.callout{
+  border-left:3px solid var(--copper);
+  background:linear-gradient(90deg,var(--copper-soft),transparent 78%);
+  padding:13px 18px;border-radius:0 8px 8px 0;margin:16px 0;
+}
+.callout.green{border-left-color:var(--green);background:linear-gradient(90deg,var(--green-soft),transparent 78%)}
+.callout.red{border-left-color:var(--red);background:linear-gradient(90deg,var(--red-soft),transparent 78%)}
+.callout .ttl{font-family:var(--sans);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--copper);margin-bottom:4px}
+.callout.green .ttl{color:var(--green)}
+.callout.red .ttl{color:var(--red)}
+
+.mathblock{background:var(--paper2);border:1px solid var(--rule);border-radius:9px;padding:14px 16px;margin:14px 0;overflow-x:auto}
+.mathline{margin:9px 0;overflow-x:auto;overflow-y:hidden}
+.katex{font-size:1.03em}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:12.5px;color:var(--ink2);margin:10px 0}
+.legend i{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:3px;margin-right:6px}
+
+.bigval{font-family:var(--mono);font-size:clamp(20px,3.4vw,30px);letter-spacing:-.01em;line-height:1.25}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:14px 0}
+.stat{background:var(--paper2);border:1px solid var(--rule);border-radius:9px;padding:11px 13px}
+.stat .lab{font-family:var(--sans);font-size:11px;letter-spacing:.02em;color:var(--dim);font-weight:700}
+.stat .v{font-family:var(--mono);font-size:19px;margin-top:3px;color:var(--ink)}
+
+/* bracket chips */
+.chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-family:var(--mono);font-size:12.5px;margin:8px 0}
+.chip{background:var(--paper2);border:1px solid var(--rule2);border-radius:5px;padding:2px 7px;color:var(--ink2)}
+.chip.one{background:var(--green-soft);border-color:rgba(47,111,82,.35);color:var(--green)}
+.chip.zero{background:var(--red-soft);border-color:rgba(163,58,53,.35);color:var(--red)}
+.chip.res{background:var(--copper-soft);border-color:var(--copper);color:var(--copper);font-weight:700}
+
+/* mini bars */
+.barrow{display:grid;grid-template-columns:34px 1fr 92px;gap:8px;align-items:center;margin:3px 0;font-family:var(--mono);font-size:11.5px}
+.bartrack{height:11px;background:var(--paper2);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--rule)}
+.barfill{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs .btn{border-radius:20px}
+.panel{display:none}
+.panel.on{display:block}
+
+footer{padding:40px 0 70px;border-top:1px solid var(--rule);margin-top:34px;color:var(--dim);font-family:var(--sans);font-size:13.5px}
+sup.fn{color:var(--copper);font-size:.7em}
+.small{font-family:var(--sans);font-size:13px;color:var(--dim)}
+b.ink{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="wrap">
+  <span class="brand">Interest-Rate Ceiling</span>
+  <a href="#s1">1 · The ledger</a>
+  <a href="#s2">2 · The ceiling</a>
+  <a href="#s3">3 · The bridge</a>
+  <a href="#s4">4 · Why &lt; 3</a>
+  <a href="#s5">5 · Time adds</a>
+  <a href="#s6">6 · Where it breaks</a>
+</div></nav>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">The exponential function · approach 04</div>
+  <h1>The interest-rate ceiling:<br><em>growth in slow motion</em></h1>
+  <p class="lede">A bank pays 100% interest a year. You deposit $1. If the bank compounds twice a year instead of once, you end with $2.25 instead of $2.00. Four times: $2.44. Daily: $2.7146. So — compound <em>continuously</em>, infinitely often, and you get… infinite money?</p>
+  <p class="kicker">No. You get <b class="ink">$2.71828…</b>, and not one cent more. This page is about why that ceiling exists, and about the much bigger thing hiding underneath it: the discrete compounding process <b class="ink">is</b> the law <i>“rate = current amount”</i> written in slow motion. Taking the slices to zero does not build a new object. It takes the limit of the same law. The function comes first; the number <i>e</i> is what falls out.</p>
+</header>
+
+<!-- ============================ SECTION 1 ============================ -->
+<section id="s1">
+  <div class="sec-num">01</div>
+  <h2>One ledger, <span style="color:var(--copper)">n</span> jumps</h2>
+  <p class="sub">Split the term into <em>n</em> equal slices. Over one slice of length <span id="dt-inline"></span>, the account earns <b class="ink">(rate) × (current amount) × (length of slice)</b> — that is the entire law of the thing, and it is the only rule in the ledger below. Everything else is bookkeeping.</p>
+
+  <div class="mathblock">
+    <div class="mathline" data-tex-d="\underbrace{y_{k+1}-y_k}_{\text{interest this slice}} \;=\; \underbrace{1}_{\text{rate}}\cdot \underbrace{y_k}_{\text{current amount}}\cdot \underbrace{h}_{\Delta t},\qquad h=\frac{x}{n}\;\Longrightarrow\; y_{k+1}=y_k\Bigl(1+\frac{x}{n}\Bigr)\;\Longrightarrow\; y_n=\Bigl(1+\frac{x}{n}\Bigr)^{\!n}"></div>
+  </div>
+  <div class="callout">
+    <div class="ttl">Read this twice</div>
+    <div>That recursion is <b class="ink">exactly Euler's method</b> applied to <span data-tex="y'=y,\;y(0)=1"></span> with step <span data-tex="h=x/n"></span> on the interval <span data-tex="[0,x]"></span>. So <span data-tex="(1+x/n)^n"></span> is not an analogy for the exponential — it is the <em>n</em>-step numerical solution of the differential equation that <b class="ink">defines</b> it. The compound-interest story and the "speed equals position" story are the same story at two zoom levels.</div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Compounding <span class="val" id="n-lab">once a year · n = 1</span></label>
+      <input type="range" id="n-slider" min="0" max="9" step="1" value="0">
+    </div>
+    <div class="ctl">
+      <label>Term <span class="val" id="x-lab">x = 1.00 yr</span></label>
+      <input type="range" id="x-slider" min="0.25" max="3" step="0.05" value="1">
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="play-btn">▶ Run the ledger</button>
+      <button class="btn" id="curve-btn">Show <span data-tex="e^x" style="margin:0 2px"></span> curve</button>
+    </div>
+  </div>
+
+  <div class="grid g-hero">
+    <div>
+      <div class="canvas-holder" id="stair-canvas"></div>
+      <div class="legend">
+        <span><i style="background:var(--copper)"></i>the staircase — <span data-tex="n"></span> multiplicative jumps</span>
+        <span><i style="background:var(--green)"></i>the smooth curve <span data-tex="e^{t}"></span></span>
+        <span><i style="background:var(--red)"></i>the shortfall at <span data-tex="t=x"></span></span>
+      </div>
+      <p class="small">Hover the staircase or a ledger row — the two views are linked. Each riser is drawn at its true height <span data-tex="y_k\cdot h"></span>: the jumps get shorter as <em>n</em> grows, but there are more of them, and the ceiling below is the reason the trade never quite pays off.</p>
+    </div>
+    <div>
+      <h3>The ledger</h3>
+      <div class="ledger-scroll"><table class="ledger" id="ledger"></table></div>
+      <div class="statgrid" id="s1-stats"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SECTION 2 ============================ -->
+<section id="s2">
+  <div class="sec-num">02</div>
+  <h2>The ceiling: more compounding is not more money</h2>
+  <p class="sub">Fix the term at one year and push <em>n</em> from 1 to a million. The balance rises every single time — and flattens hard. The whole benefit of compounding infinitely often, over compounding once, is <b class="ink">71.8 cents on the dollar</b>, and monthly compounding already collects <span id="pct-monthly">85%</span> of it.</p>
+
+  <div class="grid g-6040">
+    <div>
+      <div class="card"><div class="chart-box tall"><canvas id="ceil-chart"></canvas></div></div>
+      <p class="small" style="margin-top:10px">Horizontal axis is logarithmic: each tick is a tenfold increase in effort. The curve is <em>strictly increasing</em> in <em>n</em> (section 3 says why) and pinned under the dashed ceiling.</p>
+    </div>
+    <div>
+      <h3>What the extra effort buys</h3>
+      <div class="statgrid" id="gain-stats" style="margin-top:0"></div>
+      <div class="callout red" style="margin-top:4px">
+        <div class="ttl">The shape of the diminishing return</div>
+        <div style="font-size:15.5px">The error obeys <span data-tex="e-(1+1/n)^n \approx \dfrac{e}{2n}"></span> — the last two columns of the table below agree to three digits by <em>n</em> = 100. Halving the error costs <em>twice as many compoundings</em>. This is a first-order method; section 6 makes the honest comparison with its factorially-fast sibling, the power series.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:26px">The book of values</h3>
+  <div class="card" style="padding:6px 14px 12px"><div style="overflow-x:auto"><table class="data" id="ceil-table"></table></div></div>
+  <p class="small" style="margin-top:8px">
+    <span class="tag exact">exact</span> exact rational <span data-tex="(n{+}1)^n/n^n"></span> built from native BigInt integer powers, truncated to 12 places — no floating point anywhere in the path ·
+    <span class="tag hp">70 dp</span> big.js decimal arithmetic, binary exponentiation with rounding at 70 digits.
+    Every number on this page is computed in your browser at load time; none are hard-coded.
+  </p>
+</section>
+
+<!-- ============================ SECTION 3 ============================ -->
+<section id="s3">
+  <div class="sec-num">03</div>
+  <h2>The bridge: where the factorials come from</h2>
+  <p class="sub">This is the heart of the matter. Expand <span data-tex="(1+x/n)^n"></span> with the binomial theorem and something remarkable falls out — the finite compounding product is the power series, term by term, each term <em>damped by a bracket that creeps up to 1</em>.</p>
+
+  <div class="mathblock">
+    <div class="mathline" data-tex-d="\Bigl(1+\frac{x}{n}\Bigr)^{\!n}=\sum_{k=0}^{n}\binom{n}{k}\frac{x^k}{n^k}=\sum_{k=0}^{n}\frac{x^k}{k!}\cdot\underbrace{\frac{n(n-1)(n-2)\cdots(n-k+1)}{n^k}}_{\textstyle B_k(n)}"></div>
+    <div class="mathline" data-tex-d="B_k(n)=\Bigl(1-\frac{0}{n}\Bigr)\Bigl(1-\frac{1}{n}\Bigr)\Bigl(1-\frac{2}{n}\Bigr)\cdots\Bigl(1-\frac{k-1}{n}\Bigr)\;\xrightarrow[\;n\to\infty\;]{}\;1\quad\text{for each fixed }k"></div>
+  </div>
+
+  <p class="narrow">Two things follow immediately, and they are the two things you actually needed to know:</p>
+  <p class="narrow"><b class="ink">(1) Why the balance always goes up with <em>n</em>.</b> Every bracket <span data-tex="B_k(n)"></span> increases with <em>n</em>, <em>and</em> a larger <em>n</em> adds more terms to the sum. Nothing ever decreases. That is the monotonicity — no calculus required.</p>
+  <p class="narrow"><b class="ink">(2) Why the limit is the series.</b> Each bracket climbs to 1, so term <em>k</em> climbs to <span data-tex="x^k/k!"></span>. The compound-interest limit <em>is</em> <span data-tex="\sum x^k/k!"></span>. Compounding did not discover a second exponential function; it walked to the same one from below.</p>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Compounding periods <span class="val" id="b-n-lab">n = 12</span></label>
+      <input type="range" id="b-n-slider" min="0" max="60" step="1" value="11">
+    </div>
+    <div class="ctl">
+      <label>Term <span class="val" id="b-x-lab">x = 1.00</span></label>
+      <input type="range" id="b-x-slider" min="0.25" max="3" step="0.05" value="1">
+    </div>
+    <div class="ctl">
+      <label>Inspect term <span class="val" id="b-k-lab">k = 5</span></label>
+      <input type="range" id="b-k-slider" min="0" max="12" step="1" value="5">
+    </div>
+  </div>
+
+  <div class="grid g-6040">
+    <div>
+      <div class="card"><div class="chart-box tall"><canvas id="binom-chart"></canvas></div></div>
+      <div class="legend">
+        <span><i style="background:var(--copper)"></i>actual term <span data-tex="\binom{n}{k}(x/n)^k"></span>, sums to <span data-tex="(1+x/n)^n"></span></span>
+        <span><i style="background:var(--green)"></i>limit term <span data-tex="x^k/k!"></span>, sums to <span data-tex="e^x"></span></span>
+      </div>
+    </div>
+    <div>
+      <h3>The bracket, factor by factor</h3>
+      <div class="card">
+        <div id="bracket-eq" class="mathline" style="margin-top:0"></div>
+        <div class="chips" id="bracket-chips"></div>
+        <div class="statgrid" id="b-stats" style="margin-bottom:0"></div>
+      </div>
+      <p class="small" style="margin-top:10px" id="bracket-story"></p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="ttl">Honesty: one step here is asserted, not proved</div>
+    <div>Passing from “each term converges” to “the sum converges to the sum of the limits” is an interchange of two limits (<span data-tex="n\to\infty"></span> and the infinite summation) and it is <em>not</em> automatic — there are sequences of series where it fails. Here it is legitimate: the terms are non-negative and increase in <em>n</em>, so monotone convergence applies (dominated convergence works too, with dominating series <span data-tex="\sum |x|^k/k!"></span>). This page shows you the numbers doing it; it does not prove it.</div>
+  </div>
+</section>
+
+<!-- ============================ SECTION 4 ============================ -->
+<section id="s4">
+  <div class="sec-num">04</div>
+  <h2>Proof that the ceiling exists (and is below 3)</h2>
+  <p class="sub">The monotonicity from section 3 is half the argument. Here is the other half, complete and elementary: every bracket is at most 1, and <span data-tex="k!\ge 2^{\,k-1}"></span> for <span data-tex="k\ge1"></span>, so the balance is trapped under a geometric series that sums to exactly 3.</p>
+
+  <div class="mathblock">
+    <div class="mathline" data-tex-d="\Bigl(1+\frac1n\Bigr)^{\!n}=\sum_{k=0}^{n}\frac{B_k(n)}{k!}\;\le\;\sum_{k=0}^{n}\frac1{k!}\;\le\;1+\underbrace{1+\tfrac12+\tfrac14+\tfrac18+\cdots}_{\text{geometric, sums to }2}\;=\;3"></div>
+  </div>
+  <p class="narrow">Increasing and bounded above ⟹ convergent (monotone convergence for sequences). That is a full existence proof for the number <em>e</em>, and it never once assumes <em>e</em> exists. Below, the three columns are the three inequalities, computed live at <span id="s4-n-echo">n = 12</span> — drag the <em>n</em> slider in section 3 and watch the left column crawl up toward the middle one while the right one stands still.</p>
+
+  <div class="grid g-half">
+    <div class="card">
+      <h3 style="margin-bottom:12px">Term by term</h3>
+      <div id="bound-rows"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">Running totals</h3>
+      <div id="bound-totals"></div>
+      <p class="small" style="margin-top:14px;margin-bottom:0">The middle column's limit is <em>e</em> itself — which is section 03's power series, arriving at the same number from the other direction. The right column is a crude but airtight fence. Nothing in this argument needed a calculator.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SECTION 5 ============================ -->
+<section id="s5">
+  <div class="sec-num">05</div>
+  <h2>Time adds, money multiplies</h2>
+  <p class="sub">Grow for <em>x</em> years, then grow for <em>y</em> more. Same as growing for <em>x + y</em>. Obvious about money — and it is the entire functional equation <span data-tex="\exp(x+y)=\exp(x)\exp(y)"></span>.</p>
+
+  <p class="narrow">The beautiful part: with a <em>fixed</em> slice length <span data-tex="h"></span>, this identity is already <b class="ink">exactly true before any limit</b>. Growing for <em>m</em> slices and then <em>k</em> more is <span data-tex="(1+h)^m(1+h)^k=(1+h)^{m+k}"></span> — nothing but the schoolbook law of integer exponents. The limit inherits it. That is why the exponential turns addition into multiplication: it was doing so at every finite stage.</p>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>First stretch <span class="val" id="m-lab">x = 12 months</span></label>
+      <input type="range" id="m-slider" min="1" max="24" step="1" value="12">
+    </div>
+    <div class="ctl">
+      <label>Second stretch <span class="val" id="k2-lab">y = 8 months</span></label>
+      <input type="range" id="k2-slider" min="1" max="24" step="1" value="8">
+    </div>
+    <div class="btnrow">
+      <button class="btn on" id="ghost-btn">Overlay the rescaled copy</button>
+    </div>
+  </div>
+
+  <div class="grid g-hero">
+    <div>
+      <div class="canvas-holder" id="add-canvas"></div>
+      <p class="small">The dashed overlay is the <em>first</em> <span data-tex="y"></span>-months of the staircase, lifted and magnified by the factor <span data-tex="A=\exp(x)"></span>. It lands exactly on the second stretch. The second stretch is not a new shape — it is the same growth movie, re-scaled. <em>That</em> is what the functional equation looks like.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>The accounts agree</h3>
+        <div id="add-stats" class="statgrid" style="margin-top:0"></div>
+        <div id="add-eq" class="mathline"></div>
+        <p class="small" style="margin-bottom:0" id="add-note"></p>
+      </div>
+      <div class="callout green" style="margin-top:16px">
+        <div class="ttl">Why the notation <span style="font-family:var(--serif);text-transform:none;font-style:italic">e<sup>x</sup></span> is even allowed</div>
+        <div>From additivity, <span data-tex="\exp(m/q)^q=\exp(m)=\exp(1)^m"></span> for integers, so <span data-tex="\exp(r)=\exp(1)^r=e^{\,r}"></span> for every rational <em>r</em>, and continuity does the rest. The function obeys the power law, so it <em>earns</em> the right to be written as a power. Backwards from how it is usually taught: we did not start with a number <em>e</em> and raise it to <em>x</em>. We built a function, and discovered it behaves like a power of its own value at 1.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ SECTION 6 ============================ -->
+<section id="s6">
+  <div class="sec-num">06</div>
+  <h2>Where this picture breaks</h2>
+  <p class="sub">Three places where the compounding story is misleading, fragile, or simply expensive. All three are worth knowing; none of them damages the limit.</p>
+
+  <div class="tabs">
+    <button class="btn on" data-panel="p-neg">Negative time: the alternating ledger</button>
+    <button class="btn" data-panel="p-fp">Floating point: the cliff at 10<sup>16</sup></button>
+    <button class="btn" data-panel="p-slow">Cost: this method is slow</button>
+  </div>
+
+  <div class="panel on" id="p-neg">
+    <div class="grid g-half">
+      <div>
+        <p>For <span data-tex="x<0"></span> the recursion still reads <span data-tex="y_{k+1}=y_k(1+x/n)"></span>, but if <span data-tex="n<|x|"></span> the factor <span data-tex="1+x/n"></span> is <b class="ink">negative</b>: the balance flips sign every slice. Euler's method has overshot past zero. At <span data-tex="x=-5,\,n=2"></span> the ledger reports <b class="ink">$2.25</b> for an account that should hold <b class="ink">$0.0067</b> — off by a factor of 334, and with the wrong sign at odd <em>n</em>.</p>
+        <p>At exactly <span data-tex="n=|x|"></span> the factor is 0 and the account is annihilated in one step. Only once <span data-tex="n>|x|"></span> does the staircase become a genuine decaying picture — and then it converges, slowly, from below. <b class="ink">The limit is fine; the finite-<em>n</em> picture is a liar.</b> Section 1 restricts to <span data-tex="x>0"></span> for exactly this reason.</p>
+        <div class="callout red" style="margin-top:12px">
+          <div class="ttl">The honest fix</div>
+          <div>Define <span data-tex="\exp"></span> for <span data-tex="x\ge0"></span> here and get negatives from the functional equation: <span data-tex="\exp(-x)=1/\exp(x)"></span>, which follows from <span data-tex="\exp(x)\exp(-x)=\exp(0)=1"></span>. Section 5's identity is doing real work, not decoration.</div>
+        </div>
+      </div>
+      <div>
+        <div style="overflow:auto"><table class="data" id="neg-table"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="p-fp">
+    <div class="grid g-half">
+      <div>
+        <p>Computing <span data-tex="(1+1/n)^n"></span> in ordinary double precision fails long before the mathematics does. Around <span data-tex="n\approx10^{15}"></span> the quantity <span data-tex="1+1/n"></span> can no longer be represented — the machine epsilon for doubles near 1 is about <span data-tex="2.2\times10^{-16}"></span> — so the rounding error in the base gets amplified by the exponent <em>n</em>. The result staggers, then collapses to exactly <b class="ink">1.0</b>.</p>
+        <p>The right column below computes the same expression with big.js at 70 decimal digits (binary exponentiation, rounding to 70 dp after every multiplication) and keeps climbing to <em>e</em> as it should. This is a numerical-analysis failure, not a mathematical one — but if you only ever met <em>e</em> through a spreadsheet, this is where you would have concluded the limit was 1.</p>
+        <div class="callout" style="margin-top:12px">
+          <div class="ttl">Catastrophic cancellation, family resemblance</div>
+          <div>This is the same disease as the difference-quotient noise floor: a tiny quantity added to 1, then the 1 taken back out. Whenever your formula computes <span data-tex="1+\varepsilon"></span> and then depends on <span data-tex="\varepsilon"></span>, doubles will betray you.</div>
+        </div>
+      </div>
+      <div><div style="overflow:auto"><table class="data" id="fp-table"></table></div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="p-slow">
+    <div class="grid g-6040">
+      <div>
+        <div class="card"><div class="chart-box"><canvas id="err-chart"></canvas></div></div>
+      </div>
+      <div>
+        <p>Both constructions define the same function. They are not remotely the same <em>algorithm</em>.</p>
+        <div class="statgrid" id="cost-stats"></div>
+        <p class="small">Error for compounding is <span data-tex="\approx e/(2n)"></span> — first order, a straight line of slope <span data-tex="-1"></span> on this log-log plot. Error for the truncated series <span data-tex="\sum_{k\le N}1/k!"></span> is <span data-tex="\approx 1/(N{+}1)!"></span> — it falls off the bottom of the chart. To buy ten correct digits by compounding you need roughly <span id="n-for-10">2.7 × 10¹⁰</span> compoundings; the series needs <span id="N-for-10">14</span> terms.</p>
+        <p class="small">So why teach compounding at all? Because it is the <em>definition that explains itself</em>: it is the law “rate = amount” executed in slow motion, in units anyone can hold in their hand. The series is the fast way to compute; this is the honest way to see.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CLOSING ============================ -->
+<section id="s7">
+  <div class="sec-num">07</div>
+  <h2>What actually happened here</h2>
+  <div class="narrow">
+    <p>We never assumed a number <em>e</em>. We wrote down one rule — <b class="ink">the increase over a slice of time is the current amount times the length of the slice</b> — and executed it <em>n</em> times. That is <span data-tex="(1+x/n)^n"></span>, and it is Euler's method for <span data-tex="y'=y"></span>.</p>
+    <p>Refining the slices does not change the rule; it only stops rounding it. The limit exists because the sequence is increasing (every binomial bracket climbs toward 1) and bounded (every bracket is at most 1, and <span data-tex="\sum 1/k!<3"></span>). The limit <em>is</em> the power series, because that is where the brackets take you. And the limit turns sums into products, because <span data-tex="(1+h)^{m+k}=(1+h)^m(1+h)^k"></span> was true at every finite stage.</p>
+    <p>Only at the very end, by evaluating at <span data-tex="x=1"></span>, does a number appear: <span data-tex="e=2.718281828\ldots"></span>. <b class="ink">The function came first. The number is the byproduct.</b> And the ceiling is not a disappointment — it is the whole content of the theorem. Compounding faster buys you more, with brutally diminishing returns, and the thing it is diminishing toward is the one motion whose speed always equals its position.</p>
+  </div>
+  <div class="mathblock" style="text-align:center">
+    <div class="mathline" data-tex-d="\exp(x)\;=\;\lim_{n\to\infty}\Bigl(1+\frac{x}{n}\Bigr)^{\!n}\;=\;\sum_{k=0}^{\infty}\frac{x^k}{k!}\;=\;\text{the unique }f\text{ with }f'=f,\;f(0)=1"></div>
+  </div>
+</section>
+
+<footer>
+  <p>All numbers computed in-page: high-precision values via <b>big.js</b> at 70 decimal digits, exact rationals via native <b>BigInt</b>, plots via <b>Chart.js</b>, staircases via <b>p5.js</b>, notation via <b>KaTeX</b>. Nothing loads from the network at view time.</p>
+  <p style="margin-bottom:0">Approach 04 of 5 on the exponential function. Companion angles: the base where the derivative matches (<em>01</em>), the uniqueness of the solution to <span data-tex="y'=y"></span> (<em>02</em>), the power series as a self-reproducing object (<em>03</em>), and Euler's formula in the complex plane (<em>05</em>).</p>
+</footer>
+
+</div><!-- /wrap -->
+
+<script src="lib/katex/katex.min.js"></script>
+<script src="lib/big.min.js"></script>
+<script src="lib/chart.umd.js"></script>
+<script src="lib/p5.min.js"></script>
+<script>
+/* =====================================================================
+   THE INTEREST-RATE CEILING
+   exp as the limit of discrete compounding, (1 + x/n)^n -> e^x
+   ===================================================================== */
+(function(){
+"use strict";
+
+/* ---------- palette (kept in sync with CSS custom properties) ---------- */
+const C = {
+  ink:'#1c2530', ink2:'#3d4a58', dim:'#6d7a88', faint:'#98a3ae',
+  rule:'#ddd2bb', rule2:'#c9bb9e', paper2:'#ece5d5', card:'#fcfaf4',
+  copper:'#c2703a', copperSoft:'rgba(194,112,58,.18)',
+  green:'#2f6f52', greenSoft:'rgba(47,111,82,.16)',
+  red:'#a33a35', gold:'#9c7b16', blue:'#2f5d8a', violet:'#6a4f8f'
+};
+
+/* Log axes draw a gridline at every minor tick, which turns the plot into a
+   hatched mess.  Paint only the decades. */
+const decadeGrid = ctx => {
+  const l = Math.log10(ctx.tick.value);
+  return Math.abs(l - Math.round(l)) < 1e-9 ? C.rule : 'rgba(0,0,0,0)';
+};
+
+/* =====================================================================
+   0.  KaTeX helpers
+   ===================================================================== */
+function tex(el, s, display){
+  try { katex.render(s, el, {throwOnError:false, displayMode:!!display}); }
+  catch(e){ el.textContent = s; }
+}
+function renderStaticTeX(root){
+  (root||document).querySelectorAll('[data-tex]').forEach(el=>{
+    if(el.dataset.done) return; el.dataset.done='1'; tex(el, el.getAttribute('data-tex'), false);
+  });
+  (root||document).querySelectorAll('[data-tex-d]').forEach(el=>{
+    if(el.dataset.done) return; el.dataset.done='1'; tex(el, el.getAttribute('data-tex-d'), true);
+  });
+}
+
+/* =====================================================================
+   1.  ARITHMETIC LAYER
+       - big.js high precision (70 dp) for every headline value
+       - native BigInt exact rationals for small n
+       - IEEE doubles, clearly labelled, only where we are exposing them
+   ===================================================================== */
+Big.DP = 90;          // decimal places kept on division
+Big.RM = 1;           // round half-up
+Big.NE = -80; Big.PE = 80;
+const DP = 70;        // working precision we advertise
+
+/** base^exp by binary exponentiation, rounding to DP digits after each multiply.
+ *  big.js multiplication is exact, so without rounding the digit count doubles
+ *  every squaring; rounding keeps it bounded. 20 roundings at 1e-70 each is
+ *  utterly negligible against the 1e-15 we display.
+ *  NOTE: modulo, not bitwise — `n & 1` coerces to int32 and would silently
+ *  corrupt exponents above 2^31 (we go to 1e17 in the floating-point panel). */
+function bpow(base, e){
+  let r = new Big(1), x = new Big(base), n = e;
+  while(n > 0){
+    if(n % 2 === 1) r = r.times(x).round(DP);
+    n = Math.floor(n/2);
+    if(n > 0) x = x.times(x).round(DP);
+  }
+  return r;
+}
+/** (1 + x/n)^n in 70-digit decimal arithmetic */
+function compoundBig(x, n){
+  return bpow(new Big(1).plus(new Big(x).div(n)), n);
+}
+/** e^x via the power series, 70 digits (the reference value everything is judged against) */
+const TINY = new Big(1).div(bpow(10, DP+8));
+function expBig(x){
+  const bx = new Big(x);
+  let s = new Big(1), t = new Big(1);
+  for(let k=1;k<=300;k++){
+    t = t.times(bx).div(k).round(DP+12);
+    s = s.plus(t);
+    if(t.abs().lt(TINY)) break;
+  }
+  return s.round(DP);
+}
+const E_BIG  = expBig(1);
+const E_NUM  = Math.E;
+
+/** exact rational (n+1)^n / n^n as a decimal string with `d` places (BigInt).
+ *  Truly exact: no floating point anywhere in the path. */
+function exactCompoundStr(n, d){
+  const num = BigInt(n+1) ** BigInt(n);
+  const den = BigInt(n) ** BigInt(n);
+  const scaled = (num * (10n ** BigInt(d))) / den;      // truncated, not rounded
+  const s = scaled.toString().padStart(d+1,'0');
+  return s.slice(0, s.length-d) + '.' + s.slice(s.length-d);
+}
+function exactFractionStr(n){
+  return `\\frac{${(BigInt(n+1)**BigInt(n)).toString()}}{${(BigInt(n)**BigInt(n)).toString()}}`;
+}
+
+/* doubles — factorials, brackets, terms (only ever displayed to ~10 digits) */
+const FACT = [1];
+for(let k=1;k<=25;k++) FACT[k] = FACT[k-1]*k;
+
+/** B_k(n) = (1-0/n)(1-1/n)...(1-(k-1)/n).  Hits exactly 0 once k > n,
+ *  which is precisely why the binomial sum self-truncates at k = n. */
+function bracket(k, n){
+  let b = 1;
+  for(let j=1;j<=k-1;j++) b *= (1 - j/n);
+  return b < 0 ? 0 : b;
+}
+/** the k-th binomial term of (1+x/n)^n, written as (x^k/k!)*B_k(n) */
+function binomTerm(k, x, n){
+  if(k > n) return 0;
+  return Math.pow(x,k)/FACT[k] * bracket(k,n);
+}
+
+/* ---------- formatting ---------- */
+const money = v => '$' + v.toFixed(4);
+const fx = (v,d) => v.toFixed(d);
+function commas(n){ return n.toLocaleString('en-US'); }
+function sci(v, d){
+  if(v === 0) return '0';
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  if(e >= -4 && e <= 5) return v.toFixed(Math.max(0, d-1-e));
+  return (v/Math.pow(10,e)).toFixed(2) + '×10' + supDigits(e);
+}
+function supDigits(e){
+  const map = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴',
+               '5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  return String(e).split('').map(c=>map[c]||c).join('');
+}
+
+/* =====================================================================
+   2.  SECTION 1 — the ledger and the staircase
+   ===================================================================== */
+const N_CHOICES = [1,2,3,4,6,12,26,52,365,8760];
+const N_NAMES = ['annually','semi-annually','every 4 months','quarterly','bi-monthly',
+                 'monthly','fortnightly','weekly','daily','hourly'];
+
+const S1 = {
+  nIdx: 0, x: 1, ledgerHover: false,
+  get n(){ return N_CHOICES[this.nIdx]; },
+  hoverK: -1,          // step highlighted by pointer (1-based), -1 = none
+  playK: -1,           // step reached by the "run" animation, -1 = show all
+  playing: false,
+  showCurve: true
+};
+
+/* ----- the mathematical object on screen: a ledger of n rows ----- */
+function buildLedger(x, n){
+  const h = x/n, f = 1 + h;
+  const rows = [];
+  let y = 1;
+  for(let k=1;k<=n;k++){
+    const start = y;
+    const interest = start * h;      // = rate(1) * amount * dt   <-- the whole law
+    y = start * f;
+    rows.push({k, t: k*h, start, interest, end: y});
+  }
+  return {h, f, rows, final: y};
+}
+
+function renderLedgerTable(){
+  const {h, f, rows, final} = S1.ledger;
+  const n = S1.n, x = S1.x;
+  const target = Math.exp(x);
+  const shown = [];
+  if(n <= 14){ for(let i=0;i<n;i++) shown.push(rows[i]); }
+  else {
+    for(let i=0;i<7;i++) shown.push(rows[i]);
+    shown.push(null);
+    for(let i=n-3;i<n;i++) shown.push(rows[i]);
+  }
+  let html = `<thead><tr>
+      <th>#</th><th>t</th><th>balance</th><th>+ interest</th><th>× factor</th><th>new balance</th>
+    </tr></thead><tbody>`;
+  for(const r of shown){
+    if(!r){ html += `<tr class="gap"><td colspan="6">⋯ ${commas(n-10)} more periods ⋯</td></tr>`; continue; }
+    const hot = (r.k === S1.hoverK) ? ' class="hot"' : '';
+    html += `<tr${hot} data-k="${r.k}">
+      <td>${r.k}</td>
+      <td>${fx(r.t,4)}</td>
+      <td>${money(r.start)}</td>
+      <td class="num-copper">+${r.interest.toFixed(4)}</td>
+      <td>${fx(f,5)}</td>
+      <td>${money(r.end)}</td></tr>`;
+  }
+  html += `</tbody><tfoot>
+      <tr><td colspan="3">after n periods &nbsp;(1 + ${fx(x,2)}/${n})<sup>${n}</sup></td><td colspan="3" class="num-copper">${money(final)}</td></tr>
+      <tr><td colspan="3">continuous, e<sup>x</sup></td><td colspan="3" class="num-green">${money(target)}</td></tr>
+      <tr><td colspan="3">shortfall</td><td colspan="3" class="num-red">${money(target-final)} &nbsp;(${((target-final)/target*100).toFixed(2)}%)</td></tr>
+    </tfoot>`;
+  const t = document.getElementById('ledger');
+  t.innerHTML = html;
+  t.querySelectorAll('tbody tr[data-k]').forEach(tr=>{
+    tr.addEventListener('mouseenter', ()=>{ S1.ledgerHover = true; S1.hoverK = +tr.dataset.k; markHot(); });
+    tr.addEventListener('mouseleave', ()=>{ S1.ledgerHover = false; S1.hoverK = -1; markHot(); });
+  });
+}
+function markHot(){
+  document.querySelectorAll('#ledger tbody tr[data-k]').forEach(tr=>{
+    tr.classList.toggle('hot', +tr.dataset.k === S1.hoverK);
+  });
+}
+
+function renderS1Stats(){
+  const {final} = S1.ledger, x = S1.x, n = S1.n;
+  const target = Math.exp(x);
+  const hp = compoundBig(x, n).toFixed(12);
+  document.getElementById('s1-stats').innerHTML = `
+    <div class="stat"><div class="lab">slice length h = x/n</div><div class="v">${fx(S1.ledger.h,6)} yr</div></div>
+    <div class="stat"><div class="lab">growth factor 1 + h</div><div class="v">${fx(S1.ledger.f,6)}</div></div>
+    <div class="stat"><div class="lab">ledger total <span class="tag hp">70 dp</span></div><div class="v" style="color:${C.copper}">${hp}</div></div>
+    <div class="stat"><div class="lab">e<sup>x</sup></div><div class="v" style="color:${C.green}">${expBig(x).toFixed(12)}</div></div>`;
+}
+
+/* ----- p5 sketch: the staircase ----- */
+const stairSketch = (p)=>{
+  let W = 700, H = 430;
+  const M = {l:62, r:26, t:26, b:44};
+
+  p.setup = ()=>{
+    const host = document.getElementById('stair-canvas');
+    W = host.clientWidth || 700;
+    const c = p.createCanvas(W, H);
+    c.parent(host);
+    p.pixelDensity(Math.min(2, window.devicePixelRatio||1));
+    p.textFont('ui-monospace, SFMono-Regular, Menlo, monospace');
+  };
+  p.windowResized = ()=>{
+    const host = document.getElementById('stair-canvas');
+    W = host.clientWidth || 700;
+    p.resizeCanvas(W, H);
+  };
+
+  p.draw = ()=>{
+    const x = S1.x, n = S1.n, L = S1.ledger;
+    const yTop = Math.max(Math.exp(x), L.final) * 1.10;
+    const PX = t => M.l + (t/x) * (W - M.l - M.r);
+    const PY = v => H - M.b - (v/yTop) * (H - M.t - M.b);
+
+    p.background(C.card);
+
+    /* --- grid --- */
+    p.stroke(C.rule); p.strokeWeight(1); p.noFill();
+    p.textSize(10); p.textAlign(p.RIGHT, p.CENTER);
+    const yStep = yTop > 12 ? 5 : (yTop > 6 ? 2 : (yTop>2.5?0.5:0.25));
+    for(let v=0; v<=yTop; v+=yStep){
+      p.stroke(v===0?C.rule2:C.rule); p.line(M.l, PY(v), W-M.r, PY(v));
+      p.noStroke(); p.fill(C.faint); p.text('$'+v.toFixed(yStep<1?2:0), M.l-8, PY(v));
+      p.stroke(C.rule);
+    }
+    p.textAlign(p.CENTER, p.TOP);
+    const tStep = x > 2 ? 0.5 : (x > 1 ? 0.25 : 0.2);
+    for(let t=0; t<=x+1e-9; t+=tStep){
+      p.stroke(C.rule); p.line(PX(t), M.t, PX(t), H-M.b);
+      p.noStroke(); p.fill(C.faint); p.text(t.toFixed(2), PX(t), H-M.b+7);
+    }
+    p.noStroke(); p.fill(C.dim); p.textSize(11);
+    p.text('time  t  (years)', (M.l+W-M.r)/2, H-M.b+22);
+
+    /* --- the smooth curve e^t --- */
+    if(S1.showCurve){
+      p.noFill(); p.stroke(C.green); p.strokeWeight(2.4);
+      p.beginShape();
+      for(let i=0;i<=260;i++){ const t = x*i/260; p.vertex(PX(t), PY(Math.exp(t))); }
+      p.endShape();
+    }
+
+    /* --- how much of the staircase to draw (for the run animation) --- */
+    const kMax = (S1.playK >= 0) ? Math.min(S1.playK, n) : n;
+
+    /* --- staircase.  Above ~1200 slices the risers are sub-pixel, so we walk
+           the corner points with a stride: same polyline to the eye, 60fps. --- */
+    const stride = Math.max(1, Math.ceil(kMax/1200));
+    const tEnd = kMax > 0 ? L.rows[kMax-1].t : 0;
+    const walk = (emit)=>{
+      emit(PX(0), PY(1));
+      for(let k=stride; k<=kMax; k+=stride){
+        const r = L.rows[k-1];
+        if(stride === 1) emit(PX(r.t), PY(r.start));
+        emit(PX(r.t), PY(r.end));
+      }
+      if(kMax > 0 && (kMax % stride) !== 0) emit(PX(tEnd), PY(L.rows[kMax-1].end));
+    };
+
+    p.noStroke(); p.fill(194,112,58, 34);
+    p.beginShape();
+    p.vertex(PX(0), PY(0));
+    walk((a,b)=>p.vertex(a,b));
+    p.vertex(PX(tEnd), PY(0));
+    p.endShape(p.CLOSE);
+
+    p.noFill(); p.stroke(C.copper); p.strokeWeight(n > 200 ? 1.4 : 2.2);
+    p.beginShape();
+    walk((a,b)=>p.vertex(a,b));
+    p.endShape();
+
+    /* --- corner dots (only when few enough to be honest, not decorative) --- */
+    if(n <= 52){
+      p.noStroke(); p.fill(C.copper);
+      for(let k=0;k<=kMax;k++){
+        const t = k===0?0:L.rows[k-1].t, v = k===0?1:L.rows[k-1].end;
+        p.circle(PX(t), PY(v), n<=12?6:4);
+      }
+    }
+
+    /* --- pointer picking: which slice is the mouse over --- */
+    const inCanvas = p.mouseX > M.l && p.mouseX < W-M.r && p.mouseY > M.t && p.mouseY < H-M.b;
+    if(!S1.playing && inCanvas){
+      const tm = (p.mouseX - M.l)/(W-M.l-M.r)*x;
+      const k = Math.min(n, Math.max(1, Math.ceil(tm/L.h - 1e-9) || 1));
+      if(k !== S1.hoverK){ S1.hoverK = k; markHot(); }
+    } else if(!S1.playing && !S1.ledgerHover && S1.hoverK !== -1){
+      S1.hoverK = -1; markHot();
+    }
+
+    /* --- highlight the selected slice: the one rule, drawn --- */
+    const hk = (S1.playing && kMax>0) ? kMax : S1.hoverK;
+    if(hk >= 1 && hk <= n){
+      const r = L.rows[hk-1];
+      const t0 = r.t - L.h;
+      /* slice band */
+      p.noStroke(); p.fill(194,112,58, 26);
+      p.rect(PX(t0), M.t, PX(r.t)-PX(t0), H-M.b-M.t);
+      /* the riser, thick */
+      p.stroke(C.copper); p.strokeWeight(3.6);
+      p.line(PX(r.t), PY(r.start), PX(r.t), PY(r.end));
+      /* arrow head */
+      p.noStroke(); p.fill(C.copper);
+      p.triangle(PX(r.t), PY(r.end), PX(r.t)-4.5, PY(r.end)+7, PX(r.t)+4.5, PY(r.end)+7);
+      /* label */
+      const lx = Math.min(W - M.r - 200, Math.max(M.l+6, PX(r.t)+10));
+      const ly = Math.max(M.t+14, PY(r.end)-30);
+      p.fill(255,255,255,232); p.stroke(C.rule2); p.strokeWeight(1);
+      p.rect(lx-6, ly-13, 196, 42, 5);
+      p.noStroke(); p.textAlign(p.LEFT, p.TOP); p.textSize(11);
+      p.fill(C.ink);   p.text(`period ${hk}:  ${money(r.start)} → ${money(r.end)}`, lx, ly-9);
+      p.fill(C.copper);p.text(`+${r.interest.toFixed(5)} = ${r.start.toFixed(4)} × ${L.h.toFixed(5)}`, lx, ly+6);
+    }
+
+    /* --- the shortfall bracket at t = x --- */
+    if(kMax === n && S1.showCurve){
+      const xe = PX(x), a = PY(L.final), b = PY(Math.exp(x));
+      if(Math.abs(a-b) > 3){
+        p.stroke(C.red); p.strokeWeight(1.6);
+        p.line(xe-9, a, xe-9, b);
+        p.line(xe-13, a, xe-5, a); p.line(xe-13, b, xe-5, b);
+        p.noStroke(); p.fill(C.red); p.textSize(11); p.textAlign(p.RIGHT, p.CENTER);
+        p.text(money(Math.exp(x)-L.final), xe-17, (a+b)/2);
+      }
+      /* end labels — nudge apart when the staircase has nearly caught the curve */
+      let la = a, lb = b;
+      if(a - b < 15){ la = (a+b)/2 + 8; lb = (a+b)/2 - 8; }
+      p.noStroke(); p.textAlign(p.LEFT, p.CENTER); p.textSize(12);
+      p.fill(C.copper); p.text(money(L.final), Math.min(xe+6, W-M.r-60), la);
+      p.fill(C.green);  p.text(money(Math.exp(x)), Math.min(xe+6, W-M.r-60), lb);
+    }
+
+    /* --- run animation --- */
+    if(S1.playing){
+      S1.playK += Math.max(1, Math.round(n/90));
+      if(S1.playK >= n){ S1.playing = false; S1.playK = -1;
+        document.getElementById('play-btn').textContent = '▶ Run the ledger'; }
+    }
+  };
+};
+
+function updateS1(){
+  S1.ledger = buildLedger(S1.x, S1.n);
+  document.getElementById('n-lab').textContent = `${N_NAMES[S1.nIdx]} · n = ${commas(S1.n)}`;
+  document.getElementById('x-lab').textContent = `x = ${S1.x.toFixed(2)} yr`;
+  renderLedgerTable();
+  renderS1Stats();
+}
+
+/* =====================================================================
+   3.  SECTION 2 — the ceiling
+   ===================================================================== */
+const CEIL_ROWS = [1,2,3,4,10,12,52,100,365,1000,8760,100000,1000000];
+const EXACT_MAX = 400;   // above this, (n+1)^n as a BigInt gets impolite
+
+function buildCeilTable(){
+  const gainTotal = E_NUM - 2;          // the entire prize: yearly → continuous
+  let html = `<thead><tr><th>n</th><th>compounded</th><th>balance on $1</th><th>precision</th>
+                <th>gained over previous row</th><th>share of the whole prize</th>
+                <th>e − value</th><th>e / 2n</th></tr></thead><tbody>`;
+  let prev = null;
+  for(const n of CEIL_ROWS){
+    const big = compoundBig(1, n);
+    const num = parseFloat(big.toFixed(18));
+    const useExact = n <= EXACT_MAX;
+    const val = useExact ? exactCompoundStr(n, 12) : big.toFixed(12);
+    const err = E_BIG.minus(big);
+    const label = {1:'yearly',2:'twice a year',3:'3× a year',4:'quarterly',10:'10× a year',
+                   12:'monthly',52:'weekly',100:'100× a year',365:'daily',1000:'1000× a year',
+                   8760:'hourly',100000:'every ~5 min',1000000:'every ~31 s'}[n] || '';
+    const gain = prev===null ? null : num - prev;
+    html += `<tr>
+      <td>${commas(n)}</td>
+      <td style="color:${C.faint}">${label}</td>
+      <td class="num-copper">${val}</td>
+      <td>${useExact?'<span class="tag exact">exact</span>':'<span class="tag hp">70 dp</span>'}</td>
+      <td>${gain===null?'—':'+'+gain.toFixed(8)}</td>
+      <td style="color:${C.green}">${((num-2)/gainTotal*100).toFixed(3)}%</td>
+      <td>${sci(parseFloat(err.toFixed(20)),4)}</td>
+      <td style="color:${C.faint}">${sci(E_NUM/(2*n),4)}</td></tr>`;
+    prev = num;
+  }
+  html += `<tr style="background:${C.greenSoft}">
+      <td><b>∞</b></td><td style="color:${C.faint}">continuously</td>
+      <td class="num-green"><b>${E_BIG.toFixed(12)}</b></td>
+      <td><span class="tag hp">70 dp</span></td>
+      <td>+${(E_NUM-prev).toFixed(8)}</td><td style="color:${C.green}"><b>100.000%</b></td>
+      <td>0</td><td>—</td></tr>`;
+  html += `</tbody>`;
+  document.getElementById('ceil-table').innerHTML = html;
+
+  const share = n => (Math.pow(1+1/n,n) - 2)/gainTotal*100;
+  document.getElementById('pct-monthly').textContent = share(12).toFixed(1) + '%';
+  document.getElementById('gain-stats').innerHTML = `
+    <div class="stat"><div class="lab">the whole prize (yearly → continuous)</div><div class="v" style="color:${C.copper}">$${gainTotal.toFixed(4)}</div></div>
+    <div class="stat"><div class="lab">captured by monthly (n = 12)</div><div class="v" style="color:${C.green}">${share(12).toFixed(1)}%</div></div>
+    <div class="stat"><div class="lab">captured by daily (n = 365)</div><div class="v" style="color:${C.green}">${share(365).toFixed(2)}%</div></div>
+    <div class="stat"><div class="lab">everything past hourly is worth</div><div class="v" style="color:${C.red}">$${(E_NUM-Math.pow(1+1/8760,8760)).toFixed(6)}</div></div>`;
+}
+
+function buildCeilChart(){
+  const pts = [];
+  for(let i=0;i<=120;i++){
+    const n = Math.max(1, Math.round(Math.pow(10, 6*i/120)));
+    pts.push({x:n, y: parseFloat(compoundBig(1,n).toFixed(15))});
+  }
+  /* de-duplicate the small-n integers so the early staircase of the data is honest */
+  const seen = new Set(), data = [];
+  for(const q of pts){ if(!seen.has(q.x)){ seen.add(q.x); data.push(q); } }
+
+  new Chart(document.getElementById('ceil-chart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'(1 + 1/n)^n', data, borderColor:C.copper, backgroundColor:C.copperSoft,
+        borderWidth:2.4, pointRadius:0, fill:true, tension:0 },
+      { label:'the ceiling  e = 2.718281828…',
+        data:[{x:1,y:E_NUM},{x:1e6,y:E_NUM}],
+        borderColor:C.red, borderWidth:1.8, borderDash:[7,5], pointRadius:0, fill:false },
+      { label:'landmarks', data:[1,2,4,12,365,8760].map(n=>({x:n,y:parseFloat(compoundBig(1,n).toFixed(15))})),
+        showLine:false, pointRadius:5, pointBackgroundColor:C.card, pointBorderColor:C.copper,
+        pointBorderWidth:2 }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{mode:'nearest', intersect:false},
+      scales:{
+        x:{ type:'logarithmic', min:1, max:1e6,
+            title:{display:true, text:'n  —  compoundings per year (log scale)', color:C.dim,
+                   font:{size:12, family:'ui-sans-serif, system-ui'}},
+            grid:{color:decadeGrid}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:10, family:'ui-monospace, monospace'},
+                   callback:v=>{ const l=Math.log10(v); return Math.abs(l-Math.round(l))<1e-9 ? commas(v) : ''; }} },
+        y:{ min:1.9, max:2.82,
+            title:{display:true, text:'balance after one year, on $1', color:C.dim,
+                   font:{size:12, family:'ui-sans-serif, system-ui'}},
+            grid:{color:C.rule}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:10, family:'ui-monospace, monospace'},
+                   callback:v=>'$'+v.toFixed(2)} }
+      },
+      plugins:{
+        legend:{labels:{color:C.ink2, font:{size:11.5, family:'ui-sans-serif, system-ui'},
+                boxWidth:22, filter:i=>i.text!=='landmarks'}},
+        tooltip:{
+          backgroundColor:'rgba(28,37,48,.94)', titleFont:{family:'ui-monospace'},
+          bodyFont:{family:'ui-monospace', size:12},
+          callbacks:{
+            title:it=>'n = '+commas(it[0].parsed.x),
+            label:it=>[' balance  $'+it.parsed.y.toFixed(9),
+                       ' shortfall '+ (E_NUM-it.parsed.y).toExponential(3)]
+          }}
+      }
+    }
+  });
+}
+
+/* =====================================================================
+   4.  SECTION 3 — the binomial bridge  (+ section 4 bound, same state)
+   ===================================================================== */
+/* n slider is index-based on a log-ish ramp so 1..2000 is reachable smoothly */
+function bnFromIdx(i){
+  if(i <= 11) return i+1;                       // 1..12
+  return Math.round(Math.pow(10, 1.079 + (i-11)*(3.301-1.079)/49));   // 12 -> 2000
+}
+const B = { nIdx:11, x:1, k:5 };
+let binomChart = null;
+const KMAX = 12;
+
+function binomData(){
+  const n = bnFromIdx(B.nIdx), x = B.x;
+  const actual = [], limit = [];
+  for(let k=0;k<=KMAX;k++){
+    actual.push(binomTerm(k,x,n));
+    limit.push(Math.pow(x,k)/FACT[k]);
+  }
+  return {n, x, actual, limit};
+}
+
+function buildBinomChart(){
+  const d = binomData();
+  binomChart = new Chart(document.getElementById('binom-chart'), {
+    type:'bar',
+    data:{
+      labels: Array.from({length:KMAX+1}, (_,k)=>'k='+k),
+      datasets:[
+        { label:'limit term  x^k/k!', data:d.limit, backgroundColor:C.greenSoft,
+          borderColor:C.green, borderWidth:1.5, borderSkipped:false, order:2,
+          categoryPercentage:.72, barPercentage:.98 },
+        { label:'actual term  C(n,k)(x/n)^k', data:d.actual, backgroundColor:C.copper,
+          borderColor:C.copper, borderWidth:0, order:1,
+          categoryPercentage:.72, barPercentage:.55 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:180},
+      scales:{
+        x:{ stacked:true, grid:{display:false}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:10.5, family:'ui-monospace, monospace'}} },
+        y:{ type:'logarithmic', min:1e-8, max:20,
+            title:{display:true, text:'size of the term (log scale)', color:C.dim,
+                   font:{size:12, family:'ui-sans-serif, system-ui'}},
+            grid:{color:decadeGrid}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:10, family:'ui-monospace, monospace'},
+                   autoSkip:false,
+                   callback:v=>{ const l=Math.log10(v);
+                     return Math.abs(l-Math.round(l))<1e-9 ? '10'+supDigits(Math.round(l)) : ''; }} }
+      },
+      plugins:{
+        legend:{labels:{color:C.ink2, font:{size:11.5, family:'ui-sans-serif, system-ui'}, boxWidth:22}},
+        tooltip:{
+          backgroundColor:'rgba(28,37,48,.94)', bodyFont:{family:'ui-monospace', size:12},
+          callbacks:{ label:it=>' '+it.dataset.label.split('  ')[0]+': '+it.parsed.y.toPrecision(7) }
+        }
+      }
+    }
+  });
+}
+
+function updateBinom(){
+  const d = binomData(), n = d.n, x = d.x, k = B.k;
+  document.getElementById('b-n-lab').textContent = 'n = ' + commas(n);
+  document.getElementById('b-x-lab').textContent = 'x = ' + x.toFixed(2);
+  document.getElementById('b-k-lab').textContent = 'k = ' + k;
+
+  if(binomChart){
+    binomChart.data.datasets[0].data = d.limit;
+    binomChart.data.datasets[1].data = d.actual;
+    binomChart.update('none');
+  }
+
+  /* --- the bracket, written compactly (the chips below give it factor by factor) --- */
+  tex(document.getElementById('bracket-eq'),
+      k === 0
+        ? `B_{0}(${n})=1\\quad(\\text{empty product})`
+        : `B_{${k}}(${n})=\\prod_{j=0}^{${k-1}}\\Bigl(1-\\tfrac{j}{${n}}\\Bigr)=${bracket(k,n).toFixed(6)}`,
+      true);
+
+  const chipHost = document.getElementById('bracket-chips');
+  let chips = '';
+  for(let j=1;j<=k-1;j++){
+    const v = 1 - j/n;
+    const cls = v <= 0 ? 'zero' : (v > 0.995 ? 'one' : '');
+    chips += `<span class="chip ${cls}">${v.toFixed(4)}</span>`;
+    if(j < k-1) chips += '<span style="color:var(--faint)">×</span>';
+  }
+  if(k <= 1) chips = '<span class="chip one">1.0000</span><span style="color:var(--faint)">(no factors)</span>';
+  chips += `<span style="color:var(--faint)">=</span><span class="chip res">${bracket(k,n).toFixed(6)}</span>`;
+  chipHost.innerHTML = chips;
+
+  const act = binomTerm(k,x,n), lim = Math.pow(x,k)/FACT[k];
+  const sumA = d.actual.reduce((a,b)=>a+b,0), sumL = d.limit.reduce((a,b)=>a+b,0);
+  const trueCompound = parseFloat(compoundBig(x,n).toFixed(15));
+  document.getElementById('b-stats').innerHTML = `
+    <div class="stat"><div class="lab">bracket B<sub>${k}</sub>(n)</div><div class="v" style="color:${C.copper}">${bracket(k,n).toFixed(6)}</div></div>
+    <div class="stat"><div class="lab">actual term</div><div class="v" style="color:${C.copper}">${act.toPrecision(6)}</div></div>
+    <div class="stat"><div class="lab">limit term x<sup>k</sup>/k!</div><div class="v" style="color:${C.green}">${lim.toPrecision(6)}</div></div>
+    <div class="stat"><div class="lab">Σ copper bars (k≤12)</div><div class="v" style="color:${C.copper}">${sumA.toFixed(9)}</div></div>
+    <div class="stat"><div class="lab">(1+x/n)<sup>n</sup> <span class="tag hp">70 dp</span></div><div class="v">${trueCompound.toFixed(9)}</div></div>
+    <div class="stat"><div class="lab">Σ green bars → e<sup>x</sup></div><div class="v" style="color:${C.green}">${sumL.toFixed(9)}</div></div>`;
+
+  const pct = lim>0 ? (act/lim*100) : 100;
+  document.getElementById('bracket-story').innerHTML =
+    k > n
+    ? `With <b class="ink">k = ${k} &gt; n = ${n}</b> the bracket contains the factor (1 &minus; n/n) = <b class="ink">0</b>: the term simply does not exist yet. A ledger with ${n} periods cannot produce ${k}-fold compounding. The missing high-order terms are precisely what more frequent compounding buys you.`
+    : `At n = ${commas(n)}, term ${k} is running at <b class="ink">${pct.toFixed(2)}%</b> of its limiting value ${lim.toPrecision(5)}. The damping is worst for large k — the ledger under-counts the deep compounding-on-compounding terms most, and that shortfall is exactly the shortfall you saw in section 1.`;
+
+  updateBound(n);
+}
+
+/* ----- section 4: the three-column bound, live at the same n ----- */
+function updateBound(n){
+  document.getElementById('s4-n-echo').textContent = 'n = ' + commas(n);
+  const rows = [];
+  let sA=0, sB=0, sC=0;
+  for(let k=0;k<=10;k++){
+    const a = binomTerm(k,1,n);
+    const b = 1/FACT[k];
+    const c = k===0 ? 1 : Math.pow(2,-(k-1));
+    sA+=a; sB+=b; sC+=c;
+    rows.push({k,a,b,c});
+  }
+  const scale = 1;    // bars are on [0,1]
+  let html = `<div class="barrow" style="color:var(--dim);font-family:var(--sans);font-size:11px;font-weight:700">
+      <div>k</div><div>B<sub>k</sub>(n)/k!&nbsp; ≤ &nbsp;1/k!&nbsp; ≤ &nbsp;1/2<sup>k−1</sup></div><div style="text-align:right">term value</div></div>`;
+  for(const r of rows){
+    html += `<div class="barrow">
+      <div style="color:var(--faint)">${r.k}</div>
+      <div class="bartrack">
+        <div class="barfill" style="width:${(r.c/scale*100).toFixed(2)}%;background:${C.rule2}"></div>
+        <div class="barfill" style="width:${(r.b/scale*100).toFixed(2)}%;background:${C.greenSoft};border-right:1px solid ${C.green}"></div>
+        <div class="barfill" style="width:${(r.a/scale*100).toFixed(2)}%;background:${C.copper}"></div>
+      </div>
+      <div style="text-align:right;color:${C.copper}">${r.a.toFixed(6)}</div></div>`;
+  }
+  html += `<p class="small" style="margin:12px 0 0">Copper = the actual ledger term at n = ${commas(n)}. Green edge = its ceiling <span style="font-family:var(--mono)">1/k!</span>. Grey = the geometric fence <span style="font-family:var(--mono)">1/2<sup>k&minus;1</sup></span>. Copper never crosses green; green never crosses grey.</p>`;
+  document.getElementById('bound-rows').innerHTML = html;
+
+  const compound = parseFloat(compoundBig(1,n).toFixed(15));
+  document.getElementById('bound-totals').innerHTML = `
+    <div class="statgrid" style="margin-top:0">
+      <div class="stat"><div class="lab">Σ B<sub>k</sub>(n)/k! = (1+1/n)<sup>n</sup></div><div class="v" style="color:${C.copper}">${compound.toFixed(9)}</div></div>
+      <div class="stat"><div class="lab">Σ 1/k! = e</div><div class="v" style="color:${C.green}">${E_BIG.toFixed(9)}</div></div>
+      <div class="stat"><div class="lab">1 + Σ 2<sup>−(k−1)</sup> = 3</div><div class="v" style="color:${C.dim}">3.000000000</div></div>
+    </div>
+    <div class="mathline" id="bound-tex"></div>`;
+  tex(document.getElementById('bound-tex'),
+      `${compound.toFixed(6)}\\;<\\;${E_BIG.toFixed(6)}\\;<\\;3`, true);
+}
+
+/* =====================================================================
+   5.  SECTION 5 — additivity
+   ===================================================================== */
+const A5 = { m:12, k:8, h:1/12, ghost:true };
+
+function updateAdd(){
+  const {m,k,h} = A5;
+  document.getElementById('m-lab').textContent = `x = ${m} month${m>1?'s':''}`;
+  document.getElementById('k2-lab').textContent = `y = ${k} month${k>1?'s':''}`;
+
+  const f = new Big(1).plus(new Big(1).div(12));
+  const A = bpow(f, m), Bv = bpow(f, k), AB = A.times(Bv).round(DP), Tot = bpow(f, m+k);
+  const diff = AB.minus(Tot).abs();
+
+  const xr = m/12, yr = k/12;
+  document.getElementById('add-stats').innerHTML = `
+    <div class="stat"><div class="lab">A = (1+h)<sup>${m}</sup></div><div class="v" style="color:${C.copper}">${A.toFixed(8)}</div></div>
+    <div class="stat"><div class="lab">B = (1+h)<sup>${k}</sup></div><div class="v" style="color:${C.blue}">${Bv.toFixed(8)}</div></div>
+    <div class="stat"><div class="lab">A × B</div><div class="v" style="color:${C.green}">${AB.toFixed(8)}</div></div>
+    <div class="stat"><div class="lab">(1+h)<sup>${m+k}</sup></div><div class="v" style="color:${C.green}">${Tot.toFixed(8)}</div></div>`;
+  tex(document.getElementById('add-eq'),
+      `\\Bigl(1+\\tfrac1{12}\\Bigr)^{${m}}\\!\\cdot\\!\\Bigl(1+\\tfrac1{12}\\Bigr)^{${k}}=\\Bigl(1+\\tfrac1{12}\\Bigr)^{${m+k}}`, true);
+  document.getElementById('add-note').innerHTML =
+    `Agreement at 70 decimal digits: difference = <b class="ink">${diff.eq(0)?'exactly 0':diff.toExponential(2)}</b>. This is not a limit statement — it is the integer power law, true at every finite n. In the limit it becomes exp(${xr.toFixed(4)}) · exp(${yr.toFixed(4)}) = exp(${(xr+yr).toFixed(4)}), i.e. <b class="ink">${Math.exp(xr).toFixed(6)} × ${Math.exp(yr).toFixed(6)} = ${Math.exp(xr+yr).toFixed(6)}</b>.`;
+}
+
+const addSketch = (p)=>{
+  let W=700, H=360;
+  const M={l:58,r:24,t:24,b:42};
+  p.setup=()=>{
+    const host=document.getElementById('add-canvas');
+    W=host.clientWidth||700;
+    p.createCanvas(W,H).parent(host);
+    p.pixelDensity(Math.min(2, window.devicePixelRatio||1));
+    p.textFont('ui-monospace, SFMono-Regular, Menlo, monospace');
+  };
+  p.windowResized=()=>{ const host=document.getElementById('add-canvas'); W=host.clientWidth||700; p.resizeCanvas(W,H); };
+  p.draw=()=>{
+    const {m,k,h,ghost}=A5, N=m+k;
+    const f=1+h;
+    const bal=[1]; for(let i=1;i<=N;i++) bal.push(bal[i-1]*f);
+    const yTop = bal[N]*1.12;
+    const PX=i=>M.l + (i/N)*(W-M.l-M.r);
+    const PY=v=>H-M.b-(v/yTop)*(H-M.t-M.b);
+
+    p.background(C.card);
+    /* grid */
+    p.textSize(10);
+    const step = yTop>8?2:(yTop>4?1:0.5);
+    p.textAlign(p.RIGHT,p.CENTER);
+    for(let v=0;v<=yTop;v+=step){
+      p.stroke(v===0?C.rule2:C.rule); p.line(M.l,PY(v),W-M.r,PY(v));
+      p.noStroke(); p.fill(C.faint); p.text('$'+v.toFixed(step<1?1:0), M.l-8, PY(v));
+    }
+    /* segment bands */
+    p.noStroke();
+    p.fill(194,112,58,20); p.rect(PX(0),M.t,PX(m)-PX(0),H-M.b-M.t);
+    p.fill(47,93,138,18);  p.rect(PX(m),M.t,PX(N)-PX(m),H-M.b-M.t);
+
+    /* the smooth curve behind */
+    p.noFill(); p.stroke(C.green); p.strokeWeight(1.6);
+    p.beginShape();
+    for(let i=0;i<=240;i++){ const u=N*i/240; p.vertex(PX(u), PY(Math.exp(u*h))); }
+    p.endShape();
+
+    /* staircase, two colours */
+    const drawStair=(i0,i1,col,w)=>{
+      p.noFill(); p.stroke(col); p.strokeWeight(w);
+      p.beginShape();
+      p.vertex(PX(i0),PY(bal[i0]));
+      for(let i=i0+1;i<=i1;i++){ p.vertex(PX(i),PY(bal[i-1])); p.vertex(PX(i),PY(bal[i])); }
+      p.endShape();
+    };
+    drawStair(0,m,C.copper,2.4);
+    drawStair(m,N,C.blue,2.4);
+
+    /* the rescaled copy: first k months, magnified by A = bal[m], laid at t=m */
+    if(ghost){
+      p.noFill(); p.stroke(C.violet); p.strokeWeight(2.2);
+      p.drawingContext.setLineDash([6,5]);
+      p.beginShape();
+      p.vertex(PX(m), PY(bal[m]*bal[0]));
+      for(let i=1;i<=k;i++){ p.vertex(PX(m+i),PY(bal[m]*bal[i-1])); p.vertex(PX(m+i),PY(bal[m]*bal[i])); }
+      p.endShape();
+      p.drawingContext.setLineDash([]);
+      p.noStroke(); p.fill(C.violet); p.textSize(11); p.textAlign(p.CENTER,p.BOTTOM);
+      p.text(`first ${k} months × A`, (PX(m)+PX(N))/2, M.t+14);
+    }
+
+    /* markers and labels */
+    p.textSize(11); p.textAlign(p.CENTER,p.TOP);
+    p.noStroke(); p.fill(C.copper); p.text(`x = ${m} mo`, (PX(0)+PX(m))/2, H-M.b+7);
+    p.fill(C.blue);   p.text(`y = ${k} mo`, (PX(m)+PX(N))/2, H-M.b+7);
+    p.stroke(C.rule2); p.strokeWeight(1);
+    p.line(PX(m),M.t,PX(m),H-M.b);
+
+    p.noStroke(); p.textAlign(p.LEFT,p.CENTER); p.textSize(12);
+    p.fill(C.copper); p.text('A = '+bal[m].toFixed(4), Math.min(PX(m)+6,W-M.r-90), PY(bal[m]));
+    p.fill(C.green);  p.text('A·B = '+bal[N].toFixed(4), Math.max(M.l+4,PX(N)-96), PY(bal[N])-14);
+    p.fill(C.dim); p.textAlign(p.CENTER,p.TOP); p.textSize(10.5);
+    p.text('slices of one month, h = 1/12', (M.l+W-M.r)/2, H-M.b+22);
+  };
+};
+
+/* =====================================================================
+   6.  SECTION 6 — honesty panels
+   ===================================================================== */
+function buildNegTable(){
+  const x = -5, target = Math.exp(-5);
+  let html = `<thead><tr><th>n</th><th>factor 1 + x/n</th><th>(1 + x/n)<sup>n</sup></th><th>verdict</th></tr></thead><tbody>`;
+  for(const n of [1,2,3,4,5,6,10,20,50,365,10000]){
+    const f = 1 + x/n, v = Math.pow(f, n);
+    let verdict, col;
+    if(f < 0){ verdict = 'sign flips each slice'; col = C.red; }
+    else if(f === 0){ verdict = 'wiped out in one step'; col = C.red; }
+    else { verdict = 'monotone, converging'; col = C.green; }
+    html += `<tr><td>${commas(n)}</td>
+      <td style="color:${f<=0?C.red:C.ink2}">${f.toFixed(5)}</td>
+      <td style="color:${col}">${v.toExponential(5)}</td>
+      <td style="color:${col};font-family:var(--sans);font-size:11.5px">${verdict}</td></tr>`;
+  }
+  html += `<tr style="background:${C.greenSoft}"><td><b>∞</b></td><td>1</td>
+      <td class="num-green"><b>${target.toExponential(5)}</b></td>
+      <td style="font-family:var(--sans);font-size:11.5px">e<sup>−5</sup>, the truth</td></tr></tbody>`;
+  document.getElementById('neg-table').innerHTML = html;
+}
+
+function buildFPTable(){
+  let html = `<thead><tr><th>n</th><th>IEEE double <span class="tag dbl">64-bit</span></th>
+              <th>big.js <span class="tag hp">70 dp</span></th><th>double's error</th></tr></thead><tbody>`;
+  const ns = [1e3,1e6,1e8,1e10,1e12,1e14,1e15,1e16,1e17];
+  for(const n of ns){
+    const d = Math.pow(1 + 1/n, n);
+    const b = compoundBig(1, n);
+    const bn = parseFloat(b.toFixed(20));
+    const bad = Math.abs(d - bn) > 1e-6;
+    html += `<tr>
+      <td>10${supDigits(Math.round(Math.log10(n)))}</td>
+      <td style="color:${bad?C.red:C.ink2}">${d.toFixed(10)}</td>
+      <td class="num-green">${b.toFixed(10)}</td>
+      <td style="color:${bad?C.red:C.faint}">${Math.abs(d-bn) < 1e-14 ? '—' : Math.abs(d-bn).toExponential(2)}</td></tr>`;
+  }
+  html += `</tbody>`;
+  document.getElementById('fp-table').innerHTML = html;
+}
+
+let errChart = null;
+function buildErrChart(){
+  const cErr = [], sErr = [];
+  for(let i=0;i<=48;i++){
+    const n = Math.round(Math.pow(10, 16*i/48));
+    if(n < 1) continue;
+    const e = parseFloat(E_BIG.minus(compoundBig(1, Math.min(n, 1e9))).toFixed(20));
+    cErr.push({x:n, y: n<=1e9 ? Math.max(e,1e-18) : Math.max(E_NUM/(2*n),1e-18)});
+  }
+  let s = 0;
+  for(let N=0;N<=19;N++){
+    s += 1/FACT[N];
+    sErr.push({x: Math.max(1,N), y: Math.max(E_NUM - s, 1e-18)});
+  }
+  errChart = new Chart(document.getElementById('err-chart'), {
+    type:'line',
+    data:{ datasets:[
+      { label:'compounding: n periods', data:cErr, borderColor:C.copper, borderWidth:2.4,
+        pointRadius:0, fill:false },
+      { label:'power series: N terms', data:sErr, borderColor:C.green, borderWidth:2.4,
+        pointRadius:2.5, pointBackgroundColor:C.green, fill:false }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      scales:{
+        x:{ type:'logarithmic', min:1, max:1e16,
+            title:{display:true, text:'work: compoundings n, or series terms N (log)', color:C.dim,
+                   font:{size:11.5, family:'ui-sans-serif, system-ui'}},
+            grid:{color:decadeGrid}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:9.5, family:'ui-monospace, monospace'}, autoSkip:false,
+                   callback:v=>{ const l=Math.log10(v); return Math.abs(l-Math.round(l))<1e-9 && Math.round(l)%2===0 ? '10'+supDigits(Math.round(l)) : ''; }} },
+        y:{ type:'logarithmic', min:1e-17, max:2,
+            title:{display:true, text:'absolute error from e', color:C.dim,
+                   font:{size:11.5, family:'ui-sans-serif, system-ui'}},
+            grid:{color:decadeGrid}, border:{color:C.rule2},
+            ticks:{color:C.faint, font:{size:9.5, family:'ui-monospace, monospace'}, autoSkip:false,
+                   callback:v=>{ const l=Math.log10(v); return Math.abs(l-Math.round(l))<1e-9 && Math.round(l)%3===0 ? '10'+supDigits(Math.round(l)) : ''; }} }
+      },
+      plugins:{
+        legend:{labels:{color:C.ink2, font:{size:11.5, family:'ui-sans-serif, system-ui'}, boxWidth:20}},
+        tooltip:{backgroundColor:'rgba(28,37,48,.94)', bodyFont:{family:'ui-monospace', size:12},
+                 callbacks:{label:it=>' error '+it.parsed.y.toExponential(3)+'  at '+commas(it.parsed.x)}}
+      }
+    }
+  });
+
+  /* cost statistics, computed not asserted */
+  let sum=0, Nfor10=0;
+  for(let N=0;N<=25;N++){ sum += 1/FACT[N]; if(Math.abs(E_NUM-sum) < 0.5e-10){ Nfor10 = N; break; } }
+  const nFor10 = Math.ceil(E_NUM/(2*0.5e-10));
+  document.getElementById('N-for-10').textContent = Nfor10;
+  document.getElementById('n-for-10').textContent = sci(nFor10, 2);
+  document.getElementById('cost-stats').innerHTML = `
+    <div class="stat"><div class="lab">compounding, 10 digits</div><div class="v" style="color:${C.copper}">n ≈ ${sci(nFor10,2)}</div></div>
+    <div class="stat"><div class="lab">series, 10 digits</div><div class="v" style="color:${C.green}">N = ${Nfor10}</div></div>
+    <div class="stat"><div class="lab">error law, compounding</div><div class="v" style="color:${C.copper}">e / 2n</div></div>
+    <div class="stat"><div class="lab">error law, series</div><div class="v" style="color:${C.green}">1 / (N+1)!</div></div>`;
+}
+
+/* =====================================================================
+   7.  WIRING
+   ===================================================================== */
+function init(){
+  renderStaticTeX();
+  tex(document.getElementById('dt-inline'), '\\Delta t = x/n', false);
+
+  /* ---- section 1 ---- */
+  updateS1();
+  new p5(stairSketch);
+  document.getElementById('n-slider').addEventListener('input', e=>{
+    S1.nIdx = +e.target.value; S1.playK = -1; S1.playing = false;
+    document.getElementById('play-btn').textContent = '▶ Run the ledger';
+    updateS1();
+  });
+  document.getElementById('x-slider').addEventListener('input', e=>{
+    S1.x = +e.target.value; updateS1();
+  });
+  document.getElementById('play-btn').addEventListener('click', e=>{
+    if(S1.playing){ S1.playing=false; S1.playK=-1; e.target.textContent='▶ Run the ledger'; }
+    else { S1.playing=true; S1.playK=0; e.target.textContent='■ Stop'; }
+  });
+  const cb = document.getElementById('curve-btn');
+  cb.classList.add('on');
+  cb.addEventListener('click', ()=>{
+    S1.showCurve = !S1.showCurve; cb.classList.toggle('on', S1.showCurve);
+  });
+
+  /* ---- section 2 ---- */
+  buildCeilTable();
+  buildCeilChart();
+
+  /* ---- sections 3 & 4 ---- */
+  buildBinomChart();
+  updateBinom();
+  document.getElementById('b-n-slider').addEventListener('input', e=>{ B.nIdx=+e.target.value; updateBinom(); });
+  document.getElementById('b-x-slider').addEventListener('input', e=>{ B.x=+e.target.value; updateBinom(); });
+  document.getElementById('b-k-slider').addEventListener('input', e=>{ B.k=+e.target.value; updateBinom(); });
+
+  /* ---- section 5 ---- */
+  updateAdd();
+  new p5(addSketch);
+  document.getElementById('m-slider').addEventListener('input', e=>{ A5.m=+e.target.value; updateAdd(); });
+  document.getElementById('k2-slider').addEventListener('input', e=>{ A5.k=+e.target.value; updateAdd(); });
+  const gb = document.getElementById('ghost-btn');
+  gb.addEventListener('click', ()=>{ A5.ghost=!A5.ghost; gb.classList.toggle('on', A5.ghost); });
+
+  /* ---- section 6 ---- */
+  buildNegTable();
+  buildFPTable();
+  buildErrChart();
+  document.querySelectorAll('.tabs .btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.tabs .btn').forEach(o=>o.classList.remove('on'));
+      document.querySelectorAll('.panel').forEach(o=>o.classList.remove('on'));
+      b.classList.add('on');
+      document.getElementById(b.dataset.panel).classList.add('on');
+      /* the error chart is built inside a display:none panel, so its canvas
+         starts at zero size — force a resize the first time it is revealed. */
+      if(b.dataset.panel === 'p-slow' && errChart) errChart.resize();
+    });
+  });
+
+  /* any KaTeX injected by the builders above */
+  renderStaticTeX();
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>

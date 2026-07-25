@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Glue Budget at Every Zoom Level — Nash-Williams–Tutte</title>
+<link rel="stylesheet" href="lib/katex.min.css">
+<style>
+:root{
+  color-scheme: dark;
+  --plane:#0b0d12;
+  --surface:#141821;
+  --surface-2:#1b2130;
+  --ink:#eef1f6;
+  --ink-2:#aab4c4;
+  --muted:#77839a;
+  --rule:#262d3d;
+  --hair:rgba(238,241,246,.10);
+
+  /* categorical slots 1-3, validated all-pairs on #141821 and #0b0d12 (dark mode) */
+  --s1:#3987e5;   /* the true minimum f(r) / tree 1 / cross edges */
+  --s2:#d95926;   /* the nested chain / tree 2 */
+  --s3:#199e70;   /* tree 3 */
+  --ref:#c3c2b7;  /* reference line — not a series */
+
+  /* status — reserved, never a series */
+  --good:#0ca30c;
+  --warn:#fab219;
+  --crit:#d03b3b;
+  --crit-ink:#ff9a9a;
+  --good-ink:#5fd35f;
+
+  --r:12px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--plane)}
+body{
+  margin:0;background:var(--plane);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1300px;margin:0 auto;padding:0 26px}
+h1,h2,h3{letter-spacing:-.018em;font-weight:650}
+a{color:var(--s1)}
+.katex{font-size:1.02em}
+
+.hero{padding:76px 0 20px}
+.eyebrow{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:clamp(33px,5.6vw,62px);line-height:1.03;margin:16px 0 0;max-width:17ch}
+h1 em{font-style:normal;color:var(--s1)}
+.lede{font-size:clamp(16.5px,1.9vw,20px);color:var(--ink-2);max-width:68ch;margin:24px 0 0}
+.lede strong{color:var(--ink);font-weight:620}
+.thmbox{margin-top:34px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:22px 26px}
+.thmbox .lab{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px;padding-bottom:26px}
+.toc a{font-size:13px;color:var(--ink-2);text-decoration:none;border:1px solid var(--rule);border-radius:999px;padding:6px 14px;background:var(--surface);transition:.14s}
+.toc a:hover{border-color:var(--s1);color:var(--ink)}
+
+.beat{border-top:1px solid var(--rule);padding:64px 0 68px}
+.beat.tight{padding-bottom:26px}
+.bhead{display:flex;gap:18px;align-items:baseline;margin-bottom:8px}
+.bnum{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;padding-top:6px}
+h2{font-size:clamp(24px,3.2vw,36px);margin:0;max-width:24ch}
+.sub{color:var(--ink-2);max-width:72ch;margin:14px 0 0;font-size:16.5px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start;margin-top:30px}
+.split.wide-left{grid-template-columns:1.32fr 1fr}
+.split.three{grid-template-columns:1fr 1fr 1fr}
+.split > *{min-width:0}
+
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:20px 22px}
+.card h3{margin:0 0 10px;font-size:15px;letter-spacing:.02em}
+.card p{margin:0 0 10px;color:var(--ink-2);font-size:14.5px;line-height:1.6}
+.card p:last-child{margin-bottom:0}
+
+.stage{background:#070910;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;position:relative}
+.stage canvas{display:block}
+.stagenote{position:absolute;left:14px;bottom:11px;font-family:var(--mono);font-size:11px;color:#5c6880;pointer-events:none;z-index:2}
+
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:14px 0 0}
+.ctrl{display:flex;align-items:center;gap:8px}
+.ctrl label{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+select,button,input[type=range]{font-family:inherit}
+select{background:var(--surface-2);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;font-size:13.5px}
+.btn{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--rule);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;transition:.13s}
+.btn:hover{border-color:var(--s1);color:var(--ink)}
+.btn.on{background:var(--s1);border-color:var(--s1);color:#fff}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg .btn{border:0;border-radius:0;border-right:1px solid var(--rule)}
+.seg .btn:last-child{border-right:0}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:22px;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--rule);border-radius:3px}
+input[type=range]::-moz-range-track{height:4px;background:var(--rule);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--s1);margin-top:-6px;border:2px solid var(--plane)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--s1);border:2px solid var(--plane)}
+
+.rbig{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;font-weight:700}
+.rval{font-size:clamp(28px,3.9vw,42px);line-height:1.05;margin:6px 0 10px;font-weight:600;letter-spacing:-.02em}
+.rval small{font-size:.40em;color:var(--muted);letter-spacing:0;font-weight:500;margin-left:10px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:650;border-radius:999px;padding:4px 12px;border:1px solid}
+.pill .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pill.ok{color:var(--good-ink);border-color:rgba(12,163,12,.5);background:rgba(12,163,12,.10)}
+.pill.ok .dot{background:var(--good)}
+.pill.bad{color:var(--crit-ink);border-color:rgba(208,59,59,.55);background:rgba(208,59,59,.12)}
+.pill.bad .dot{background:var(--crit)}
+.pill.neu{color:var(--ink-2);border-color:var(--rule);background:var(--surface-2)}
+.pill.neu .dot{background:var(--muted)}
+
+.meter{margin:18px 0 6px}
+.meter .lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-family:var(--mono);margin-bottom:20px}
+.mbar{position:relative;height:26px;background:var(--surface-2);border-radius:6px;border:1px solid var(--rule)}
+.mfill{position:absolute;left:0;top:0;bottom:0;background:var(--s1);border-radius:5px 0 0 5px}
+.mdef{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(208,59,59,.9) 0 5px,rgba(208,59,59,.32) 5px 10px)}
+.mtick{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ref)}
+.mtick span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10.5px;color:var(--ref);white-space:nowrap}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+.strip{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0}
+.strip b{font-family:var(--mono);font-size:11px;font-weight:600;line-height:1;padding:7px 7px;
+  border-radius:5px;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);
+  cursor:pointer;min-width:32px;text-align:center;transition:.12s}
+.strip b.f{background:rgba(208,59,59,.18);border-color:rgba(208,59,59,.55);color:var(--crit-ink)}
+.strip b.p{background:rgba(12,163,12,.10);border-color:rgba(12,163,12,.34);color:var(--good-ink)}
+.strip b.cur{box-shadow:0 0 0 2px var(--s1);color:var(--ink)}
+.chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--rule);border-radius:6px;padding:3px 8px;color:var(--ink-2);background:var(--surface-2)}
+.note{font-size:14px;color:var(--ink-2);margin:16px 0 0;border-left:2px solid var(--rule);padding-left:14px}
+.note.bad{border-color:var(--crit);color:#ffd6d6}
+.note.ok{border-color:var(--good)}
+.note b{color:var(--ink)}
+
+.track{position:relative}
+@media (min-width:1040px) and (min-height:660px){
+  .track.scroller{height:360vh}
+  .track.scroller .stick{position:sticky;top:0;height:100vh;display:flex;align-items:center}
+}
+
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom-color:var(--hair)}
+tbody tr:hover{background:var(--surface-2)}
+td.mono,th.mono{font-family:var(--mono)}
+tr.clickable{cursor:pointer}
+tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--s1)}
+.tw{overflow-x:auto;border:1px solid var(--hair);border-radius:var(--r);background:var(--surface);padding:6px 14px 10px}
+.yes{color:var(--good-ink)} .no{color:var(--crit-ink)}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:22px;height:0;border-top-width:3px;border-top-style:solid;vertical-align:middle;margin-right:7px;border-radius:2px}
+.legend .sq{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+
+.chartbox{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:14px 16px 10px;position:relative;height:440px}
+.foot{border-top:1px solid var(--rule);padding:34px 0 70px;color:var(--muted);font-size:13.5px}
+.hl{color:var(--ink);font-weight:600}
+.s1{color:var(--s1)} .s2{color:var(--s2)} .crit{color:var(--crit-ink)}
+ul.chk{list-style:none;margin:8px 0 0;padding:0;font-size:13.5px}
+ul.chk li{display:flex;gap:10px;align-items:baseline;padding:3px 0;color:var(--ink-2)}
+ul.chk li b{width:16px;flex:none;text-align:center}
+ul.chk li .v{margin-left:auto;font-family:var(--mono);color:var(--ink)}
+
+@media (max-width:1039px){
+  .split,.split.wide-left,.split.three{grid-template-columns:1fr;gap:24px}
+  .hero{padding-top:46px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ HERO ============================ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Nash-Williams (1961) · Tutte (1961) · tree packing</div>
+    <h1>The glue budget at <em>every zoom level</em></h1>
+    <p class="lede">
+      A spanning tree is <strong>glue</strong>. Squint at a graph until only <span class="hl">r</span> clusters
+      of vertices are visible, and any one spanning tree must spend exactly <span class="hl">r&minus;1</span> of
+      its edges running between clusters — no fewer, or the clusters would not be welded into one piece.
+      So <span class="hl">k</span> edge-disjoint spanning trees have to pay a toll of
+      <span data-tex="k(r-1)"></span> crossing edges, <strong>at every possible way of clustering.</strong>
+    </p>
+    <p class="lede">
+      Nash-Williams and Tutte proved the miracle: <strong>that obvious toll is the only toll.</strong>
+      Nothing else can go wrong. The sole way tree-packing can fail is for some clustering of the
+      vertices to be too sparsely stitched together.
+    </p>
+
+    <div class="thmbox">
+      <div class="lab">The theorem</div>
+      <div data-tex-d="\text{A finite multigraph }G=(V,E)\text{ has }k\text{ pairwise edge-disjoint spanning trees}"></div>
+      <div data-tex-d="\iff\quad e_G(P)\;\ge\;k\,(r-1)\quad\text{for \textbf{every} partition }P\text{ of }V\text{ into }r\text{ nonempty parts.}"></div>
+      <p style="color:var(--ink-2);font-size:14px;margin:12px 0 0">
+        <span data-tex="e_G(P)"></span> counts the edges whose two endpoints lie in different parts
+        (<em>cross edges</em>). Loops never cross; parallel edges count with multiplicity.
+        <span data-tex="r"></span> ranges over <span data-tex="1\le r\le|V|"></span> — the case
+        <span data-tex="r=1"></span> is vacuous (<span data-tex="0\ge 0"></span>).
+      </p>
+    </div>
+
+    <nav class="toc">
+      <a href="#s-toll">1 · the toll</a>
+      <a href="#s-tower">2 · descend the tower</a>
+      <a href="#s-ends">3 · two ends, one continuum</a>
+      <a href="#s-cloud">4 · it is not a chain</a>
+      <a href="#s-trees">5 · the payoff</a>
+      <a href="#s-honest">6 · asserted vs computed</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================ 1 · THE TOLL ============================ -->
+<section class="beat" id="s-toll">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">01</div>
+      <h2>Why the toll is exactly <span data-tex="k(r-1)"></span></h2></div>
+    <p class="sub">
+      Contract every part of a partition down to a single supernode. A spanning tree of
+      <span data-tex="G"></span> becomes a <em>connected spanning</em> submultigraph of the
+      <span data-tex="r"></span>-vertex quotient, so at least <span data-tex="r-1"></span> of its edges
+      survive the contraction — those are precisely its cross edges. The <span data-tex="k"></span> trees
+      are edge-disjoint, so their cross edges are disjoint too, and the counts simply add.
+    </p>
+
+    <div class="split wide-left">
+      <div>
+        <div class="stage" id="tollStage" style="height:400px"></div>
+        <div class="ctrls">
+          <div class="ctrl"><label for="tollR">clusters r</label>
+            <input type="range" id="tollR" min="2" max="8" value="5" style="width:170px">
+            <span class="chip" id="tollRv">5</span></div>
+          <div class="ctrl"><label for="tollK">trees k</label>
+            <input type="range" id="tollK" min="1" max="3" value="2" style="width:100px">
+            <span class="chip" id="tollKv">2</span></div>
+        </div>
+        <div class="legend" id="tollLegend"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>The necessity argument, in full</h3>
+          <div data-tex-d="\text{each tree }T_i:\qquad e_{T_i}(P)\;\ge\;r-1"></div>
+          <p>— because contracting the parts turns <span data-tex="T_i"></span> into a connected spanning
+             multigraph on <span data-tex="r"></span> supernodes, and every connected graph on
+             <span data-tex="r"></span> vertices has at least <span data-tex="r-1"></span> edges.</p>
+          <div data-tex-d="\Rightarrow\qquad e_G(P)\;\ge\;\sum_{i=1}^{k} e_{T_i}(P)\;\ge\;k(r-1)"></div>
+          <p>— because the <span data-tex="T_i"></span> are pairwise edge-disjoint, so no edge of
+             <span data-tex="G"></span> is counted twice on the right.</p>
+          <p style="color:var(--ink)">That is the whole easy half of the theorem. Everything below is about
+             what happens when you run this one test at <em>every</em> resolution at once.</p>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Current toll</h3>
+          <div class="rval" id="tollOut"></div>
+          <div id="tollTex"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 2 · THE TOWER ============================ -->
+<section class="beat tight" id="s-tower">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">02</div>
+      <h2>Descend the tower of resolutions</h2></div>
+    <p class="sub">
+      Every level of this tower is one resolution. The <strong>top</strong> is
+      <span data-tex="r=n"></span>: every vertex alone, nothing merged, every edge crossing.
+      The <strong>bottom</strong> is <span data-tex="r=2"></span>: two clusters — that is, a cut. Descending
+      merges clusters, so interior edges vanish and the cross count falls. But the toll
+      <span data-tex="k(r-1)"></span> falls too, along a perfectly straight line. The entire theorem is the
+      race between those two.
+    </p>
+    <p class="sub">
+      Beside the tower hangs the <strong>budget ladder</strong>: at each level a bar for the cross edges
+      actually present, and a tick for the toll owed. Read the ladder edge-on and it is a chart; look
+      down the tower and it is a graph collapsing — one object, two readings.
+      <span class="hl">Scroll to descend</span>, or drag the resolution slider.
+    </p>
+  </div>
+
+  <div class="track scroller" id="towerTrack">
+    <div class="stick">
+      <div class="wrap" style="width:100%">
+        <div class="split wide-left" style="margin-top:18px">
+          <div>
+            <div class="stage" id="towerStage" style="height:min(62vh,600px);min-height:400px">
+              <div class="stagenote">drag to orbit · wheel to zoom</div>
+            </div>
+            <div class="ctrls">
+              <div class="ctrl"><label for="gSel">graph</label><select id="gSel"></select></div>
+              <div class="ctrl"><label for="kSel">k</label>
+                <select id="kSel"><option>1</option><option selected>2</option><option>3</option></select></div>
+              <div class="ctrl"><label>levels</label>
+                <span class="seg"><button class="btn on" id="mChain">nested chain</button><button class="btn" id="mMin">minimisers</button></span></div>
+              <div class="ctrl"><label>camera</label>
+                <span class="seg"><button class="btn on" id="camOver">tower</button><button class="btn" id="camLad">ladder</button><button class="btn" id="camTop">look down</button></span></div>
+            </div>
+            <div class="ctrls">
+              <div class="ctrl" style="flex:1;min-width:280px">
+                <label for="rSlider">resolution</label>
+                <input type="range" id="rSlider" min="0" max="10" value="0" style="flex:1;min-width:160px">
+                <button class="btn" id="jumpWorst">worst resolution</button>
+              </div>
+            </div>
+            <div class="legend">
+              <span><i style="border-color:var(--s1)"></i>cross edges present</span>
+              <span><i style="border-color:var(--ref);border-top-style:dashed"></i>toll <span data-tex="k(r-1)"></span></span>
+              <span><span class="sq" style="background:var(--crit)"></span>shortfall — this resolution fails</span>
+              <span style="color:var(--muted)">cluster colours are identity only</span>
+            </div>
+          </div>
+
+          <div id="readout">
+            <div class="rbig">resolution</div>
+            <div class="rval" id="roR"></div>
+            <p style="color:var(--muted);font-size:14px;margin:-4px 0 12px" id="roBlurb"></p>
+            <div id="roPill"></div>
+            <div class="meter">
+              <div class="lab"><span id="roLabL"></span><span id="roLabR"></span></div>
+              <div class="mbar" id="roBar"></div>
+            </div>
+            <div id="roTex"></div>
+            <div class="chips" id="roChips"></div>
+            <div class="note" id="roNote"></div>
+            <div class="note" id="roMinNote"></div>
+            <div class="rbig" style="margin-top:24px">every resolution at a glance
+              <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">
+                — f(r) vs k(r−1); click to jump</span></div>
+            <div class="strip" id="roStrip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 3 · TWO ENDS ============================ -->
+<section class="beat" id="s-ends">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">03</div>
+      <h2>The two famous tests are the two ends of this one continuum</h2></div>
+    <p class="sub">
+      Everybody already knows the endpoints. Almost nobody notices they are the same test, evaluated at
+      the two extremes of <span data-tex="r"></span>.
+    </p>
+
+    <div class="split" style="margin-top:26px">
+      <div class="card">
+        <h3>Bottom of the tower — <span data-tex="r=2"></span></h3>
+        <div data-tex-d="\min_{|P|=2} e_G(P)\;\ge\;k\quad\iff\quad \lambda(G)\ge k"></div>
+        <p>A partition into two parts <em>is</em> a cut, and <span data-tex="e_G(P)"></span> is the number of
+        edges across it. Running the condition over all 2-partitions is exactly the statement that
+        <span data-tex="G"></span> is <span data-tex="k"></span>-edge-connected. The toll here is
+        <span data-tex="k(2-1)=k"></span>.</p>
+      </div>
+      <div class="card">
+        <h3>Top of the tower — <span data-tex="r=n"></span></h3>
+        <div data-tex-d="e_G(P)=|E|\;\ge\;k(n-1)"></div>
+        <p>With every vertex its own part, <em>every</em> non-loop edge crosses, so the left side is just
+        <span data-tex="|E|"></span>. The condition degenerates into the raw headcount: you need at least
+        <span data-tex="k"></span> trees' worth of edges. It says nothing whatsoever about where they are.</p>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:32px">
+      Neither endpoint suffices. <strong>And neither do both together.</strong> Below, every preset is
+      scanned at every <span data-tex="r"></span>, with the two endpoint tests broken out. Look for the
+      rows that pass both ends and still fail.
+    </p>
+
+    <div class="tw" style="margin-top:16px">
+      <table id="surveyTable">
+        <thead><tr>
+          <th>graph</th><th class="mono">n</th><th class="mono">|E|</th>
+          <th class="mono">λ(G) ≥ k ?</th><th class="mono">|E| ≥ k(n−1) ?</th>
+          <th class="mono">fails at r =</th><th class="mono">max trees</th><th>verdict at this k</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="sub" style="font-size:14px;color:var(--muted);margin-top:12px">
+      Click any row to load it into the tower. <span data-tex="\lambda(G)"></span> is the global minimum
+      cut, computed exactly by Stoer&ndash;Wagner. &ldquo;max trees&rdquo; is
+      <span data-tex="\min_{r\ge2}\lfloor f(r)/(r-1)\rfloor"></span>, the Nash-Williams&ndash;Tutte formula
+      for the largest packing, where <span data-tex="f(r)"></span> is the minimum cross count over all
+      partitions into <span data-tex="r"></span> parts.
+    </p>
+
+    <div class="split three" style="margin-top:30px">
+      <div class="card"><h3>Fails only at the coarse end</h3>
+        <p><span class="hl">2×K₅ + one bridge.</span> 21 edges against a required 18, so the headcount sails
+        through, and every intermediate resolution is fine. But one bridge means
+        <span data-tex="\lambda=1<2"></span>.</p></div>
+      <div class="card"><h3>Fails only at the fine end</h3>
+        <p><span class="hl">Petersen.</span> 3-edge-connected, so <span data-tex="r=2"></span> passes with room
+        to spare. But 15 edges against a required 18 — it is simply too poor. The failure begins at
+        <span data-tex="r=8"></span> and deepens upward.</p></div>
+      <div class="card"><h3>Fails only in the middle</h3>
+        <p><span class="hl">Three districts</span> and <span class="hl">3×K₅ + 3 bridges.</span> Both pass
+        <span data-tex="r=2"></span>, both pass <span data-tex="r=n"></span> — and both are dead at
+        <span data-tex="r=3"></span>. This is the case the two famous tests cannot see.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 4 · NOT A CHAIN ============================ -->
+<section class="beat" id="s-cloud">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">04</div>
+      <h2>Honest caveat: &ldquo;every zoom level&rdquo; is not a chain</h2></div>
+    <p class="sub">
+      A scrubber suggests a tidy hierarchy — level <span data-tex="r"></span> a coarsening of level
+      <span data-tex="r+1"></span>, one path down. <strong>The theorem quantifies over far more than that.</strong>
+      At each fixed <span data-tex="r"></span> there are <span data-tex="S(n,r)"></span> different partitions
+      (a Stirling number of the second kind) and the condition must hold for every single one. So what
+      actually matters at each resolution is the <em>minimum</em>
+      <span data-tex="f(r)=\min_{|P|=r} e_G(P)"></span> over that entire cloud.
+    </p>
+    <p class="sub">
+      Below, the cloud is drawn. The <span class="s2">orange</span> line is the tower's nested chain — one
+      path. The <span class="s1">blue</span> line is the true minimum at each <span data-tex="r"></span>.
+      They are not the same line, and the theorem cares only about the blue one. Switch the tower to
+      <em>minimisers</em> mode and this becomes visible in 3-D: the connecting trunks disappear, because
+      the optimal partition at <span data-tex="r"></span> is generally <em>not</em> a coarsening of the
+      optimal partition at <span data-tex="r+1"></span>.
+    </p>
+
+    <div class="split wide-left" style="margin-top:26px">
+      <div>
+        <div class="chartbox"><canvas id="profChart"></canvas></div>
+        <div class="ctrls">
+          <div class="ctrl"><label>show</label>
+            <button class="btn on" id="tgCloud">partition cloud</button>
+            <button class="btn on" id="tgChain">nested chain</button>
+            <button class="btn" id="tgTable">table view</button></div>
+        </div>
+        <div class="tw" id="profTableWrap" style="display:none;margin-top:14px"><table id="profTable"></table></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>What search actually ran</h3>
+          <p id="methodText"></p>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Two shapes, one crossing</h3>
+          <div data-tex-d="f(r-1)\;\le\;f(r)\qquad\text{always}"></div>
+          <p>Merging two parts never increases the cross count and drops <span data-tex="r"></span> by one,
+          so <span data-tex="f"></span> is non-decreasing — the blue curve can only climb. The toll
+          <span data-tex="k(r-1)"></span> is a straight line of slope <span data-tex="k"></span>. A concave-ish
+          rising curve against a straight line: they can cross in the middle, and that is exactly what an
+          intermediate failure <em>is</em>.</p>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Is the search trustworthy?</h3>
+          <p>For every preset small enough to enumerate exhaustively, the same heuristic used on the large
+          ones was run alongside the exhaustive truth and compared at every <span data-tex="r"></span>.
+          Computed in this page on load:</p>
+          <div id="validText" style="font-family:var(--mono);font-size:12.5px;color:var(--ink-2)"></div>
+          <p style="margin-top:12px">That is evidence, not proof — which is why no verdict on this page rests
+          on the search. See §6.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 5 · THE PAYOFF ============================ -->
+<section class="beat" id="s-trees">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">05</div>
+      <h2>When the budget holds everywhere, the glue materialises</h2></div>
+    <p class="sub">
+      That is the deep half, and this page <strong>asserts</strong> it rather than proving it: if every
+      partition clears its toll, the <span data-tex="k"></span> edge-disjoint spanning trees genuinely
+      exist. Here they are — computed by a real matroid-union packing (greedy growth plus a breadth-first
+      exchange search over edges), then peeled apart into separate layers so you can see that no edge is
+      shared.
+    </p>
+    <p class="sub" style="font-size:15px;color:var(--muted)">
+      Concretely: <span data-tex="k"></span> edge-disjoint spanning trees are <span data-tex="k"></span>
+      independent communication backbones on one set of wires. Lose an entire backbone and the network is
+      still connected by each of the others.
+    </p>
+
+    <div class="split wide-left" style="margin-top:26px">
+      <div>
+        <div class="stage" id="treeStage" style="height:min(56vh,500px);min-height:360px">
+          <div class="stagenote">drag to orbit</div>
+        </div>
+        <div class="ctrls">
+          <div class="ctrl"><label for="treeSep">peel apart</label>
+            <input type="range" id="treeSep" min="0" max="100" value="70" style="width:200px"></div>
+          <div class="ctrl"><button class="btn" id="treeSpin">auto-rotate</button></div>
+        </div>
+        <div class="legend" id="treeLegend"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h3 id="treeHead"></h3>
+          <div id="treeBody"></div>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>The maximum, exactly</h3>
+          <div data-tex-d="\max\{k: G\text{ packs }k\text{ trees}\}\;=\;\min_{r\ge2}\left\lfloor\frac{f(r)}{r-1}\right\rfloor"></div>
+          <p id="maxKText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 6 · HONESTY ============================ -->
+<section class="beat" id="s-honest">
+  <div class="wrap">
+    <div class="bhead"><div class="bnum">06</div>
+      <h2>What is asserted here, and what is computed</h2></div>
+    <div class="split" style="margin-top:22px">
+      <div class="card">
+        <h3>Asserted, not proved</h3>
+        <p><strong>Sufficiency.</strong> That passing every partition test <em>forces</em> the trees to exist
+        is the deep half (Tutte 1961; Nash-Williams 1961), and nothing on this page argues for it. The
+        necessity direction, §1, <em>is</em> proved here in three lines.</p>
+        <p>For the sufficiency argument as an algorithm — a packing that either produces the trees or emits
+        the violating partition as a certificate — see the companion artifact
+        <em>04 · certificate duality</em>.</p>
+      </div>
+      <div class="card">
+        <h3>The scrubber is a simplification</h3>
+        <p>The tower shows one nested chain, <span data-tex="n-1"></span> partitions. The theorem quantifies
+        over all <span data-tex="B_n"></span> of them
+        (<span data-tex="B_{15}=1{,}382{,}958{,}545"></span>). §4 draws the rest of the cloud, and
+        <em>minimisers</em> mode shows that the per-<span data-tex="r"></span> optima do not nest — the
+        trunks vanish because there is no hierarchy connecting them.</p>
+        <p>No verdict here comes from the chain. A <em>failing</em> verdict comes from one exhibited
+        partition, recounted from scratch; a <em>passing</em> verdict comes from exhibited trees, re-verified
+        from scratch. Neither needs the search to be optimal.</p>
+      </div>
+      <div class="card">
+        <h3>Search method, stated</h3>
+        <p id="honestSearch"></p>
+      </div>
+      <div class="card">
+        <h3>Conventions</h3>
+        <p>Multigraphs throughout. A <strong>loop</strong> has both endpoints in the same part at every
+        resolution, so it never crosses and can never help. <em>Three districts</em> is a genuine multigraph
+        with doubled edges, and its parallel edges are counted with multiplicity in every number on this
+        page.</p>
+        <p><span data-tex="r=1"></span> is included in the theorem and is vacuous:
+        <span data-tex="e_G(P)=0\ge k\cdot 0"></span>. The tower therefore starts at
+        <span data-tex="r=2"></span>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot"><div class="wrap">
+  <p>Everything on this page is computed in the browser from edge lists: cross counts, exhaustive partition
+  enumeration, Stoer&ndash;Wagner minimum cuts, the agglomerative chain, and the matroid-union tree packing.
+  Nothing is hard-coded.</p>
+  <p>Vendored offline: Three.js r149 (UMD) · OrbitControls (globalised) · Chart.js 4.4.1 (UMD) ·
+  KaTeX 0.16.11 (UMD, all 20 faces).</p>
+</div></footer>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/chart.umd.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+"use strict";
+/* =======================================================================
+   PART A — pure math. No DOM.
+   Every routine here was validated offline in Node against brute force.
+   ======================================================================= */
+function ring(cnt,cx,cy,R,phase){var p=[];for(var i=0;i<cnt;i++){var a=phase+2*Math.PI*i/cnt;p.push([cx+R*Math.cos(a),cy+R*Math.sin(a)]);}return p;}
+function cliqueEdges(ids){var e=[];for(var i=0;i<ids.length;i++)for(var j=i+1;j<ids.length;j++)e.push([ids[i],ids[j]]);return e;}
+
+/* cross edges: loops never cross, parallel edges counted with multiplicity */
+function crossCount(g,part){var c=0;for(var i=0;i<g.edges.length;i++){var e=g.edges[i];if(part[e[0]]!==part[e[1]])c++;}return c;}
+function canon(part){var map=new Map(),out=new Int32Array(part.length),r=0;
+  for(var i=0;i<part.length;i++){var p=part[i];if(!map.has(p))map.set(p,r++);out[i]=map.get(p);}
+  return {part:out,r:r};}
+
+/* --- exhaustive minimum over ALL partitions, indexed by r --- */
+function exhaustiveByR(g){
+  var n=g.n,back=[],i,r;
+  for(i=0;i<n;i++)back.push([]);
+  for(i=0;i<g.edges.length;i++){var u=g.edges[i][0],v=g.edges[i][1];
+    if(u===v)continue;back[Math.max(u,v)].push(Math.min(u,v));}
+  var a=new Int32Array(n),mx=new Int32Array(n),cum=new Int32Array(n+1);
+  var minCross=new Array(n+1),argPart=new Array(n+1),dens=[];
+  for(r=0;r<=n;r++){minCross[r]=Infinity;argPart[r]=null;dens.push(new Map());}
+  var total=0;
+  (function rec(i){
+    if(i===n){total++;var rr=mx[n-1]+1,c=cum[n];
+      if(c<minCross[rr]){minCross[rr]=c;argPart[rr]=Array.prototype.slice.call(a);}
+      dens[rr].set(c,(dens[rr].get(c)||0)+1);return;}
+    var lim=i===0?0:mx[i-1]+1;
+    for(var lab=0;lab<=lim;lab++){
+      a[i]=lab;var add=0,b=back[i];
+      for(var t=0;t<b.length;t++)if(a[b[t]]!==lab)add++;
+      cum[i+1]=cum[i]+add;mx[i]=i===0?0:Math.max(mx[i-1],lab);
+      rec(i+1);
+    }
+  })(0);
+  return {minCross:minCross,argPart:argPart,total:total,dens:dens,exact:true};
+}
+
+/* --- Stoer-Wagner global minimum cut, exact, multiplicities respected --- */
+function minCut(g){
+  var n=g.n,i;
+  if(n<2)return {value:Infinity,part:null};
+  var w=[];for(i=0;i<n;i++)w.push(new Float64Array(n));
+  for(i=0;i<g.edges.length;i++){var u=g.edges[i][0],v=g.edges[i][1];
+    if(u===v)continue;w[u][v]+=1;w[v][u]+=1;}
+  var groups=[];for(i=0;i<n;i++)groups.push([i]);
+  var active=[];for(i=0;i<n;i++)active.push(i);
+  var best=Infinity,bestGroup=null;
+  while(active.length>1){
+    var inA=new Set(),wsum=new Float64Array(n),prev=-1,last=-1,q;
+    for(var it=0;it<active.length;it++){
+      var sel=-1,bw=-1;
+      for(q=0;q<active.length;q++){var vv=active[q];
+        if(!inA.has(vv)&&wsum[vv]>bw){bw=wsum[vv];sel=vv;}}
+      inA.add(sel);prev=last;last=sel;
+      for(q=0;q<active.length;q++){var v2=active[q];
+        if(!inA.has(v2))wsum[v2]+=w[sel][v2];}
+      if(it===active.length-1){
+        if(bw<best){best=bw;bestGroup=groups[last].slice();}
+        for(q=0;q<active.length;q++){var v3=active[q];
+          if(v3!==last&&v3!==prev){w[prev][v3]+=w[last][v3];w[v3][prev]=w[prev][v3];}}
+        groups[prev]=groups[prev].concat(groups[last]);
+        active=active.filter(function(x){return x!==last;});
+      }
+    }
+  }
+  var part=new Int32Array(n);
+  for(i=0;i<bestGroup.length;i++)part[bestGroup[i]]=1;
+  return {value:best,part:part};
+}
+
+/* --- the nested chain: agglomerative average-linkage merges (deterministic).
+       At each step merge the pair maximising w/(|A||B|); ties by larger w,
+       then lowest key. This is the ONE path the tower scrubs through.    --- */
+function greedyChain(g){
+  var n=g.n,i;
+  var part=new Int32Array(n);for(i=0;i<n;i++)part[i]=i;
+  var chain=new Array(n+1);for(i=0;i<=n;i++)chain[i]=null;
+  chain[n]=canon(part).part;part=Int32Array.from(chain[n]);
+  var cur=n;
+  while(cur>1){
+    var size=new Map();for(i=0;i<n;i++)size.set(part[i],(size.get(part[i])||0)+1);
+    var W=new Map();
+    for(i=0;i<g.edges.length;i++){var a=part[g.edges[i][0]],b=part[g.edges[i][1]];
+      if(a===b)continue;var key=Math.min(a,b)*n+Math.max(a,b);W.set(key,(W.get(key)||0)+1);}
+    var bestKey=-1,bestRatio=-1,bestW=-1;
+    W.forEach(function(w,key){
+      var ka=Math.floor(key/n),kb=key%n,ratio=w/(size.get(ka)*size.get(kb));
+      if(ratio>bestRatio+1e-12||(Math.abs(ratio-bestRatio)<1e-12&&(w>bestW||(w===bestW&&key<bestKey)))){
+        bestRatio=ratio;bestW=w;bestKey=key;}
+    });
+    if(bestKey<0){var labs=Array.from(new Set(part)).sort(function(x,y){return x-y;});
+      bestKey=labs[0]*n+labs[1];}
+    var A=Math.floor(bestKey/n),B=bestKey%n;
+    for(i=0;i<n;i++)if(part[i]===B)part[i]=A;
+    cur--;chain[cur]=canon(part).part;part=Int32Array.from(chain[cur]);
+  }
+  return chain;
+}
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* --- heuristic UPPER BOUND on f(r) for graphs too big to enumerate.
+       Endpoints pinned exact: r=2 by Stoer-Wagner, r=n by |E| minus loops. --- */
+function searchByR(g,restarts,seed){
+  var n=g.n,rng=mulberry32(seed||0x9e3779b9),i,r,j;
+  var best=new Array(n+1),arg=new Array(n+1);
+  for(i=0;i<=n;i++){best[i]=Infinity;arg[i]=null;}
+  function consider(part){var c0=canon(part),c=crossCount(g,c0.part);
+    if(c<best[c0.r]){best[c0.r]=c;arg[c0.r]=Array.prototype.slice.call(c0.part);}}
+  function chainOf(randomness,useRatio){
+    var part=new Int32Array(n),jj;
+    for(jj=0;jj<n;jj++)part[jj]=jj;
+    consider(part);
+    var cur=n;
+    while(cur>1){
+      var size=new Map();for(jj=0;jj<n;jj++)size.set(part[jj],(size.get(part[jj])||0)+1);
+      var W=new Map();
+      for(jj=0;jj<g.edges.length;jj++){var a=part[g.edges[jj][0]],b=part[g.edges[jj][1]];
+        if(a===b)continue;var key=Math.min(a,b)*n+Math.max(a,b);W.set(key,(W.get(key)||0)+1);}
+      var keys=Array.from(W.keys());
+      if(!keys.length){var labs=Array.from(new Set(part)).sort(function(x,y){return x-y;});
+        keys=[labs[0]*n+labs[1]];W.set(keys[0],0);}
+      var pick;
+      if(rng()<randomness){pick=keys[Math.floor(rng()*keys.length)];}
+      else{var br=-1;pick=keys[0];
+        for(jj=0;jj<keys.length;jj++){var kk=keys[jj],ka=Math.floor(kk/n),kb=kk%n;
+          var sc=useRatio?W.get(kk)/(size.get(ka)*size.get(kb)):W.get(kk);
+          if(sc>br||(sc===br&&rng()<0.5)){br=sc;pick=kk;}}}
+      var A=Math.floor(pick/n),B=pick%n;
+      for(jj=0;jj<n;jj++)if(part[jj]===B)part[jj]=A;
+      cur--;consider(part);
+    }
+  }
+  /* two deterministic linkages plus randomised restarts of both */
+  chainOf(0,true);chainOf(0,false);
+  for(var t=0;t<restarts;t++)chainOf(0.10+0.5*rng(),(t%2)===0);
+
+  var inc=[];for(i=0;i<n;i++)inc.push([]);
+  for(i=0;i<g.edges.length;i++){var e=g.edges[i];if(e[0]===e[1])continue;
+    inc[e[0]].push(e[1]);inc[e[1]].push(e[0]);}
+  /* local search: move one vertex to another part, keeping the part count fixed */
+  function refine(p0,r0){
+    var p=Int32Array.from(p0),cnt=new Int32Array(r0),q;
+    for(q=0;q<n;q++)cnt[p[q]]++;
+    var cur2=crossCount(g,p),improved=true,guard=0;
+    while(improved&&guard++<300){
+      improved=false;
+      for(var v=0;v<n;v++){
+        var from=p[v];if(cnt[from]===1)continue;
+        var deg=new Int32Array(r0);
+        for(q=0;q<inc[v].length;q++)deg[p[inc[v][q]]]++;
+        var bq=from,bg=0;
+        for(var qq=0;qq<r0;qq++){if(qq===from)continue;
+          var gn=deg[qq]-deg[from];if(gn>bg){bg=gn;bq=qq;}}
+        if(bg>0){cnt[from]--;p[v]=bq;cnt[bq]++;cur2-=bg;improved=true;}
+      }
+    }
+    return {part:p,cross:cur2};
+  }
+  function offer(p,rr){
+    var cc=canon(p);
+    if(cc.r!==rr)return;
+    var c=crossCount(g,cc.part);
+    if(c<best[rr]){best[rr]=c;arg[rr]=Array.prototype.slice.call(cc.part);}
+  }
+  for(r=2;r<=n;r++){
+    if(!arg[r])continue;
+    var rf=refine(Int32Array.from(arg[r]),r);
+    offer(rf.part,r);
+  }
+  /* downward pass: every level-(r+1) solution, merged, is a level-r candidate */
+  function heaviestMerge(p){
+    var Wm=new Map(),q;
+    for(q=0;q<g.edges.length;q++){var pa=p[g.edges[q][0]],pb=p[g.edges[q][1]];
+      if(pa===pb)continue;var kk2=Math.min(pa,pb)*n+Math.max(pa,pb);
+      Wm.set(kk2,(Wm.get(kk2)||0)+1);}
+    var bk2=-1,bw3=-1;
+    Wm.forEach(function(w,key){if(w>bw3){bw3=w;bk2=key;}});
+    if(bk2<0){var lb=Array.from(new Set(p)).sort(function(x,y){return x-y;});
+      if(lb.length<2)return null;bk2=lb[0]*n+lb[1];}
+    var out=Int32Array.from(p),A3=Math.floor(bk2/n),B3=bk2%n;
+    for(q=0;q<n;q++)if(out[q]===B3)out[q]=A3;
+    return out;
+  }
+  for(r=n-1;r>=2;r--){
+    if(!arg[r+1])continue;
+    var merged=heaviestMerge(Int32Array.from(arg[r+1]));
+    if(!merged)continue;
+    var cm=canon(merged);
+    if(cm.r!==r)continue;
+    offer(cm.part,r);
+    var rf2=refine(cm.part,r);
+    offer(rf2.part,r);
+  }
+  var mc=minCut(g);
+  if(mc.value<best[2]){best[2]=mc.value;arg[2]=Array.prototype.slice.call(mc.part);}
+  var mNo=0;for(i=0;i<g.edges.length;i++)if(g.edges[i][0]!==g.edges[i][1])mNo++;
+  best[n]=mNo;
+  var sing=new Int32Array(n);for(i=0;i<n;i++)sing[i]=i;
+  arg[n]=Array.prototype.slice.call(sing);
+  best[1]=0;arg[1]=Array.prototype.slice.call(new Int32Array(n));
+
+  /* f is non-decreasing in r; repair any upward violation by an explicit merge */
+  for(r=n-1;r>=2;r--){
+    if(best[r]>best[r+1]&&arg[r+1]){
+      var pp=Int32Array.from(arg[r+1]),WW=new Map();
+      for(i=0;i<g.edges.length;i++){var aa=pp[g.edges[i][0]],bb=pp[g.edges[i][1]];
+        if(aa===bb)continue;var kkey=Math.min(aa,bb)*n+Math.max(aa,bb);
+        WW.set(kkey,(WW.get(kkey)||0)+1);}
+      var bk=-1,bw2=-1;
+      WW.forEach(function(w,key){if(w>bw2){bw2=w;bk=key;}});
+      if(bk<0)continue;
+      var A2=Math.floor(bk/n),B2=bk%n;
+      for(i=0;i<n;i++)if(pp[i]===B2)pp[i]=A2;
+      var cc=canon(pp),c2=crossCount(g,cc.part);
+      if(cc.r===r&&c2<best[r]){best[r]=c2;arg[r]=Array.prototype.slice.call(cc.part);}
+    }
+  }
+  return {minCross:best,argPart:arg,exact:false,restarts:restarts};
+}
+
+/* --- matroid union: k edge-disjoint spanning trees --- */
+function DSU(n){var p=new Int32Array(n);for(var i=0;i<n;i++)p[i]=i;
+  function f(x){while(p[x]!==x){p[x]=p[p[x]];x=p[x];}return x;}
+  return {find:f,
+    union:function(a,b){a=f(a);b=f(b);if(a===b)return false;p[a]=b;return true;},
+    comps:function(){var s=new Set();for(var i=0;i<n;i++)s.add(f(i));return s.size;}};}
+
+function packTrees(g,k){
+  var n=g.n,m=g.edges.length,e,i,q;
+  var owner=new Int32Array(m);owner.fill(-1);
+  var dsus=null;
+  function build(){var d=[],i2,e2;for(i2=0;i2<k;i2++)d.push(DSU(n));
+    for(e2=0;e2<m;e2++)if(owner[e2]>=0)d[owner[e2]].union(g.edges[e2][0],g.edges[e2][1]);
+    return d;}
+  dsus=build();
+  function fits(e2,i2){var u=g.edges[e2][0],v=g.edges[e2][1];
+    return u!==v&&dsus[i2].find(u)!==dsus[i2].find(v);}
+  function fpath(i2,a,b){
+    var adj=new Map(),e2,t;
+    for(e2=0;e2<m;e2++)if(owner[e2]===i2){var u=g.edges[e2][0],v=g.edges[e2][1];
+      if(!adj.has(u))adj.set(u,[]);if(!adj.has(v))adj.set(v,[]);
+      adj.get(u).push([v,e2]);adj.get(v).push([u,e2]);}
+    var prev=new Map();prev.set(a,null);
+    var qq=[a];
+    while(qq.length){var x=qq.shift();if(x===b)break;
+      var lst=adj.get(x)||[];
+      for(t=0;t<lst.length;t++)if(!prev.has(lst[t][0])){prev.set(lst[t][0],[x,lst[t][1]]);qq.push(lst[t][0]);}}
+    if(!prev.has(b))return null;
+    var out=[],x2=b;
+    while(prev.get(x2)){var pr=prev.get(x2);out.push(pr[1]);x2=pr[0];}
+    return out;
+  }
+  var count=0;
+  for(var pass=0;pass<m*3+8&&count<k*(n-1);pass++){
+    var progressed=false;
+    for(e=0;e<m;e++){if(owner[e]>=0)continue;
+      for(i=0;i<k;i++)if(fits(e,i)){owner[e]=i;dsus[i].union(g.edges[e][0],g.edges[e][1]);
+        count++;progressed=true;break;}}
+    if(count>=k*(n-1))break;
+    if(progressed)continue;
+    var label=new Map(),qArr=[];
+    for(e=0;e<m;e++)if(owner[e]<0&&g.edges[e][0]!==g.edges[e][1]){label.set(e,null);qArr.push(e);}
+    var found=null;
+    while(qArr.length&&!found){
+      var ee=qArr.shift();
+      for(i=0;i<k;i++){
+        if(owner[ee]===i)continue;
+        if(fits(ee,i)){found={edge:ee,to:i};break;}
+        var path=fpath(i,g.edges[ee][0],g.edges[ee][1])||[];
+        for(q=0;q<path.length;q++)if(!label.has(path[q])){
+          label.set(path[q],{parent:ee,forest:i});qArr.push(path[q]);}
+      }
+    }
+    if(!found)break;
+    var chain=[],ce=found.edge,cto=found.to;
+    for(;;){chain.push({edge:ce,to:cto});var lb=label.get(ce);if(!lb)break;cto=owner[ce];ce=lb.parent;}
+    for(var s=chain.length-1;s>=0;s--)owner[chain[s].edge]=chain[s].to;
+    dsus=build();count=0;for(e=0;e<m;e++)if(owner[e]>=0)count++;
+  }
+  /* independent re-verification, from the owner array alone */
+  var trees=[],ok=true;
+  for(i=0;i<k;i++){
+    var es=[];for(e=0;e<m;e++)if(owner[e]===i)es.push(e);
+    var d=DSU(n),acyclic=true;
+    for(var z=0;z<es.length;z++)if(!d.union(g.edges[es[z]][0],g.edges[es[z]][1]))acyclic=false;
+    var comps=d.comps();
+    trees.push({edges:es,size:es.length,acyclic:acyclic,comps:comps,
+                spanning:comps===1&&es.length===n-1});
+    if(!trees[i].spanning||!trees[i].acyclic)ok=false;
+  }
+  var seen=new Set(),disjoint=true;
+  for(i=0;i<trees.length;i++)for(var y=0;y<trees[i].edges.length;y++){
+    if(seen.has(trees[i].edges[y]))disjoint=false;seen.add(trees[i].edges[y]);}
+  return {ok:ok&&disjoint,disjoint:disjoint,trees:trees,owner:owner,used:seen.size};
+}
+
+function maxKof(minCross,n){
+  var best=Infinity,argr=-1;
+  for(var r=2;r<=n;r++){if(!isFinite(minCross[r]))continue;
+    var v=Math.floor(minCross[r]/(r-1));if(v<best){best=v;argr=r;}}
+  return {k:best,r:argr};
+}
+
+/* --- sample the partition cloud when exhaustive enumeration is out of reach.
+       Two families, because neither alone covers the space:
+         (a) uniform-ish random restricted-growth labellings — these
+             concentrate on MANY parts, so they populate large r;
+         (b) random edge-contraction chains — every chain passes through
+             every r from n down to 1, so these populate small r.
+       Reported honestly in the UI as a sample, never as the whole space. --- */
+function sampleCloud(g,N,seed){
+  var n=g.n,rng=mulberry32(seed||12345),a=new Int32Array(n),dens=[],r,i,j,c,total=0;
+  for(r=0;r<=n;r++)dens.push(new Map());
+  function record(part,rr){
+    var cc=0;
+    for(var q=0;q<g.edges.length;q++)if(part[g.edges[q][0]]!==part[g.edges[q][1]])cc++;
+    dens[rr].set(cc,(dens[rr].get(cc)||0)+1);total++;
+  }
+  var half=Math.floor(N/2);
+  for(var t=0;t<half;t++){
+    var mx=0;a[0]=0;
+    for(i=1;i<n;i++){var lab=Math.floor(rng()*(mx+2));a[i]=lab;if(lab>mx)mx=lab;}
+    record(a,mx+1);
+  }
+  var chains=Math.max(1,Math.ceil((N-half)/n));
+  for(var ch=0;ch<chains;ch++){
+    var p=new Int32Array(n);
+    for(i=0;i<n;i++)p[i]=i;
+    var cur=n;record(p,cur);
+    while(cur>1){
+      var cand=[];
+      for(j=0;j<g.edges.length;j++)if(p[g.edges[j][0]]!==p[g.edges[j][1]])cand.push(j);
+      var A,B;
+      if(cand.length){
+        var e=g.edges[cand[Math.floor(rng()*cand.length)]];
+        A=Math.min(p[e[0]],p[e[1]]);B=Math.max(p[e[0]],p[e[1]]);
+      }else{
+        var labs=Array.from(new Set(p)).sort(function(x,y){return x-y;});
+        A=labs[0];B=labs[1];
+      }
+      for(i=0;i<n;i++)if(p[i]===B)p[i]=A;
+      cur--;record(p,cur);
+    }
+  }
+  dens.total=total;
+  return dens;
+}
+/* =======================================================================
+   PART B — the graphs. Geometry first; edge lists derived from the layout
+   wherever bridges are involved, so drawing and combinatorics agree.
+   ======================================================================= */
+function mkComplete(n,id,label,blurb){
+  var ids=[];for(var i=0;i<n;i++)ids.push(i);
+  return {id:id,name:label,n:n,edges:cliqueEdges(ids),pos:ring(n,0,0,100,-Math.PI/2),blurb:blurb};
+}
+function islands(sizes,radius,iRad){
+  var cnt=sizes.length,pos=[],edges=[],groups=[],idx=0,c,j,a,b;
+  var centres=ring(cnt,0,0,radius,-Math.PI/2);
+  for(c=0;c<cnt;c++){
+    var s=sizes[c],ids=[];
+    var local=ring(s,centres[c][0],centres[c][1],iRad,
+      Math.atan2(centres[c][1],centres[c][0])+Math.PI);
+    for(j=0;j<s;j++){pos.push(local[j]);ids.push(idx++);}
+    groups.push(ids);
+    var ce=cliqueEdges(ids);
+    for(j=0;j<ce.length;j++)edges.push(ce[j]);
+  }
+  for(a=0;a<cnt;a++)for(b=a+1;b<cnt;b++){
+    var bd=Infinity,bp=null;
+    for(var x=0;x<groups[a].length;x++)for(var y=0;y<groups[b].length;y++){
+      var u=groups[a][x],v=groups[b][y];
+      var d=Math.pow(pos[u][0]-pos[v][0],2)+Math.pow(pos[u][1]-pos[v][1],2);
+      if(d<bd){bd=d;bp=[u,v];}}
+    edges.push(bp.slice());
+  }
+  return {pos:pos,edges:edges,groups:groups,n:idx};
+}
+
+var GRAPHS=[];
+(function(){
+  var I3=islands([5,5,5],200,80);
+  GRAPHS.push({id:'threeK5',name:'3×K₅ + 3 bridges',n:I3.n,edges:I3.edges,pos:I3.pos,
+    blurb:'Three cliques, one bridge per pair. Passes at r=2 and at r=n. Dead at r=3.'});
+
+  var I=islands([4,4,3],168,62);
+  var edges=I.edges.slice(),C=I.groups[2];
+  for(var i=0;i<C.length;i++)for(var j=i+1;j<C.length;j++)edges.push([C[i],C[j]]);
+  GRAPHS.push({id:'districts',name:'Three districts (multigraph)',n:I.n,edges:edges,pos:I.pos,
+    blurb:'District C is double-wired. Small enough to enumerate every one of its 678,570 partitions.'});
+
+  GRAPHS.push(mkComplete(6,'k6','K₆',
+    'Complete on 6 vertices. Clears the budget at every resolution — and carries three disjoint spanning trees.'));
+  GRAPHS.push(mkComplete(5,'k5','K₅',
+    'Complete on 5 vertices: 10 edges against the 8 that k=2 demands.'));
+
+  var outer=ring(5,0,0,112,-Math.PI/2),inner=ring(5,0,0,52,-Math.PI/2);
+  var pos=outer.concat(inner),pe=[],q;
+  for(q=0;q<5;q++)pe.push([q,(q+1)%5]);
+  for(q=0;q<5;q++)pe.push([q,q+5]);
+  for(q=0;q<5;q++)pe.push([5+q,5+((q+2)%5)]);
+  GRAPHS.push({id:'petersen',name:'Petersen',n:10,edges:pe,pos:pos,
+    blurb:'3-edge-connected, so the cut test is comfortable. Only 15 edges, so the headcount is not.'});
+
+  var I2=islands([5,5],132,58);
+  GRAPHS.push({id:'twoK5',name:'2×K₅ + one bridge',n:I2.n,edges:I2.edges,pos:I2.pos,
+    blurb:'21 edges against the 18 demanded — and a single bridge holding it together.'});
+
+  var qpos=[],qe=[],t,d;
+  for(t=0;t<16;t++){
+    var bt=[(t>>0)&1,(t>>1)&1,(t>>2)&1,(t>>3)&1],sc=bt[3]?1:0;
+    qpos.push([(bt[0]?1:-1)*(sc?96:52)+(bt[2]?1:-1)*(sc?34:19),
+               (bt[1]?1:-1)*(sc?96:52)+(bt[2]?1:-1)*(sc?34:19)]);
+  }
+  for(t=0;t<16;t++)for(d=0;d<4;d++){var jj=t^(1<<d);if(jj>t)qe.push([t,jj]);}
+  GRAPHS.push({id:'q4',name:'Q₄ hypercube',n:16,edges:qe,pos:qpos,
+    blurb:'4-edge-connected = 2k with k=2 — the corollary case. 32 edges against the 30 demanded.'});
+})();
+var GBY={};(function(){for(var i=0;i<GRAPHS.length;i++)GBY[GRAPHS[i].id]=GRAPHS[i];})();
+
+/* =======================================================================
+   PART C — analysis cache
+   ======================================================================= */
+var EXHAUSTIVE_LIMIT=11;
+var ANA={};
+var SUBD='₀₁₂₃₄₅₆₇₈₉';
+function subN(x){return String(x).split('').map(function(c){return SUBD[+c];}).join('');}
+
+function analyse(gid){
+  if(ANA[gid])return ANA[gid];
+  var g=GBY[gid],res;
+  if(g.n<=EXHAUSTIVE_LIMIT){
+    res=exhaustiveByR(g);
+    res.method='exhaustive';
+    res.methodText='<b>Exhaustive.</b> Every one of the '+res.total.toLocaleString()+
+      ' set partitions of these '+g.n+' vertices was enumerated (restricted-growth strings with '+
+      'incremental cross counting) and measured. The blue curve is the exact minimum, not a bound — '+
+      'so for this graph a &ldquo;clears the budget everywhere&rdquo; reading is fully trustworthy.';
+  }else{
+    res=searchByR(g,500,0x9e3779b9);
+    res.total=null;
+    res.method='search';
+    res.methodText='<b>Search — upper bound.</b> '+g.n+' vertices means B'+subN(g.n)+
+      ' partitions, far out of reach. What ran: 502 agglomerative passes — two deterministic (average-linkage '+
+      'and heaviest-edge linkage) plus 500 randomised restarts alternating between the two, with random '+
+      'tie-breaks and occasional random merges — keeping the best partition seen at each r; then '+
+      'single-vertex-move local search at each r until no move improves; then a downward pass that '+
+      'merges each level-(r+1) solution and re-refines it as a level-r candidate. The endpoints are '+
+      'pinned <em>exact</em> — r=2 by Stoer–Wagner minimum cut, r=n by counting non-loop edges. '+
+      'Everything between is an <em>upper bound</em> on f(r). A dip below the toll therefore still '+
+      '<em>proves</em> failure; a clean run does not by itself prove success. The cloud drawn for this '+
+      'graph is a <em>sample</em>, not the whole space: half random restricted-growth labellings (these '+
+      'land on many parts) and half random edge-contraction chains (these sweep every r), so both ends '+
+      'of the axis are populated.';
+    res.dens=sampleCloud(g,40000,7717);
+    res.sampled=res.dens.total;
+  }
+  res.chain=greedyChain(g);
+  res.mincut=minCut(g);
+  res.n=g.n;res.m=g.edges.length;
+  ANA[gid]=res;
+  return res;
+}
+
+/* honesty credential: the same heuristic, run against exhaustive truth
+   on every preset small enough to enumerate */
+function validateSearch(){
+  var rows=[];
+  for(var i=0;i<GRAPHS.length;i++){
+    var g=GRAPHS[i];
+    if(g.n>EXHAUSTIVE_LIMIT)continue;
+    var ex=exhaustiveByR(g),se=searchByR(g,500,0x9e3779b9),agree=true;
+    for(var r=1;r<=g.n;r++)if(ex.minCross[r]!==se.minCross[r])agree=false;
+    rows.push({name:g.name,n:g.n,total:ex.total,agree:agree});
+  }
+  return rows;
+}
+
+/* per-graph, per-k verdict used by the survey table and the tower */
+function verdict(gid,k){
+  var g=GBY[gid],an=analyse(gid),n=g.n,fails=[],r;
+  for(r=2;r<=n;r++)if(an.minCross[r]<k*(r-1))fails.push(r);
+  var mk=maxKof(an.minCross,n);
+  return {g:g,an:an,fails:fails,maxK:mk,
+          cutOK:an.mincut.value>=k,
+          headOK:an.minCross[n]>=k*(n-1),
+          pass:fails.length===0};
+}
+/* =======================================================================
+   PART D — shared 3-D helpers
+   Three.js r149 UMD + globalised OrbitControls, both classic <script>.
+   ======================================================================= */
+var COL={s1:0x3987e5,s2:0xd95926,s3:0x199e70,crit:0xd03b3b,ref:0xc3c2b7,
+         ink2:0xaab4c4,muted:0x77839a,rule:0x2c3446};
+var SERIES=[COL.s1,COL.s2,COL.s3];
+var SERIES_CSS=['var(--s1)','var(--s2)','var(--s3)'];
+var GLYPH=['●','■','▲'];
+
+var _cyl=new THREE.CylinderGeometry(1,1,1,10,1,true);
+var _sph=new THREE.SphereGeometry(1,20,14);
+var _up=new THREE.Vector3(0,1,0);
+
+function makeScene(el,opts){
+  opts=opts||{};
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(opts.fov||42,1,0.05,400);
+  var renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  if(THREE.sRGBEncoding!==undefined)renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.setClearColor(0x070910,1);
+  el.appendChild(renderer.domElement);
+  var controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;controls.dampingFactor=0.09;
+  controls.enablePan=!!opts.pan;controls.rotateSpeed=0.72;
+  if(opts.minDist)controls.minDistance=opts.minDist;
+  if(opts.maxDist)controls.maxDistance=opts.maxDist;
+  scene.add(new THREE.HemisphereLight(0xdfe8ff,0x131722,1.15));
+  var dl=new THREE.DirectionalLight(0xffffff,0.85);dl.position.set(3,6,4);scene.add(dl);
+  var dl2=new THREE.DirectionalLight(0x8fb6ff,0.35);dl2.position.set(-4,-2,-3);scene.add(dl2);
+  function resize(){
+    var w=el.clientWidth,h=el.clientHeight;
+    if(!w||!h)return;
+    renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  }
+  resize();
+  if(window.ResizeObserver)new ResizeObserver(resize).observe(el);
+  window.addEventListener('resize',resize);
+  var visible=true;
+  if(window.IntersectionObserver){
+    new IntersectionObserver(function(es){visible=es[0].isIntersecting;},{rootMargin:'250px'}).observe(el);
+  }
+  return {scene:scene,camera:camera,renderer:renderer,controls:controls,el:el,resize:resize,
+          isVisible:function(){return visible;}};
+}
+
+function tube(p1,p2,mat,thick){
+  var dir=new THREE.Vector3().subVectors(p2,p1),len=dir.length();
+  if(len<1e-9)return null;
+  var mesh=new THREE.Mesh(_cyl,mat);
+  mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(_up,dir.clone().normalize());
+  mesh.scale.set(thick,len,thick);
+  return mesh;
+}
+
+function labelSprite(text,opts){
+  opts=opts||{};
+  var fs=opts.fs||44,W=opts.w||256,H=opts.h||72,pad=10;
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  var cx=cv.getContext('2d');
+  function draw(t,c){
+    cx.clearRect(0,0,W,H);
+    cx.font=(opts.weight||600)+' '+fs+'px ui-monospace, SFMono-Regular, Menlo, monospace';
+    cx.textAlign=opts.align||'center';cx.textBaseline='middle';
+    cx.fillStyle=c||opts.color||'#aab4c4';
+    cx.fillText(t,opts.align==='left'?pad:(opts.align==='right'?W-pad:W/2),H/2);
+  }
+  draw(text);
+  var tex=new THREE.CanvasTexture(cv);tex.needsUpdate=true;
+  var mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false});
+  var sp=new THREE.Sprite(mat);
+  var sc=opts.scale||0.5;
+  sp.scale.set(sc,sc*H/W,1);
+  sp.userData.redraw=function(t,c){draw(t,c);tex.needsUpdate=true;};
+  return sp;
+}
+
+function disposeGroup(gr){
+  var kill=[];
+  gr.traverse(function(o){kill.push(o);});
+  for(var i=0;i<kill.length;i++){
+    var o=kill[i];
+    if(o.material){
+      var ms=Array.isArray(o.material)?o.material:[o.material];
+      for(var j=0;j<ms.length;j++){if(ms[j].map)ms[j].map.dispose();ms[j].dispose();}
+    }
+    if(o.geometry&&o.geometry!==_cyl&&o.geometry!==_sph)o.geometry.dispose();
+  }
+  while(gr.children.length)gr.remove(gr.children[0]);
+}
+
+function arcTube(a,b,lift,mat,thick,group){
+  var mid=new THREE.Vector3().addVectors(a,b).multiplyScalar(0.5);
+  mid.y+=lift;
+  var seg=new THREE.QuadraticBezierCurve3(a,mid,b).getPoints(18);
+  for(var s=0;s<seg.length-1;s++){
+    var tb=tube(seg[s],seg[s+1],mat,thick);
+    if(tb)group.add(tb);
+  }
+}
+
+/* =======================================================================
+   PART E — §1 the toll widget
+   r clusters on a ring; tree i drawn as a star centred at cluster i,
+   bowed to its own height. r-1 welds per tree, k(r-1) welds in total.
+   ======================================================================= */
+(function(){
+  var el=document.getElementById('tollStage');
+  var V=makeScene(el,{fov:38,minDist:2.4,maxDist:9});
+  V.camera.position.set(0.15,2.75,3.15);
+  V.controls.target.set(0,0.20,0);
+  var root=new THREE.Group();V.scene.add(root);
+  var r=5,k=2;
+
+  function build(){
+    disposeGroup(root);
+    var R=1.22,i,t,pts=[];
+    for(i=0;i<r;i++){
+      var a=-Math.PI/2+2*Math.PI*i/r;
+      pts.push(new THREE.Vector3(R*Math.cos(a),0,R*Math.sin(a)));
+    }
+    for(i=0;i<r;i++){
+      var sphMat=new THREE.MeshStandardMaterial({color:0x39435c,roughness:0.62,metalness:0.05});
+      var m=new THREE.Mesh(_sph,sphMat);
+      m.position.copy(pts[i]);m.scale.setScalar(0.175);root.add(m);
+      var rg=new THREE.RingGeometry(0.205,0.228,44);
+      var rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:0x4e5b74,
+        side:THREE.DoubleSide,transparent:true,opacity:0.8}));
+      rm.rotation.x=-Math.PI/2;rm.position.copy(pts[i]);rm.position.y-=0.002;root.add(rm);
+      var sp=labelSprite('C'+(i+1),{fs:38,scale:0.30,color:'#8894ab'});
+      sp.position.copy(pts[i]).add(new THREE.Vector3(0,0.33,0));root.add(sp);
+    }
+    for(t=0;t<k;t++){
+      var c=t%r;
+      var mat=new THREE.MeshStandardMaterial({color:SERIES[t],roughness:0.42,metalness:0.1});
+      for(var j=0;j<r;j++){
+        if(j===c)continue;
+        arcTube(pts[c],pts[j],0.17+0.30*t,mat,0.027,root);
+      }
+    }
+  }
+
+  function update(){
+    build();
+    document.getElementById('tollRv').textContent=r;
+    document.getElementById('tollKv').textContent=k;
+    document.getElementById('tollOut').innerHTML=(k*(r-1))+
+      ' <small>cross edges required</small>';
+    katex.render('k(r-1)='+k+'\\cdot('+r+'-1)='+(k*(r-1)),
+      document.getElementById('tollTex'),{throwOnError:false,displayMode:true});
+    var h='';
+    for(var t=0;t<k;t++)h+='<span><span class="sq" style="background:'+SERIES_CSS[t]+
+      '"></span>tree '+(t+1)+' '+GLYPH[t]+' — '+(r-1)+' weld'+(r-1===1?'':'s')+'</span>';
+    document.getElementById('tollLegend').innerHTML=h;
+  }
+
+  document.getElementById('tollR').addEventListener('input',function(e){r=+e.target.value;update();});
+  document.getElementById('tollK').addEventListener('input',function(e){k=+e.target.value;update();});
+  update();
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    V.controls.update();
+    if(V.isVisible())V.renderer.render(V.scene,V.camera);
+  })();
+})();
+/* =======================================================================
+   PART F — §2 the tower of resolutions
+   One 3-D object holding EVERY resolution at once:
+     level r  = the quotient graph after clustering V into r parts
+     trunks   = the nesting relation (chain mode only)
+     ladder   = per level, a bar for e(P) and a tick for the toll k(r-1)
+   Seen from the side the ladder IS the f(r) vs k(r-1) chart.
+   ======================================================================= */
+var S={gid:'threeK5',k:2,r:15,mode:'chain'};
+
+var tower=(function(){
+  var el=document.getElementById('towerStage');
+  var V=makeScene(el,{fov:44,pan:true,minDist:1.6,maxDist:40});
+  var root=new THREE.Group();V.scene.add(root);
+  var GAP=0.62,BASE_R=1.28,LX0=1.98,LADLEN=2.5;
+  var L={},camTween=null,focusExtras=null,worldBP=null,worldUnit=1,worldRecs=[];
+  var ladderSprite=null;
+
+  function basePos(g){
+    var mx=0,i;
+    for(i=0;i<g.pos.length;i++)mx=Math.max(mx,Math.sqrt(g.pos[i][0]*g.pos[i][0]+g.pos[i][1]*g.pos[i][1]));
+    var s=BASE_R/(mx||1);
+    return g.pos.map(function(p){return [p[0]*s,p[1]*s];});
+  }
+  function clusterColor(minIdx,n){
+    var h=(202+298*(minIdx/Math.max(1,n)))%360;
+    var c=new THREE.Color();c.setHSL(h/360,0.40,0.665);return c;
+  }
+  function partAt(an,r){
+    if(S.mode==='chain')return canon(an.chain[r]).part;
+    return an.argPart[r]?canon(Int32Array.from(an.argPart[r])).part:canon(an.chain[r]).part;
+  }
+
+  function build(){
+    disposeGroup(root);L={};focusExtras=null;
+    var g=GBY[S.gid],an=analyse(S.gid),k=S.k,n=g.n,r,i,c,v;
+    var bp=basePos(g);worldBP=bp;
+    var recs=[],maxVal=1;
+    for(r=2;r<=n;r++){
+      var p=partAt(an,r);
+      var cross=crossCount(g,p),need=k*(r-1);
+      maxVal=Math.max(maxVal,cross,need);
+      recs.push({r:r,part:p,cross:cross,need:need,fail:cross<need});
+    }
+    var unit=LADLEN/maxVal;worldUnit=unit;worldRecs=recs;
+    var cposByR={};
+
+    for(var q=0;q<recs.length;q++){
+      var rec=recs[q];r=rec.r;
+      var y=(r-2)*GAP,grp=new THREE.Group();root.add(grp);
+      var mats=[],p2=rec.part;
+
+      var members=[];for(c=0;c<r;c++)members.push([]);
+      for(v=0;v<n;v++)members[p2[v]].push(v);
+      var cpos=[],csize=[],ccol=[];
+      for(c=0;c<r;c++){
+        var sx=0,sz=0;
+        for(i=0;i<members[c].length;i++){sx+=bp[members[c][i]][0];sz+=bp[members[c][i]][1];}
+        cpos.push(new THREE.Vector3(sx/members[c].length,y,sz/members[c].length));
+        csize.push(members[c].length);
+        ccol.push(clusterColor(Math.min.apply(null,members[c]),n));
+      }
+      cposByR[r]={cpos:cpos,members:members,part:p2};
+
+      for(c=0;c<r;c++){
+        var sm=new THREE.MeshStandardMaterial({color:ccol[c],roughness:0.55,metalness:0.06,
+          transparent:true,opacity:1});
+        mats.push(sm);
+        var s=new THREE.Mesh(_sph,sm);
+        s.position.copy(cpos[c]);
+        s.scale.setScalar(0.042+0.050*Math.sqrt(csize[c]));
+        grp.add(s);
+      }
+
+      /* cross edges of the quotient; parallel ones fanned sideways */
+      var crossMat=new THREE.MeshBasicMaterial({color:COL.s1,transparent:true,opacity:1});
+      mats.push(crossMat);
+      var seen=new Map();
+      for(i=0;i<g.edges.length;i++){
+        var a=p2[g.edges[i][0]],b=p2[g.edges[i][1]];
+        if(a===b)continue;
+        var key=Math.min(a,b)+'_'+Math.max(a,b);
+        var idx=seen.get(key)||0;seen.set(key,idx+1);
+        var A=cpos[a],B=cpos[b];
+        var dd=new THREE.Vector3().subVectors(B,A);
+        var off=0.038*(idx%2?1:-1)*Math.ceil(idx/2);
+        var perp=new THREE.Vector3(-dd.z,0,dd.x);
+        if(perp.length()>1e-9)perp.normalize().multiplyScalar(off);else perp.set(0,0,0);
+        var tb=tube(A.clone().add(perp),B.clone().add(perp),crossMat,0.0135);
+        if(tb)grp.add(tb);
+      }
+
+      /* rung joining the tower to the ladder */
+      var rungMat=new THREE.MeshBasicMaterial({color:rec.fail?COL.crit:COL.rule,
+        transparent:true,opacity:1});
+      mats.push(rungMat);
+      var rung=tube(new THREE.Vector3(BASE_R+0.12,y,0),new THREE.Vector3(LX0-0.04,y,0),
+        rungMat,rec.fail?0.010:0.005);
+      if(rung)grp.add(rung);
+
+      /* the bar: cross edges actually present */
+      var barMat=new THREE.MeshBasicMaterial({color:COL.s1,transparent:true,opacity:1});
+      mats.push(barMat);
+      var bar=tube(new THREE.Vector3(LX0,y,0),new THREE.Vector3(LX0+rec.cross*unit,y,0),
+        barMat,0.026);
+      if(bar)grp.add(bar);
+
+      /* the shortfall */
+      if(rec.fail){
+        var dm=new THREE.MeshBasicMaterial({color:COL.crit,transparent:true,opacity:1});
+        mats.push(dm);
+        var db=tube(new THREE.Vector3(LX0+rec.cross*unit,y,0),
+          new THREE.Vector3(LX0+rec.need*unit,y,0),dm,0.036);
+        if(db)grp.add(db);
+        var rgg=new THREE.RingGeometry(BASE_R+0.20,BASE_R+0.26,64);
+        var rmm=new THREE.MeshBasicMaterial({color:COL.crit,side:THREE.DoubleSide,
+          transparent:true,opacity:1});
+        mats.push(rmm);
+        var halo=new THREE.Mesh(rgg,rmm);
+        halo.rotation.x=-Math.PI/2;halo.position.set(0,y,0);grp.add(halo);
+      }
+
+      /* the toll tick */
+      var tickMat=new THREE.MeshBasicMaterial({color:COL.ref,transparent:true,opacity:1});
+      mats.push(tickMat);
+      var tk=tube(new THREE.Vector3(LX0+rec.need*unit,y-0.085,0),
+        new THREE.Vector3(LX0+rec.need*unit,y+0.085,0),tickMat,0.011);
+      if(tk)grp.add(tk);
+
+      var sp=labelSprite('r='+r,{fs:40,scale:0.74,color:'#95a1b6',align:'right'});
+      sp.position.set(-BASE_R-0.72,y,0);grp.add(sp);
+
+      grp.userData={mats:mats,rec:rec,y:y,cpos:cpos,members:members,sprite:sp};
+      L[r]=grp;
+    }
+
+    /* trunks: the nesting relation. Present only when the levels really nest. */
+    if(S.mode==='chain'){
+      var trunkMat=new THREE.MeshBasicMaterial({color:0x39435c,transparent:true,opacity:0.55});
+      for(r=3;r<=n;r++){
+        var up=cposByR[r],dn=cposByR[r-1];
+        if(!up||!dn)continue;
+        for(c=0;c<up.cpos.length;c++){
+          var rep=up.members[c][0],parent=dn.part[rep];
+          var tb2=tube(up.cpos[c],dn.cpos[parent],trunkMat,0.006);
+          if(tb2)root.add(tb2);
+        }
+      }
+    }
+
+    /* the two profiles, drawn as polylines down the ladder plane */
+    var prof=[],tollPts=[];
+    for(i=0;i<recs.length;i++){
+      prof.push(new THREE.Vector3(LX0+recs[i].cross*unit,(recs[i].r-2)*GAP,0));
+      tollPts.push(new THREE.Vector3(LX0+recs[i].need*unit,(recs[i].r-2)*GAP,0));
+    }
+    root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(prof),
+      new THREE.LineBasicMaterial({color:COL.s1,transparent:true,opacity:0.6})));
+    var tl=new THREE.Line(new THREE.BufferGeometry().setFromPoints(tollPts),
+      new THREE.LineDashedMaterial({color:COL.ref,dashSize:0.075,gapSize:0.055,
+        transparent:true,opacity:0.8}));
+    tl.computeLineDistances();root.add(tl);
+    root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(
+      [new THREE.Vector3(LX0,-0.14,0),new THREE.Vector3(LX0,(n-2)*GAP+0.14,0)]),
+      new THREE.LineBasicMaterial({color:COL.rule})));
+
+    var capTop=labelSprite('finest · every vertex alone',{fs:30,scale:1.55,color:'#8894ab',w:512,h:64});
+    capTop.position.set(0,(n-2)*GAP+0.62,0);root.add(capTop);
+    var capBot=labelSprite('coarsest · one cut',{fs:30,scale:1.20,color:'#8894ab',w:512,h:64});
+    capBot.position.set(0,-0.62,0);root.add(capBot);
+
+    /* name the two curves where they end, so the ladder reads as a chart */
+    var labE=labelSprite('e(P)',{fs:34,scale:0.70,color:'#6aa6ee',w:256,h:72});
+    labE.position.set(prof[prof.length-1].x+0.34,prof[prof.length-1].y+0.24,0);root.add(labE);
+    var labT=labelSprite('k(r−1)',{fs:34,scale:0.92,color:'#c3c2b7',w:256,h:72});
+    labT.position.set(tollPts[tollPts.length-1].x-0.52,tollPts[tollPts.length-1].y+0.30,0);
+    root.add(labT);
+
+    ladderSprite=labelSprite('',{fs:30,scale:1.75,color:'#eef1f6',w:512,h:64,align:'left'});
+    root.add(ladderSprite);
+
+    if(S.r>n)S.r=n;
+    if(S.r<2)S.r=2;
+    setFocus(S.r);
+  }
+
+  function setFocus(r){
+    var g=GBY[S.gid],n=g.n,q;
+    r=Math.max(2,Math.min(n,r));S.r=r;
+    for(q=2;q<=n;q++){
+      var grp=L[q];if(!grp)continue;
+      var on=(q===r),o=on?1:0.20;
+      for(var i=0;i<grp.userData.mats.length;i++){
+        grp.userData.mats[i].opacity=o;grp.userData.mats[i].transparent=true;
+      }
+      grp.userData.sprite.material.opacity=on?1:0.30;
+    }
+    if(focusExtras){root.remove(focusExtras);disposeGroup(focusExtras);focusExtras=null;}
+    var G=L[r];
+    if(ladderSprite&&G){
+      var rc=G.userData.rec;
+      ladderSprite.position.set(LX0+LADLEN+0.78,G.userData.y,0);
+      ladderSprite.userData.redraw('e(P)='+rc.cross+'   toll '+rc.need,
+        rc.fail?'#ff9a9a':'#eef1f6');
+    }
+    if(G&&worldBP){
+      var ex=new THREE.Group();root.add(ex);focusExtras=ex;
+      var y=G.userData.y,part=G.userData.rec.part,v,i2;
+      var dotMat=new THREE.MeshBasicMaterial({color:0x93a3bf,transparent:true,opacity:0.9});
+      for(v=0;v<g.n;v++){
+        var d=new THREE.Mesh(_sph,dotMat);
+        d.position.set(worldBP[v][0],y,worldBP[v][1]);d.scale.setScalar(0.024);ex.add(d);
+      }
+      var intMat=new THREE.MeshBasicMaterial({color:0x4a5468,transparent:true,opacity:0.55});
+      for(i2=0;i2<g.edges.length;i2++){
+        var e=g.edges[i2];
+        if(part[e[0]]!==part[e[1]])continue;
+        var t2=tube(new THREE.Vector3(worldBP[e[0]][0],y,worldBP[e[0]][1]),
+                    new THREE.Vector3(worldBP[e[1]][0],y,worldBP[e[1]][1]),intMat,0.006);
+        if(t2)ex.add(t2);
+      }
+      var hullMat=new THREE.MeshBasicMaterial({color:0x6d7c98,side:THREE.DoubleSide,
+        transparent:true,opacity:0.34});
+      for(var c=0;c<G.userData.cpos.length;c++){
+        var mem=G.userData.members[c],cc=G.userData.cpos[c],rad=0.055;
+        if(mem.length<2)continue;            /* a ring around a lone vertex is noise */
+        for(i2=0;i2<mem.length;i2++){
+          rad=Math.max(rad,Math.sqrt(Math.pow(worldBP[mem[i2]][0]-cc.x,2)+
+                                     Math.pow(worldBP[mem[i2]][1]-cc.z,2)));
+        }
+        rad+=0.075;
+        var rg=new THREE.RingGeometry(rad-0.012,rad,54);
+        var rm=new THREE.Mesh(rg,hullMat);
+        rm.rotation.x=-Math.PI/2;rm.position.set(cc.x,y-0.004,cc.z);ex.add(rm);
+      }
+    }
+  }
+
+  function midY(){return ((GBY[S.gid].n-2)*GAP)/2;}
+  /* distance that frames a world-space height h at the live aspect ratio */
+  function fitDist(h,w){
+    var fov=V.camera.fov*Math.PI/180;
+    var asp=V.camera.aspect||1.2;
+    var dv=(h/2)/Math.tan(fov/2);
+    var dh=(w/2)/Math.tan(fov/2)/asp;
+    return Math.max(dv,dh)*1.02;
+  }
+  function goto(name){
+    var n=GBY[S.gid].n,my=midY(),y=(S.r-2)*GAP,pos,tgt;
+    var minX=-BASE_R-1.45, maxX=LX0+LADLEN+1.55, cx=(minX+maxX)/2;
+    var height=(n-2)*GAP+1.9, width=maxX-minX;
+    if(name==='tower'){
+      var d=fitDist(height,width);
+      tgt=new THREE.Vector3(cx,my,0);
+      pos=tgt.clone().add(new THREE.Vector3(0.34,0.15,0.93).normalize().multiplyScalar(d));
+    }else if(name==='ladder'){
+      var d2=fitDist(height,LADLEN+2.4);
+      tgt=new THREE.Vector3(LX0+LADLEN*0.46,my,0);
+      pos=new THREE.Vector3(tgt.x+0.34,my,d2);
+    }else{
+      var d3=fitDist(2*(BASE_R+0.95),2*(BASE_R+0.95));
+      pos=new THREE.Vector3(0.02,y+d3,0.02);tgt=new THREE.Vector3(0,y,0);
+    }
+    camTween={from:V.camera.position.clone(),to:pos,tf:V.controls.target.clone(),tt:tgt,t:0};
+    ['camOver','camLad','camTop'].forEach(function(id){
+      document.getElementById(id).classList.remove('on');});
+    document.getElementById(name==='tower'?'camOver':(name==='ladder'?'camLad':'camTop'))
+      .classList.add('on');
+  }
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    if(camTween){
+      camTween.t=Math.min(1,camTween.t+0.05);
+      var e=1-Math.pow(1-camTween.t,3);
+      V.camera.position.lerpVectors(camTween.from,camTween.to,e);
+      V.controls.target.lerpVectors(camTween.tf,camTween.tt,e);
+      if(camTween.t>=1)camTween=null;
+    }
+    V.controls.update();
+    if(V.isVisible())V.renderer.render(V.scene,V.camera);
+  })();
+
+  return {V:V,build:build,setFocus:setFocus,goto:goto,GAP:GAP,
+          recs:function(){return worldRecs;}};
+})();
+/* =======================================================================
+   PART G — §2 readout panel, controls, scroll-driven descent
+   ======================================================================= */
+var UI={};
+function $(id){return document.getElementById(id);}
+
+function tex(el,s,disp){
+  katex.render(s,el,{throwOnError:false,displayMode:!!disp});
+}
+function pill(kind,txt){
+  return '<span class="pill '+kind+'"><span class="dot"></span>'+txt+'</span>';
+}
+
+function levelScale(gid,k){
+  var g=GBY[gid],an=analyse(gid),mx=1,r;
+  for(r=2;r<=g.n;r++){
+    var p=(S.mode==='chain')?canon(an.chain[r]).part
+        :(an.argPart[r]?canon(Int32Array.from(an.argPart[r])).part:canon(an.chain[r]).part);
+    mx=Math.max(mx,crossCount(g,p),k*(r-1));
+  }
+  return mx;
+}
+
+function updateReadout(){
+  var g=GBY[S.gid],an=analyse(S.gid),k=S.k,n=g.n,r=S.r;
+  var partSrc=(S.mode==='chain')?an.chain[r]
+      :(an.argPart[r]?Int32Array.from(an.argPart[r]):an.chain[r]);
+  var part=canon(partSrc).part;
+  var cross=crossCount(g,part),need=k*(r-1),ok=cross>=need;
+  var fmin=an.minCross[r];
+
+  $('roR').innerHTML='r = '+r+' <small>'+
+    (r===n?'finest — every vertex alone':(r===2?'coarsest — a single cut':'intermediate'))+
+    '</small>';
+  $('roPill').innerHTML=ok
+    ? pill('ok','clears the toll — slack '+(cross-need))
+    : pill('bad','SHORT by '+(need-cross)+' — this resolution fails');
+
+  /* meter */
+  var mx=levelScale(S.gid,k);
+  var bar=$('roBar');
+  var pc=function(x){return (100*x/mx)+'%';};
+  var html='<div class="mfill" style="width:'+pc(Math.min(cross,mx))+'"></div>';
+  if(!ok)html+='<div class="mdef" style="left:'+pc(cross)+';width:'+pc(need-cross)+'"></div>';
+  html+='<div class="mtick" style="left:'+pc(need)+'"><span>toll '+need+'</span></div>';
+  bar.innerHTML=html;
+  $('roLabL').textContent='cross edges e(P) = '+cross;
+  $('roLabR').textContent='0 … '+mx;
+
+  tex($('roTex'),'e_G(P)='+cross+(ok?'\\;\\ge\\;':'\\;<\\;')+'k(r-1)='+k+'\\cdot'+(r-1)+'='+need,true);
+
+  /* part sizes */
+  var sizes=[],i;
+  for(i=0;i<r;i++)sizes.push(0);
+  for(i=0;i<n;i++)sizes[part[i]]++;
+  sizes.sort(function(a,b){return b-a;});
+  var chips='<span class="chip">'+r+' clusters</span>';
+  var shown=sizes.slice(0,9);
+  chips+='<span class="chip">sizes '+shown.join('·')+(sizes.length>9?'·…':'')+'</span>';
+  chips+='<span class="chip">'+(g.edges.length-cross)+' interior</span>';
+  $('roChips').innerHTML=chips;
+
+  /* narration */
+  var note='';
+  if(r===n){
+    note='<b>The finest resolution.</b> Nothing is merged, so <em>every</em> edge crosses and '+
+      'e(P) = |E| = '+g.edges.length+'. The test degenerates to the raw headcount '+
+      '|E| ≥ k(n−1) = '+need+'. It knows nothing about where the edges are.';
+  }else if(r===2){
+    note='<b>The coarsest nontrivial resolution.</b> Two parts is a cut, and the toll is just k = '+k+
+      '. Running this test over <em>all</em> 2-partitions is exactly k-edge-connectivity; the global '+
+      'minimum cut of this graph is λ = '+an.mincut.value+'.';
+  }else{
+    note='<b>An intermediate resolution.</b> Neither famous test looks here. '+r+' clusters cost '+
+      k+'×'+(r-1)+' = '+need+' cross edges, and this clustering supplies '+cross+'.';
+  }
+  var nd=$('roNote');
+  nd.className='note'+(ok?'':' bad');
+  nd.innerHTML=note;
+
+  /* the honest bit: the chain is one path; f(r) is the minimum over all of them */
+  var mn=$('roMinNote');
+  var exact=an.method==='exhaustive';
+  var fitxt;
+  if(fmin===cross){
+    fitxt='This clustering <em>attains</em> the minimum at r = '+r+': f('+r+') = '+fmin+
+      (exact?' (exact, over all '+an.total.toLocaleString()+' partitions).'
+            :' (best found; upper bound).');
+  }else{
+    fitxt='<b>The displayed clustering is not the worst one at this r.</b> '+
+      'Some other partition into '+r+' parts achieves only f('+r+') = '+fmin+
+      (exact?' (exact)':' (best found)')+
+      ', which '+(fmin>=need?'still clears':'<span class="crit">fails</span>')+' the toll of '+need+
+      '. Only the minimum matters.';
+  }
+  if(S.mode==='min')fitxt='<b>Minimisers mode.</b> This level shows a partition attaining f('+r+
+    ') = '+fmin+(exact?' (exact)':' (best found)')+
+    '. Notice there are no trunks in the tower: these per-r optima do not nest into a hierarchy.';
+  mn.className='note';
+  mn.innerHTML=fitxt;
+  mn.style.display='';
+
+  $('roBlurb').textContent=g.blurb||'';
+
+  /* the whole verdict, one cell per resolution, from the TRUE minimum f(r) */
+  var strip=$('roStrip'),sh='';
+  for(i=2;i<=n;i++){
+    var ok2=an.minCross[i]>=k*(i-1);
+    sh+='<b class="'+(ok2?'p':'f')+(i===r?' cur':'')+'" data-r="'+i+'" title="f('+i+') = '+
+      an.minCross[i]+'  vs  toll '+(k*(i-1))+'">'+i+'</b>';
+  }
+  strip.innerHTML=sh;
+  var cells=strip.querySelectorAll('b');
+  for(i=0;i<cells.length;i++)cells[i].addEventListener('click',function(){
+    setR(+this.getAttribute('data-r'),true);});
+}
+
+/* ---------------- controls ---------------- */
+(function(){
+  var sel=$('gSel');
+  for(var i=0;i<GRAPHS.length;i++){
+    var o=document.createElement('option');
+    o.value=GRAPHS[i].id;
+    o.textContent=GRAPHS[i].name+'  (n='+GRAPHS[i].n+', m='+GRAPHS[i].edges.length+')';
+    sel.appendChild(o);
+  }
+  sel.value=S.gid;
+})();
+
+var syncing=false;
+function trackScrollable(){
+  var stick=document.querySelector('#towerTrack .stick');
+  return stick&&getComputedStyle(stick).position==='sticky';
+}
+function scrollToR(r){
+  if(!trackScrollable())return;
+  var track=$('towerTrack'),stick=track.querySelector('.stick');
+  var n=GBY[S.gid].n,idx=n-r,span=Math.max(1,n-2);
+  var total=track.offsetHeight-stick.offsetHeight;
+  var top=track.offsetTop+total*(idx/span);
+  syncing=true;
+  window.scrollTo(0,Math.round(top));
+  setTimeout(function(){syncing=false;},60);
+}
+function onScroll(){
+  if(syncing||!trackScrollable())return;
+  var track=$('towerTrack'),stick=track.querySelector('.stick');
+  var total=track.offsetHeight-stick.offsetHeight;
+  if(total<=0)return;
+  var p=(-track.getBoundingClientRect().top)/total;
+  p=Math.max(0,Math.min(1,p));
+  var n=GBY[S.gid].n,idx=Math.round(p*(n-2)),r=n-idx;
+  if(r!==S.r)setR(r,false);
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+
+function setR(r,doScroll){
+  var n=GBY[S.gid].n;
+  r=Math.max(2,Math.min(n,r));
+  if(r!==S.r){tower.setFocus(r);}
+  S.r=r;
+  $('rSlider').value=String(n-r);
+  updateReadout();
+  if(doScroll)scrollToR(r);
+}
+
+function rebuild(resetR){
+  var n=GBY[S.gid].n;
+  var sl=$('rSlider');
+  sl.min='0';sl.max=String(n-2);
+  if(resetR)S.r=n;
+  S.r=Math.max(2,Math.min(n,S.r));
+  sl.value=String(n-S.r);
+  tower.build();
+  updateReadout();
+  updateProfile();
+  updateTrees();
+  buildSurvey();
+}
+
+$('gSel').addEventListener('change',function(e){S.gid=e.target.value;rebuild(true);tower.goto('tower');});
+$('kSel').addEventListener('change',function(e){S.k=+e.target.value;rebuild(false);});
+$('mChain').addEventListener('click',function(){
+  S.mode='chain';$('mChain').classList.add('on');$('mMin').classList.remove('on');rebuild(false);});
+$('mMin').addEventListener('click',function(){
+  S.mode='min';$('mMin').classList.add('on');$('mChain').classList.remove('on');rebuild(false);});
+$('camOver').addEventListener('click',function(){tower.goto('tower');});
+$('camLad').addEventListener('click',function(){tower.goto('ladder');});
+$('camTop').addEventListener('click',function(){tower.goto('top');});
+$('rSlider').addEventListener('input',function(e){
+  var n=GBY[S.gid].n;setR(n-(+e.target.value),true);});
+$('jumpWorst').addEventListener('click',function(){
+  var g=GBY[S.gid],an=analyse(S.gid),k=S.k,bestSlack=Infinity,bestR=2;
+  for(var r=2;r<=g.n;r++){
+    var sl=an.minCross[r]-k*(r-1);
+    if(sl<bestSlack){bestSlack=sl;bestR=r;}
+  }
+  setR(bestR,true);
+});
+
+/* =======================================================================
+   PART H — §3 survey across every preset
+   ======================================================================= */
+function buildSurvey(){
+  var tb=document.querySelector('#surveyTable tbody');
+  tb.innerHTML='';
+  for(var i=0;i<GRAPHS.length;i++){
+    var g=GRAPHS[i],vd=verdict(g.id,S.k),an=vd.an;
+    var tr=document.createElement('tr');
+    tr.className='clickable';
+    tr.setAttribute('data-gid',g.id);
+    var failTxt=vd.fails.length?vd.fails.slice(0,5).join(', ')+(vd.fails.length>5?'…':''):'—';
+    var mk=vd.maxK.k;
+    tr.innerHTML=
+      '<td>'+g.name+(an.method==='search'?' <span style="color:var(--muted)">·bound</span>':'')+'</td>'+
+      '<td class="mono">'+g.n+'</td>'+
+      '<td class="mono">'+g.edges.length+'</td>'+
+      '<td class="mono '+(vd.cutOK?'yes':'no')+'">'+(vd.cutOK?'✓':'✗')+' λ='+an.mincut.value+'</td>'+
+      '<td class="mono '+(vd.headOK?'yes':'no')+'">'+(vd.headOK?'✓':'✗')+' '+g.edges.length+'≥'+
+        (S.k*(g.n-1))+'</td>'+
+      '<td class="mono '+(vd.fails.length?'no':'')+'">'+failTxt+'</td>'+
+      '<td class="mono">'+mk+'</td>'+
+      '<td>'+(vd.pass?pill('ok','packs '+S.k):pill('bad','no '+S.k))+'</td>';
+    tr.addEventListener('click',(function(id){return function(){
+      S.gid=id;$('gSel').value=id;rebuild(true);
+      document.getElementById('s-tower').scrollIntoView({behavior:'smooth'});
+    };})(g.id));
+    tb.appendChild(tr);
+  }
+  markSurveyRow();
+}
+function markSurveyRow(){
+  var rows=document.querySelectorAll('#surveyTable tbody tr');
+  for(var i=0;i<rows.length;i++)
+    rows[i].classList.toggle('cur',rows[i].getAttribute('data-gid')===S.gid);
+}
+/* =======================================================================
+   PART I — §4 the partition cloud, the true minimum, the chain, the toll
+   The point of this panel: at each r there is a WHOLE CLOUD of partitions,
+   and only its lower envelope is what the theorem tests.
+   ======================================================================= */
+var profChart=null;
+var SHOW={cloud:true,chain:true};
+
+Chart.defaults.color='#aab4c4';
+Chart.defaults.font.family='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+Chart.defaults.font.size=12;
+
+function cloudPoints(an,n){
+  var pts=[],r,maxC=1;
+  for(r=1;r<=n;r++)an.dens[r].forEach(function(c){if(c>maxC)maxC=c;});
+  for(r=1;r<=n;r++){
+    an.dens[r].forEach(function(cnt,cross){
+      pts.push({x:r,y:cross,c:cnt,
+        rr:2+4.2*(Math.log(cnt+1)/Math.log(maxC+1))});
+    });
+  }
+  return pts;
+}
+
+function updateProfile(){
+  var g=GBY[S.gid],an=analyse(S.gid),k=S.k,n=g.n,r;
+  var fmin=[],chain=[],toll=[],fails=[];
+  for(r=1;r<=n;r++){
+    var need=k*(r-1);
+    fmin.push({x:r,y:an.minCross[r]});
+    toll.push({x:r,y:need});
+    chain.push({x:r,y:crossCount(g,canon(an.chain[r]).part)});
+    if(an.minCross[r]<need)fails.push({x:r,y:an.minCross[r]});
+  }
+  var cloud=cloudPoints(an,n);
+
+  /* array order drives the LEGEND; `order` drives z-stacking (higher = further back) */
+  var datasets=[];
+  datasets.push({
+    label:'f(r) = minimum over all partitions'+(an.method==='exhaustive'?'':' (upper bound)'),
+    data:fmin,type:'line',
+    borderColor:'#3987e5',backgroundColor:'#3987e5',borderWidth:2.5,
+    pointRadius:4,pointHoverRadius:7,tension:0,order:1
+  });
+  if(SHOW.chain)datasets.push({
+    label:"the tower's nested chain",data:chain,type:'line',
+    borderColor:'#d95926',backgroundColor:'#d95926',borderWidth:2,borderDash:[5,4],
+    pointRadius:3.5,pointStyle:'rect',pointHoverRadius:6,tension:0,order:2
+  });
+  datasets.push({
+    label:'toll  k(r−1)',data:toll,type:'line',
+    borderColor:'#c3c2b7',borderWidth:2,borderDash:[7,5],
+    pointRadius:0,pointHoverRadius:0,tension:0,order:3
+  });
+  if(SHOW.cloud)datasets.push({
+    label:(an.method==='exhaustive'?'every partition ('+an.total.toLocaleString()+')'
+                                   :an.sampled.toLocaleString()+' sampled partitions'),
+    data:cloud,type:'scatter',showLine:false,
+    backgroundColor:'rgba(122,140,170,0.26)',borderColor:'rgba(122,140,170,0.0)',
+    pointRadius:function(c){return c.raw?c.raw.rr:3;},pointHoverRadius:6,order:9
+  });
+  if(fails.length)datasets.push({
+    label:'✗ fails the toll',data:fails,type:'scatter',showLine:false,
+    backgroundColor:'rgba(208,59,59,0.28)',borderColor:'#d03b3b',borderWidth:2.5,
+    pointRadius:10,pointHoverRadius:12,pointStyle:'crossRot',order:0
+  });
+
+  var cfg={
+    type:'scatter',
+    data:{datasets:datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:false,
+      interaction:{mode:'nearest',intersect:true},
+      scales:{
+        x:{title:{display:true,text:'resolution  r  (number of clusters)',color:'#77839a'},
+           min:0.55,max:n+0.45,
+           ticks:{stepSize:1,color:'#77839a',includeBounds:false,autoSkip:false,maxRotation:0},
+           grid:{color:'rgba(238,241,246,0.055)'},border:{color:'#262d3d'}},
+        y:{title:{display:true,text:'cross edges  e(P)',color:'#77839a'},
+           beginAtZero:true,ticks:{color:'#77839a'},
+           grid:{color:'rgba(238,241,246,0.055)'},border:{color:'#262d3d'}}
+      },
+      plugins:{
+        legend:{position:'top',align:'start',
+          labels:{boxWidth:12,boxHeight:12,usePointStyle:true,padding:14,color:'#aab4c4'}},
+        tooltip:{
+          backgroundColor:'#1b2130',borderColor:'#262d3d',borderWidth:1,
+          titleColor:'#eef1f6',bodyColor:'#aab4c4',padding:10,
+          callbacks:{
+            title:function(items){return 'r = '+items[0].parsed.x;},
+            label:function(ctx){
+              var d=ctx.raw;
+              if(d&&d.c!==undefined)return d.c.toLocaleString()+' partition'+(d.c===1?'':'s')+
+                ' with e(P) = '+d.y;
+              return ctx.dataset.label+' : '+d.y;
+            }
+          }
+        }
+      }
+    }
+  };
+  if(profChart){profChart.destroy();profChart=null;}
+  profChart=new Chart($('profChart').getContext('2d'),cfg);
+
+  $('methodText').innerHTML=an.methodText;
+  $('honestSearch').innerHTML=
+    'Graphs with n ≤ '+EXHAUSTIVE_LIMIT+' are enumerated <b>exhaustively</b> — every set partition, '+
+    'no sampling, no heuristic. Larger ones (3×K₅ at n=15, Q₄ at n=16) use the randomised '+
+    'agglomerative search described in §4, whose intermediate values are <b>upper bounds</b> on f(r), '+
+    'with r=2 and r=n pinned exact. Where a row of the §3 table is only bounded it is marked '+
+    '<span style="color:var(--muted)">·bound</span>.';
+
+  /* table view */
+  var t=$('profTable'),html='<thead><tr><th class="mono">r</th>'+
+    '<th class="mono">f(r)</th><th class="mono">chain e(P)</th>'+
+    '<th class="mono">toll k(r−1)</th><th class="mono">slack</th><th>status</th></tr></thead><tbody>';
+  for(r=2;r<=n;r++){
+    var need=k*(r-1),f=an.minCross[r],slack=f-need;
+    html+='<tr><td class="mono">'+r+'</td><td class="mono">'+f+'</td>'+
+      '<td class="mono">'+chain[r-1].y+'</td><td class="mono">'+need+'</td>'+
+      '<td class="mono" style="color:'+(slack<0?'var(--crit-ink)':'inherit')+'">'+
+      (slack>=0?'+':'')+slack+'</td>'+
+      '<td>'+(slack>=0?'<span class="yes">✓ clears</span>':'<span class="no">✗ fails</span>')+
+      '</td></tr>';
+  }
+  html+='</tbody>';
+  t.innerHTML=html;
+}
+
+$('tgCloud').addEventListener('click',function(){
+  SHOW.cloud=!SHOW.cloud;this.classList.toggle('on',SHOW.cloud);updateProfile();});
+$('tgChain').addEventListener('click',function(){
+  SHOW.chain=!SHOW.chain;this.classList.toggle('on',SHOW.chain);updateProfile();});
+$('tgTable').addEventListener('click',function(){
+  var w=$('profTableWrap'),on=w.style.display==='none';
+  w.style.display=on?'':'none';this.classList.toggle('on',on);});
+/* =======================================================================
+   PART J — §5 the payoff: the k trees, peeled into k layers
+   The packing is real (matroid union) and is re-verified from the owner
+   array alone before anything is drawn.
+   ======================================================================= */
+var TREE_COL={
+  baseEdge: 0x424c61,
+  baseNode: 0x8a97ae,
+  layerNode: 0xd6dde8,
+  plate: 0x263049
+};
+
+var treeScene=(function(){
+  var el=document.getElementById('treeStage');
+  var V=makeScene(el,{fov:40,minDist:1.4,maxDist:16,pan:true});
+  V.camera.position.set(1.7,2.15,3.1);
+  V.controls.target.set(0,0.55,0);
+  var root=new THREE.Group();V.scene.add(root);
+  var layers=[],sepVal=0.64,spin=false;
+
+  function basePos(g){
+    var mx=0,i;
+    for(i=0;i<g.pos.length;i++){
+      var d=Math.sqrt(g.pos[i][0]*g.pos[i][0]+g.pos[i][1]*g.pos[i][1]);
+      if(d>mx)mx=d;
+    }
+    var s=1.25/(mx||1);
+    return g.pos.map(function(p){return [p[0]*s,p[1]*s];});
+  }
+
+  function build(g,pack,K){
+    disposeGroup(root);layers=[];
+    var bp=basePos(g),i,e,v;
+
+    /* the wiring, all of it, at the bottom */
+    var base=new THREE.Group();root.add(base);
+    var em=new THREE.MeshBasicMaterial({color:TREE_COL.baseEdge,transparent:true,opacity:0.85});
+    for(i=0;i<g.edges.length;i++){
+      e=g.edges[i];
+      var t=tube(new THREE.Vector3(bp[e[0]][0],0,bp[e[0]][1]),
+                 new THREE.Vector3(bp[e[1]][0],0,bp[e[1]][1]),em,0.007);
+      if(t)base.add(t);
+    }
+    var nm=new THREE.MeshStandardMaterial({color:TREE_COL.baseNode,roughness:0.6,metalness:0.05});
+    for(v=0;v<g.n;v++){
+      var s0=new THREE.Mesh(_sph,nm);
+      s0.position.set(bp[v][0],0,bp[v][1]);s0.scale.setScalar(0.031);base.add(s0);
+    }
+    var capBase=labelSprite('the wiring — all '+g.edges.length+' edges',
+      {fs:28,scale:1.15,color:'#6f7b91',w:512,h:64,align:'right'});
+    capBase.position.set(-2.05,0.04,0);base.add(capBase);
+
+    /* one layer per tree */
+    for(var ti=0;ti<K;ti++){
+      var lay=new THREE.Group();root.add(lay);layers.push(lay);
+      var tm=new THREE.MeshStandardMaterial({color:SERIES[ti],roughness:0.42,metalness:0.12});
+      var tr=pack.trees[ti];
+      for(i=0;i<tr.edges.length;i++){
+        e=g.edges[tr.edges[i]];
+        var tb=tube(new THREE.Vector3(bp[e[0]][0],0,bp[e[0]][1]),
+                    new THREE.Vector3(bp[e[1]][0],0,bp[e[1]][1]),tm,0.019);
+        if(tb)lay.add(tb);
+      }
+      var lm=new THREE.MeshStandardMaterial({color:TREE_COL.layerNode,roughness:0.55,metalness:0.05});
+      for(v=0;v<g.n;v++){
+        var sv=new THREE.Mesh(_sph,lm);
+        sv.position.set(bp[v][0],0,bp[v][1]);sv.scale.setScalar(0.026);lay.add(sv);
+      }
+      var cap=labelSprite('tree '+(ti+1)+' '+GLYPH[ti]+' — '+tr.size+' edges',
+        {fs:28,scale:1.15,color:'#9aa6bb',w:512,h:64,align:'right'});
+      cap.position.set(-2.05,0.04,0);lay.add(cap);
+    }
+    applySep();
+    frame();
+  }
+
+  function applySep(){
+    for(var i=0;i<layers.length;i++)layers[i].position.y=(i+1)*sepVal;
+  }
+  function frame(){
+    var K=layers.length;
+    var h=K*sepVal+1.3,w=5.3;
+    var fov=V.camera.fov*Math.PI/180,asp=V.camera.aspect||1.2;
+    var d=Math.max((h/2)/Math.tan(fov/2),(w/2)/Math.tan(fov/2)/asp)*1.12;
+    var my=K*sepVal/2;
+    V.controls.target.set(0,my,0);
+    V.camera.position.set(0,my,0).add(new THREE.Vector3(0.30,0.33,0.89).normalize().multiplyScalar(d));
+  }
+  function setSep(s){sepVal=s;applySep();frame();}
+
+  (function loop(){
+    requestAnimationFrame(loop);
+    if(spin)root.rotation.y+=0.0035;
+    V.controls.update();
+    if(V.isVisible())V.renderer.render(V.scene,V.camera);
+  })();
+
+  return {build:build,setSep:setSep,
+          toggleSpin:function(){spin=!spin;return spin;}};
+})();
+
+function updateTrees(){
+  var g=GBY[S.gid],an=analyse(S.gid),k=S.k,n=g.n;
+  var vd=verdict(S.gid,k);
+  var K=k,degraded=false;
+  var pack=packTrees(g,k);
+  if(!pack.ok){
+    K=Math.max(1,vd.maxK.k);
+    pack=packTrees(g,K);
+    degraded=true;
+  }
+  K=Math.min(K,3);
+  if(pack.trees.length>K)pack={ok:pack.ok,disjoint:pack.disjoint,used:pack.used,
+    trees:pack.trees.slice(0,K),owner:pack.owner};
+  treeScene.build(g,pack,K);
+
+  var head=$('treeHead'),body=$('treeBody');
+  if(!degraded){
+    head.innerHTML=g.name+' — '+k+' edge-disjoint spanning trees, exhibited';
+  }else{
+    head.innerHTML=g.name+' — only '+vd.maxK.k+' tree'+(vd.maxK.k===1?'':'s')+' can exist';
+  }
+  var h='';
+  if(degraded){
+    h+='<p class="note bad" style="margin-top:0">The budget is broken at <b>r = '+
+      vd.fails[0]+'</b>, where the best clustering supplies only '+an.minCross[vd.fails[0]]+
+      ' cross edges against a toll of '+(k*(vd.fails[0]-1))+
+      '. By the necessity argument of §1 that single partition <em>rules out</em> '+k+
+      ' trees outright — no search required. What is drawn is the largest packing that does exist.</p>';
+  }
+  h+='<ul class="chk">';
+  for(var i=0;i<pack.trees.length;i++){
+    var t=pack.trees[i];
+    h+='<li><b style="color:'+SERIES_CSS[i]+'">'+GLYPH[i]+'</b>'+
+      '<span>tree '+(i+1)+': '+(t.size===n-1?'n−1 = '+(n-1)+' edges':t.size+' edges')+
+      ', '+(t.acyclic?'acyclic':'HAS A CYCLE')+', '+t.comps+' component'+(t.comps===1?'':'s')+
+      '</span><span class="v">'+(t.spanning&&t.acyclic?'✓':'✗')+'</span></li>';
+  }
+  h+='<li><b>∩</b><span>pairwise edge-disjoint</span><span class="v">'+
+    (pack.disjoint?'✓':'✗')+'</span></li>';
+  h+='<li><b>Σ</b><span>edges spent of '+g.edges.length+'</span><span class="v">'+
+    pack.used+'</span></li>';
+  h+='</ul>';
+  h+='<p style="margin-top:12px">Verified after the fact from the edge-ownership array alone: '+
+    'each colour class is re-unioned from scratch and checked for exactly n−1 edges, no cycle, and '+
+    'one component. A drawn tree is therefore its own certificate — this half of the theorem needs '+
+    'no search to be believed.</p>';
+  body.innerHTML=h;
+
+  var lg='';
+  for(var j=0;j<pack.trees.length;j++)
+    lg+='<span><span class="sq" style="background:'+SERIES_CSS[j]+'"></span>tree '+(j+1)+' '+
+      GLYPH[j]+'</span>';
+  lg+='<span><span class="sq" style="background:#424c61"></span>the wiring (all edges)</span>';
+  $('treeLegend').innerHTML=lg;
+
+  var mk=vd.maxK;
+  $('maxKText').innerHTML='For <b>'+g.name+'</b> the minimum is attained at <b>r = '+mk.r+
+    '</b>: f('+mk.r+') = '+an.minCross[mk.r]+', so ⌊'+an.minCross[mk.r]+'/'+(mk.r-1)+'⌋ = <b>'+mk.k+
+    '</b> edge-disjoint spanning trees, and no more. The packing above actually found '+
+    pack.trees.length+'.'+
+    (an.method==='search'?' (f is an upper bound here, so this count is an upper bound too — but the '+
+      'packing exhibits the trees, which settles the lower half.)':'');
+}
+
+$('treeSep').addEventListener('input',function(e){treeScene.setSep(1.15*(+e.target.value)/100);});
+$('treeSpin').addEventListener('click',function(){this.classList.toggle('on',treeScene.toggleSpin());});
+/* =======================================================================
+   PART K — notation sweep and boot
+   ======================================================================= */
+function renderMath(rootEl){
+  var inl=rootEl.querySelectorAll('[data-tex]:not([data-done])'),i;
+  for(i=0;i<inl.length;i++){
+    katex.render(inl[i].getAttribute('data-tex'),inl[i],{throwOnError:false,displayMode:false});
+    inl[i].setAttribute('data-done','1');
+  }
+  var dis=rootEl.querySelectorAll('[data-tex-d]:not([data-done])');
+  for(i=0;i<dis.length;i++){
+    katex.render(dis[i].getAttribute('data-tex-d'),dis[i],{throwOnError:false,displayMode:true});
+    dis[i].setAttribute('data-done','1');
+  }
+}
+
+(function boot(){
+  /* every preset is analysed up front so §3's survey is real on first paint */
+  for(var i=0;i<GRAPHS.length;i++)analyse(GRAPHS[i].id);
+
+  var vr=validateSearch(),html='',allAgree=true;
+  for(i=0;i<vr.length;i++){
+    if(!vr[i].agree)allAgree=false;
+    html+='<div>'+(vr[i].agree?'✓':'✗')+' '+vr[i].name+' — '+
+      vr[i].total.toLocaleString()+' partitions — '+
+      (vr[i].agree?'search matched exhaustive at every r':'MISMATCH')+'</div>';
+  }
+  html+='<div style="margin-top:8px;color:'+(allAgree?'var(--good-ink)':'var(--crit-ink)')+'">'+
+    (allAgree?'Agreement on every r of every enumerable preset.':'Disagreement found.')+'</div>';
+  $('validText').innerHTML=html;
+
+  rebuild(true);
+  tower.goto('tower');
+  treeScene.setSep(1.15*(+$("treeSep").value)/100);
+  renderMath(document.body);
+  window.__ready=true;
+})();
+
+</script>
+</body>
+</html>

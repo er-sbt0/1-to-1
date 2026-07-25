@@ -1,14 +1,27 @@
 # explore_math_explanations
 
 Turn **any** mathematical statement into N competing, self-contained, interactive visual
-explainers — each a different conceptual angle and tool stack, each built by its own subagent,
-then compared.
+explainers — each taking a different deep angle and a different visual approach to the same
+meaning, each built by its own subagent, then compared.
 
 **Input:** one theorem / definition / statement (e.g. *"Tychonoff's theorem"*, *"the Fourier
 transform"*, *"Bayes' rule"*, *"the Central Limit Theorem"*).
 
-**Output:** N standalone directories (default N = 5) under `./<topic>/<theorem>/<idx>/`, each
+**Output:** N standalone directories (default N = 3) under `./<topic>/<theorem>/<idx>/`, each
 opening offline by double-click, plus a comparison writeup and a rolled-up tech inventory.
+
+**What every explainer must deliver.** Each artifact is opened on its own, so each one carries
+the whole arc:
+
+1. **The theorem** — what it actually says, precisely and in plain words.
+2. **The meaning** — what the statement *means* once the notation is gone.
+3. **The proof idea** — why it is true, as an argument the viewer can follow.
+4. **Visuals that carry 1–3** — the visual *is* the explanation, not an ornament beside it. It
+   must correspond to the math it explains, never be a visual for the sake of a visual.
+5. **No bloat** — focused writing that serves the math. Quality over volume.
+
+The N artifacts differ in **which deep angle they take** and **how they use visuals** to convey
+that meaning — not in whether they cover the arc. All of them cover it.
 
 **The split:** a **Fable 5 subagent** does the mathematical reasoning — essence, non-trivial
 insight, decomposition, and the N concept angles (Phases 0–1), returning a text brief and no
@@ -33,33 +46,42 @@ not how to draw it.
 
 THEOREM: [statement]
 AUDIENCE: [level — default: motivated student who has seen the basics of the field]
-N: [number of concept angles — default 5]
+N: [number of concept angles — default 3]
 
 PHASE 0 — understand it. North star: find the essence. The goal is never to decorate the
 formula; it is to convey what the statement *means* and *why it is true*. Answer first: if
 someone forgets every symbol but keeps one idea, what is that idea?
 
-PHASE 1 — generate N *general* concepts. Stay at the idea level: the angle and what it
-conveys. Library choice and the detailed build belong to the coding agents, not you. Spread
-the concepts across different pieces from Phase 0 — a good default: (1) the cleanest concrete
-special case, (2) the subtlety / failure mode when a hypothesis is dropped, (3) the core
-definition made spatial, (4) the proof animated step by step, (5) the grand metaphor. Adapt to
-the theorem; not every one has all five, some have more.
+PHASE 1 — generate N *general* concepts. Every concept will explain the WHOLE theorem —
+statement, meaning, and proof idea — so they do not divide that work between them. What differs
+is (a) the DEEP ANGLE each takes into the meaning, and (b) the VISUAL APPROACH it uses to make
+that meaning tangible. Stay at the idea level; library choice and the build belong to the
+coding agents.
+
+  Angles worth considering, adapted to this theorem: the cleanest concrete case made tangible ·
+  what breaks when a hypothesis is dropped · the core definition made spatial · the proof
+  argument stepped through · the spatial or dynamic metaphor that makes it obvious.
+
+  Visual approaches worth considering: a manipulable object the viewer rebuilds · a side-by-side
+  contrast where one side fails · a spatial metaphor made literal · a live computation
+  converging. The visual must correspond to the math it conveys — not decoration around it.
 
 RETURN:
   1. The precise + plain-language statement, and the discipline.
   2. THE ESSENCE (1–2 sentences) — the "aha" that survives once the notation is gone.
   3. THE NON-TRIVIAL INSIGHT — the surprising / counterintuitive / easy-to-get-wrong thing
      that separates real understanding from symbol-pushing.
-  4. A decomposition table: `piece | why it's hard | candidate visual metaphor`. Cover the
+  4. THE PROOF IDEA in 2–4 beats — why it is true, in a form every artifact can carry.
+  5. A decomposition table: `piece | why it's hard | candidate visual metaphor`. Cover the
      objects, hypotheses, claim, proof idea, failure modes, and canonical example.
-  5. N concept angles, each: `name · piece it conveys · key interaction/visual (in general
-     terms) · zero-padded index + slug` (e.g. `01-cantor-tree`, `02-product-vs-box`), plus the
-     exact math facts / proof steps and the honesty caveats that angle depends on, so its
-     coder gets correct content.
-  6. A coverage check: the facets are genuinely varied AND at least one angle goes straight at
-     the essence + non-trivial insight. Varied-but-shallow is a failure.
-  7. If two angles would naturally pull the same library, say so, so they can be nudged apart.
+  6. N concept angles, each: `name · the deep angle it takes · its visual approach · zero-padded
+     index + slug` (e.g. `01-cantor-tree`, `02-product-vs-box`), plus the exact math facts /
+     proof steps and the honesty caveats that angle depends on, so its coder gets correct
+     content.
+  7. A coverage check: the angles are genuinely distinct in BOTH deep angle and visual approach,
+     and each one can carry the statement + meaning + proof idea on its own. Two concepts
+     landing on the same visual approach is a miss — say so. Varied-but-shallow is a failure.
+  8. If two angles would naturally pull the same library, say so, so they can be nudged apart.
 ```
 
 ---
@@ -76,7 +98,8 @@ straight to Phase 3.
 
 `subagent_type: "general-purpose"` on the default/session model — do **not** set
 `model: "fable"` here. Launch **sequentially**, waiting for each to finish, so you can tell the
-next subagent what the earlier ones built (angle + stack) and keep them distinct.
+next subagent what the earlier ones built (angle + visual approach + stack) and keep them
+distinct on all three.
 
 Write products to `./<topic>/<theorem>/<idx>/` — `<topic>` = discipline slug, `<theorem>` =
 statement slug, `<idx>` = zero-padded index + short slug (`topology/tychonoff/01-cantor-tree`).
@@ -86,8 +109,10 @@ Fill the brackets below from Fable's brief — the coder does not re-derive the 
 
 ```
 You are building ONE standalone interactive web artifact that explains [THEOREM] through
-[GENERAL CONCEPT ANGLE]. This is one of N approaches that will be compared — make yours
-excellent and distinct. [Already built: <prior angles + stacks> — pick a different stack.]
+[GENERAL CONCEPT ANGLE], visualized as [VISUAL APPROACH]. This is one of N approaches that will
+be compared — they all explain the same theorem, and differ in their deep angle and how they
+use visuals. Make yours excellent and distinct.
+[Already built: <prior angles + visual approaches + stacks> — pick a different stack.]
 
 WORKING DIRECTORY (create all files here): <absolute path>/<topic>/<theorem>/<idx>/
 
@@ -97,16 +122,28 @@ THE ESSENCE (this is the point — everything serves it):
   - [the NON-TRIVIAL insight to spotlight]
 MATHEMATICAL CONTENT (must be correct):
   - [precise statement + the specific facts/proof steps this angle depends on]
+  - [the proof idea in 2–4 beats]
   - [the honesty caveats that must be surfaced, not glossed]
 
+WHAT THE PAGE MUST DELIVER — this artifact is opened on its own, so it carries the whole arc:
+  1. THE THEOREM — what it says, precisely and in plain words.
+  2. THE MEANING — what it means once the notation is gone.
+  3. THE PROOF IDEA — why it is true, as an argument the viewer can follow.
+  4. VISUALS THAT CARRY 1–3.
+  Your angle is HOW you get through these, not a substitute for any of them.
+
 YOUR JOB — think from first principles, then implement. The bar is not "a pretty picture of
-the formula" — it is: does a viewer walk away understanding the essence and the non-trivial
-insight above? If a visual is decorative but doesn't move that needle, cut it.
+the formula" — it is: does a viewer walk away understanding the theorem, its meaning, and why
+it is true?
   1. Choose your libraries from the palette below by what fits THIS scene.
   2. Decide exactly what the mathematical object on screen is — the data structure (a tree of
      paths? a parameterized surface? a swarm of samples? a cover of open sets?).
-  3. Build visuals that REFLECT THE ESSENCE — a manipulable object, a before/after contrast, a
-     "watch it break" failure mode. Prefer one deep, revealing visual over several shallow ones.
+  3. Build visuals that ARE the explanation. Every visual must correspond to something real in
+     the math — the object, the hypothesis, the step, the thing that breaks. No visuals for the
+     sake of visuals: no motion that illustrates nothing, no chart whose axes carry no theorem
+     content, no 3D that only spins. If a visual could be removed and nothing about the meaning
+     is lost, it was decoration — cut it. Prefer one deep, revealing visual over several
+     shallow ones.
   4. Compute, don't fake — actually compute the subcover, the transform, the eigen-
      decomposition, the limit, so the picture can't lie. Label any metaphor/projection as such,
      and surface caveats (finite-vs-infinite, projection-vs-embedding, discretization) in the UI
@@ -114,6 +151,10 @@ insight above? If a visual is decorative but doesn't move that needle, cut it.
   5. Define the interaction contract: what the user drags/toggles/steps, and what updates.
   6. Define the narration: staged steps/panels carrying the argument, with the KaTeX statement
      at each step.
+
+FOCUS — write for a reader who wants the math. Say the thing and move on: no intro paragraphs,
+no recaps, no restating the formula in prose. Text earns its place by saying what the visual
+cannot. A short page that lands the meaning beats a long one that circles it.
 
 PAGE LAYOUT — fold DOWN, not just out. Lay the explanation out as a vertical scroll of
 separated sections, each one clean beat of the argument, so the viewer descends at their own
@@ -167,7 +208,8 @@ DELIVERY REQUIREMENTS (strict):
     ```json
     {
       "concept": "<idx-slug, e.g. 02-product-vs-box>",
-      "angle": "<one-line: the piece of the math this artifact conveys>",
+      "angle": "<one-line: the deep angle this artifact takes into the meaning>",
+      "visual_approach": "<one-line: how it uses visuals to convey that meaning>",
       "libraries": [
         {"name": "<lib>", "version": "<pinned>", "role": "<its job in THIS scene>",
          "build": "umd|iife|global|esm", "source": "<CDN URL you vendored from>"}
@@ -192,8 +234,8 @@ chose your stack.
 
 ## Phase 4 — compare
 
-Present a comparison table (`# | dir | angle | stack | standout interaction | how well it lands
-the essence`), call out shared gotchas, note any math-honesty flags, and offer next steps: a
+Present a comparison table (`# | dir | angle | visual approach | stack | how well it lands the
+meaning + proof idea`), call out shared gotchas, note any math-honesty flags, and offer next steps: a
 **landing page** linking all N for side-by-side judging, a **scored comparison** after the user
 looks, or **polish the strongest one**.
 
@@ -208,6 +250,6 @@ templatize) versus one-offs. This roll-up is what feeds automating artifact crea
 ## Quick invocation
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
-> Use N = [5]. Audience = [level]. Run end to end with no approval stops: launch a **Fable 5**
+> Use N = [3]. Audience = [level]. Run end to end with no approval stops: launch a **Fable 5**
 > subagent for the essence + concepts (Phases 0–1), then **Opus** coding subagents one at a
 > time, relaying Fable's essence inline into each, and compare when they're built.

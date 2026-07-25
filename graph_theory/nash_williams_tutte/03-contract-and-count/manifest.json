@@ -1,0 +1,112 @@
+{
+  "concept": "03-contract-and-count",
+  "angle": "Contraction as a physical camera: the user drags vertices into blobs and pulls the camera back until each blob collapses to a supernode, so that a pre-verified packing of k edge-disjoint spanning trees is seen leaving behind at least r-1 cross edges per colour (each tree's image is a connected spanning submultigraph of G/P, never necessarily a tree), which sums by edge-disjointness to the partition condition e_G(P) >= k(r-1) — the necessity half proved in the user's hands, plus the connected-parts reduction discovered by building a deliberately disconnected part, and an explicit refusal to claim the converse.",
+  "libraries": [
+    {
+      "name": "paper",
+      "version": "0.12.18",
+      "role": "every canvas on the page, via one paper.PaperScope per <canvas> (paper-core, not paper-full — PaperScript is unused). Draws: organic part blobs as round-join outward offsets of a monotone-chain convex hull fed through Path.smooth({type:'continuous'}); cross edges as Path.quadraticCurveTo whose perpendicular control offset is (fanIndex - (m-1)/2) * FAN * smoothstep(t), so parallel quotient edges physically fan apart as the contraction proceeds and are countable at t=1; interior edges as dashed lines whose opacity dissolves to 0 by t=0.55; supernodes as circles whose radius grows with part size and whose alpha follows smoothstep(0.30,0.86,t); the lasso as a live open path plus a translucent closed twin; and PointText labels for vertices, part letters and loop-deletion badges. Whole scene is cleared and rebuilt with project.clear() on every frame — the drawing is a pure function of (positions, part map, t). Also supplies view.viewToProject for pointer hit-testing and view.zoom/view.center for fitting a logical coordinate box to any canvas size.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-core.min.js"
+    },
+    {
+      "name": "gsap",
+      "version": "3.12.5",
+      "role": "the two timelines. (1) The camera tween: gsap.to(state, {t:0->1, duration:0.95, ease:'power2.inOut', onUpdate:draw}) driven by the contract/expand buttons and mirrored back into the range input; touching the canvas while t>0 fires the reverse tween instead of starting a drag. (2) The weld playback: a monotone gsap.to on a scalar whose onUpdate ceils to an integer reveal count, stepping one colour's surviving edges into the quotient one at a time (duration scales with the edge count) and re-running the union-find replay on each step. Killed and restarted whenever the user grabs the reveal slider.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"
+    },
+    {
+      "name": "katex",
+      "version": "0.16.11",
+      "role": "all notation: the iff statement of the theorem with the definition of e_G(P), the definition of a packing, the three-line necessity chain (T_i connected -> T_i/P connected on r supernodes -> |T_i n E(P)| >= r-1), the summation line e_G(P) = |E(P)| >= sum |T_i n E(P)| >= k(r-1) where edge-disjointness is spent, the connected-parts reduction as an aligned block (e_G(P')=e_G(P), r'=r+j-1 => k(r'-1)>k(r-1)), the contrapositive for the 3xK5 certificate, and both directions of the theorem side by side in the honesty section. Rendered by a single [data-tex]/[data-tex-d] sweep with throwOnError:false.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    }
+  ],
+  "building_blocks": [
+    "graph descriptor {id, n, world:[w,h], labels[], pos:[[x,y]], edges:[[u,v]], color:Int32Array(-1 = owned by no tree), k, ktrees (derived), presets:[{name, part:[]}]}",
+    "DSU(n): path-compressed disjoint-set forest with find/union/roots(), used for three distinct jobs — verifying a colour class is a spanning tree of G, replaying a colour's survivors on the r supernodes, and finding the components of an induced subgraph",
+    "verifyPacking(g) -> {perColor:[{c, edges, m, need, acyclic, comps, spanning, ok}], ok, disjoint}: proves or disproves in-page that each colour class is a spanning tree and that no edge carries two colours",
+    "analyze(g, rawPartMap, k) -> {q (canonical vertex->part), r, members, rawOf, cross, loops, fanIdx, fanCnt, perColor, spare, partComps, totalCross, toll, k, ktrees, pass, hasDisconnected}: the single recompute-everything entry point; perColor iterates g.ktrees (the trees ACTUALLY loaded), never the toll parameter k, so raising k cannot conjure a nonexistent tree",
+    "per-colour weld replay: DSU over the r supernodes fed the colour's surviving cross edges in order, partitioning them into `useful` (merged two components) and `surplus` (closed a cycle in G/P), yielding comps/connected and the visual proof that a tree's image need not be a tree",
+    "fan indexing: for each cross edge, its index and the multiplicity among all cross edges joining the same unordered pair of parts — the data that makes parallel quotient edges drawable and countable",
+    "partComps: components of each part's induced subgraph, driving the disconnected-part warning chips and the refine button",
+    "refinePartition(g, raw, A, nextIdFn): splits every disconnected part into its components, provably preserving the cross count while raising r",
+    "hullOf(pts): monotone-chain convex hull",
+    "blobPts(pts, pad): organic part outline — circle for 1 point, stadium for 2 or collinear, otherwise a true round-join outward offset of the hull (edge normals oriented by signed area, arcs sampled at each joint)",
+    "circlePts / stadiumPts: the degenerate blob cases",
+    "pointInPoly(p, poly): ray-cast containment, used for lasso capture and for drop-into-blob hit testing",
+    "lerp / smoothstep: the easing primitives the morph is written against",
+    "polyPos(cx,cy,R,m,phase) and ellipsePos(cx,cy,rx,ry,m,phase): regular polygon / ellipse vertex layouts (the ellipse fills a landscape canvas far better than a circle)",
+    "completeEdges(ids), edgeIndexMap(edges), paintTrees(edges, [[[u,v],...],...]): clique edge lists and painting a hand-authored tree decomposition onto edge indices by endpoint pair",
+    "mkScope(canvas) / fitBox(S, canvas, box) / viewBoxOf(g, pad): one PaperScope per canvas plus fitting an arbitrary logical bounding box (derived from the graph's own extent, with room to drag into) to the canvas via view.zoom and view.center",
+    "edgeCurve(S, p1, p2, off): straight line when off ~ 0, quadratic bezier with perpendicular control offset otherwise — the single primitive that turns contraction into a visible fan of parallel edges",
+    "textAt(S, str, x, y, size, colour, weight): centred PointText helper",
+    "ContractionScene(canvas, graph, opts): THE component. Owns {part, pos, t, k, focus, drag, lasso, hoverTarget, nextId}; full-redraw draw(); pointerdown/move/up/dblclick interaction (drag-to-merge with live drop-target highlighting, lasso-to-group, double-click-to-free, auto-return of the camera when the user edits while zoomed out); API {setPart, setK, setFocus, setT(v, animate), resetPositions, analysis, newId, fit}; opts {static, pad, onChange(api, A), onT(t)}",
+    "QuotientView(canvas): canonical G/P renderer — supernodes on an ellipse, cross edges fanned by multiplicity and coloured by owning tree, deleted-loop ghost badges per supernode, per-colour isolation dimming, a `welds` mode that draws a blob hull around each DSU component so components visibly merge, a `reveal` cursor for step-by-step playback, and fitToRing() so the view auto-fits whatever it just laid out",
+    "renderLedger(g, A, {stats, table, total, loops}): the accounting panel — four stat cards (r, r-1, k, k(r-1)), one row per loaded tree (spend bar, kept, owes, pays?, image connected?), the total line against k(r-1), and the loop-deletion tally; text adapts to whether a packing is loaded and to whether the toll parameter matches the number of loaded trees",
+    "spendBar(surv, need, scaleMax): two absolutely positioned segments (the forced r-1 solid, the surplus at 40% opacity, 2px surface gap) with a 2px tick at the obligation line — no charting library",
+    "verdictHTML(ok, exact, textOK, textNO): pass / exactly-on-the-toll / short pill with a dot AND a glyph AND words, so status is never colour-alone",
+    "statCard(k, v, tone) and renderPartList(g, A, el): stat tile and part chips with a disconnected-part warning state",
+    "legendHTML(g, k, extra): swatch + glyph + stroke-style legend, the secondary encoding for the tree colours",
+    "groupButtons(container, attr, fn): radio-style .btn group wiring",
+    "renderMath(root): one-pass KaTeX sweep over [data-tex] (inline) and [data-tex-d] (display) with an idempotence guard",
+    "fold-down page skeleton: hero + numbered .beat sections, .split / .split.wide-left / .split.wide-right two-column grids (with `min-width:0` on the children so nowrap table content cannot squeeze an fr track) collapsing at 960px, plus .panel / .callout / .log / .statrow / .totalline / .pchip primitives and an IntersectionObserver reveal with a 4s failsafe"
+  ],
+  "computations": [
+    "union-find verification that K4's {12,23,34} and {13,14,24} are each spanning trees (3 = n-1 edges, acyclic, 1 component) and edge-disjoint — the full trace is printed",
+    "union-find verification of K6's three Hamiltonian paths {01,12,23,34,45}, {13,35,05,02,24}, {03,04,14,15,25} as a perfect decomposition of all 15 edges into 3 spanning trees",
+    "union-find verification of the octahedron's {04,02,12,13,35} and {34,03,05,15,25} as edge-disjoint spanning trees leaving exactly 2 edges spare",
+    "live quotient construction on every drag/lasso: partition canonicalisation, split of E into cross edges and loops, and per-parallel-class multiplicity indexing, so |E(G/P)| = e_G(P) is displayed as an identity rather than asserted",
+    "per-colour survivor replay through a second union-find on the r supernodes: number kept, number of welds (always exactly r-1 when connected), number of surplus edges, and the component count — proving |T_i n E(P)| >= r-1 numerically for the user's own clustering",
+    "K6 at r=3 (three pairs): 12 cross edges, 3 loops deleted, toll 3*2=6, and per colour 2 / 5 / 5 — T1 pays exactly the minimum while T2 and T3 overpay by 3, with T2 producing genuinely parallel A-B quotient edges",
+    "K6 at r=6 (every vertex alone): 15 cross edges vs toll 3*5=15 — exactly on the line, the headcount endpoint m = k(n-1) with zero slack",
+    "K6 at r=1: all 15 edges become loops, e_G(P)=0, toll 0 — the vacuous endpoint",
+    "K6 at r=2 (two triples): 9 cross, 6 loops, per colour 1 / 3 / 5 against a toll of 1 each",
+    "induced-subgraph component detection per part, which fires on the octahedron's three antipodal (non-adjacent) pairs",
+    "the connected-parts reduction executed live on the octahedron: refining the three antipodal pairs gives r 3 -> 6 with e_G(P) unchanged at 12 while the requirement rises 2*2=4 -> 2*5=10, and at the hypothetical k=3 the same refinement flips a comfortable pass (12 >= 6) into a failure (12 < 15) — a computed certificate that no 3-packing exists",
+    "3xK5 island graph built with bridge endpoints chosen geometrically (in each island, the vertex nearest the other island's centre), giving n=15, m=33; contracting the islands yields r=3 with exactly 3 surviving edges against a toll of 2*2=4, short by 1",
+    "the same 3xK5 graph at r=15: 33 cross edges vs k(n-1)=28, which passes — demonstrated so the page can say plainly that clearing a resolution proves nothing"
+  ],
+  "interactions": [
+    "drag any vertex with the pointer: it moves freely and STAYS where dropped; while dragging, the vertex or blob under the cursor highlights as the drop target; releasing over a vertex or inside a blob joins that part, releasing in empty space makes it a fresh singleton — every drop recomputes the quotient, the per-colour tallies, the ledger, the part chips and the quotient canvas",
+    "draw a lasso on empty canvas: a live dashed path with a translucent fill; on release every enclosed vertex is merged into one new part",
+    "double-click a vertex to set it free as its own part",
+    "camera slider (0-100%) morphs the contraction parameter t continuously: interior edges dissolve, vertices converge to their part centroid and fade, supernodes grow in, blob hulls shrink and fade, and cross edges fan apart into parallel quotient edges",
+    "contract / expand buttons play the same morph as a GSAP power2.inOut tween, writing back into the slider readout",
+    "pointing at the canvas while the camera is zoomed out tweens it back to 0 instead of starting a drag, so editing always happens on the un-blurred graph",
+    "per-graph presets (K6: all alone r=6 / three pairs r=3 / two triples r=2 / one blob r=1 / reset layout; octahedron: three antipodal pairs / all alone / two columns vs one; islands: three islands / all alone / one blob)",
+    "isolate T1 / T2 / T3 in section 2: dims every other colour simultaneously in the camera and in the quotient multigraph",
+    "section 3 reads section 2's live clustering: pick a colour, then either drag the 'edges fed in' slider or press 'play weld' to step that colour's surviving edges into the quotient one at a time — component blobs merge on screen, and the log names each edge as a weld or as surplus that closes a cycle in G/P",
+    "the caveat callout under the argument rewrites itself from the live numbers: it names whichever colour is currently overpaying and by how much, or reports that every colour is paying exactly r-1",
+    "refine (section 4): splits every disconnected part into its components; the log, the part chips, r, the toll and the ledger all move while the cross count visibly does not. Undo refine restores the previous partition",
+    "toll for k = 1 / 2 / 3 (section 4): changes only the requirement k(r-1), never the loaded trees, and the ledger says so explicitly — a pass is labelled as proving nothing, a failure as a certificate of impossibility",
+    "contract the islands graph to watch 30 edges vanish as loops and exactly 3 bridges survive between the three supernodes"
+  ],
+  "assets": [
+    "lib/paper-core.min.js (UMD, 0.12.18)",
+    "lib/gsap.min.js (UMD, 3.12.5)",
+    "lib/katex.min.js (UMD, 0.16.11)",
+    "lib/katex.min.css",
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic Bold/Regular, Fraktur Bold/Regular, Main Regular/Bold/Italic/BoldItalic, Math Italic/BoldItalic, SansSerif Regular/Bold/Italic, Script, Size1-4, Typewriter)"
+  ],
+  "gotchas": [
+    "ESM-only builds fail from file:// (origin null => CORS), so all three libraries are plain UMD dists loaded by classic <script> tags; verified by loading the page in headless Chrome over file:// WITHOUT --allow-file-access-from-files and asserting zero exceptions and zero console errors",
+    "paper-full.min.js bundles the acorn parser for PaperScript, which is dead weight when you only use the JS API — paper-core.min.js is the correct dist and is 200KB rather than 300KB",
+    "multiple canvases need one `new paper.PaperScope()` each plus scope.activate() before creating any item; the global `paper` object is just the last-activated scope, so every draw() must re-activate its own scope or items silently land in the wrong document",
+    "a canvas with only a width:100% CSS rule and a height ATTRIBUTE feeds back on itself: paper writes canvas.width/height from getBoundingClientRect, the intrinsic aspect ratio then re-derives the CSS height, and the canvas grows on every resize (observed: a 360px-tall canvas reaching 736px). Fixed by giving every canvas an explicit CSS height (a --ch custom property) so the attribute never drives layout",
+    "fitting a hand-guessed 'world' rectangle wastes most of the canvas; deriving the view box from the graph's own bounding box plus a drag margin, and laying K6 out on an ELLIPSE rather than a circle, is what actually fills a landscape canvas",
+    "in a `grid-template-columns: 1.32fr 1fr` split, a child containing a nowrap table has a min-content width that overrides its fr share and silently squeezes the other column (the camera canvas measured 550px where 631px was intended); `.split > * { min-width: 0 }` is required, with the table itself in an overflow-x:auto box",
+    "the reveal-on-scroll pattern (opacity:0 until an IntersectionObserver fires) makes the entire page blank in a full-page screenshot and in any environment where the observer misfires; a setTimeout failsafe that force-adds the visible class after 4s is mandatory",
+    "a toll parameter k and the number of trees actually painted on the graph are DIFFERENT numbers. Iterating the per-colour ledger over k invents a third tree with 0 edges and reports it as 'short' — a fabricated result. analyze() iterates g.ktrees for the tallies and uses k only for k(r-1), and the UI relabels the stat card and explains the mismatch when they differ",
+    "when a partition has no packing to audit (or the toll is hypothetical), a PASSING total proves nothing at all — necessity can only ever rule a packing out. Both the no-packing and the k-mismatch notes had to be made conditional on pass/fail, or the page cheerfully calls a passing partition a 'proof of impossibility'",
+    "at t=1 the contracted supernodes sit at part centroids, so a symmetric graph can put three supernodes exactly COLLINEAR (the octahedron drawn as three columns) and the A-C parallel bundle then runs straight through supernode B; the fix is in the source layout, offsetting the middle column vertically so the contracted triangle is non-degenerate",
+    "parallel quotient edges drawn on top of each other are indistinguishable, so the fan offset must be keyed to the edge's index within its parallel class AND scaled by the contraction parameter — at t=0 the offset is 0 so the original graph is drawn with honest straight edges, and the fan opens exactly as the multigraph comes into existence",
+    "paper's project.clear() drops all layers, but adding an item afterwards recreates an active layer automatically, so a clear-and-rebuild draw() is safe and much less bug-prone than incremental item updates at this scale (~60 items per frame)",
+    "an outward polygon offset cannot be faked by scaling hull points away from the centroid — a nearly-collinear part gives a sliver that never thickens. Orienting each edge's normal by the polygon's signed area and sampling an arc at each joint is the version that works, with explicit circle and stadium cases for parts of size 1 and 2",
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without all 20 faces vendored the maths silently falls back to a system font with wrong metrics",
+    "KaTeX does not lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>",
+    "green/red is the classic CVD-confusable pair, so every verdict on the page ships as dot + glyph (check / equals / cross) + words, and each tree carries a glyph and a stroke style (solid / dashed / dotted) alongside its hue; the three tree colours are the validated dark-mode categorical slots 1-3 and were re-run through the palette validator against this page's surface under --pairs all"
+  ]
+}

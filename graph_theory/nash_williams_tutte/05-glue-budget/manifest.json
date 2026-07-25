@@ -1,0 +1,123 @@
+{
+  "concept": "05-glue-budget",
+  "angle": "Nash-Williams–Tutte as ONE continuous family of tests indexed by resolution: a 3-D tower holds every partition-size r at once — level r is the quotient graph after clustering V into r parts, trunks are the nesting relation, and a budget ladder beside it draws e_G(P) against the toll k(r-1) at every level; because the toll is linear in r the ladder's toll ticks form a straight dashed line while the cross counts form a rising curve, so the tower's SIDE FACE is literally the f(r) vs k(r-1) chart while its TOP VIEW is the graph collapsing into clusters. Scrolling descends the tower. The payload is that r=2 (k-edge-connectivity) and r=n (|E| >= k(n-1)) are merely the bottom and top of that one continuum, that neither endpoint nor both together suffice, and that a graph can be sparse only at an intermediate scale — demonstrated by four presets that fail at the coarse end only, the fine end only, the middle only, and nowhere.",
+  "libraries": [
+    {
+      "name": "three",
+      "version": "0.149.0",
+      "role": "the only spatial engine, driving all three scenes. (1) THE TOWER: for r = 2..n a Group per level holding cluster spheres (radius 0.042+0.050*sqrt(|part|), colour = a low-chroma identity ramp keyed to the cluster's minimum member index so an island keeps its hue as it forms), quotient cross edges as oriented cylinders with a lateral fan offset per parallel edge, a rung to the ladder, a cross-count bar, a hatched shortfall segment, a toll tick, a red RingGeometry halo on failing levels, and a canvas-texture Sprite 'r=..'; plus trunk cylinders to the next coarser level (chain mode only), two polylines (Line for the e(P) profile, LineDashedMaterial + computeLineDistances for the straight k(r-1) toll line) and a live readout Sprite redrawn on focus change. Focus is expressed purely as per-level material opacity (1.0 vs 0.20) plus lazily built 'focus extras' — original vertex dots, faint interior edges, and RingGeometry cluster hulls for parts of size >= 2. (2) §1 TOLL WIDGET: r cluster spheres on a ring and k stars of r-1 QuadraticBezierCurve3 weld arcs, each tree bowed to its own height. (3) §5 TREES: the wiring at y=0 and one Group per spanning tree, separated purely by group.position.y so the peel slider never rebuilds geometry. Chosen because the stack-of-resolutions IS a spatial object with two meaningful projections; flattening it would need three separate 2-D pictures.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"
+    },
+    {
+      "name": "three OrbitControls (globalised)",
+      "version": "0.137.5",
+      "role": "orbit + dolly + damping for all three scenes, attached per renderer with enableDamping and per-scene min/max distance; enablePan only on the tower and the tree stack. Programmatic camera presets are tweened by lerping camera.position and controls.target together in the rAF loop, then handed back to the controls. Vendored from three 0.137.5 because r149 deleted examples/js entirely; it touches only stable core APIs (Vector3, Quaternion, Spherical, EventDispatcher, MOUSE, TOUCH) and runs unchanged against r149.",
+      "build": "global",
+      "source": "https://cdn.jsdelivr.net/npm/three@0.137.5/examples/js/controls/OrbitControls.js"
+    },
+    {
+      "name": "chart.js",
+      "version": "4.4.1",
+      "role": "the one statistical panel (§4): a mixed scatter+line chart carrying the partition CLOUD (one bubble per distinct (r, e(P)) with radius scaled by log of how many partitions share it — up to 678,570 partitions binned for the exhaustive graphs, a stated 40,000-partition sample otherwise), the true minimum f(r) as a line, the tower's nested chain as a dashed line, the toll k(r-1) as a neutral dashed reference line, and failing resolutions as oversized crossRot status markers. Supplies the axes, legend, and a custom tooltip that reports partition counts. A different job from Three (chart vs scene), so no overlap; D3/ECharts/Paper.js/Cytoscape are claimed by artifacts 01-04.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"
+    },
+    {
+      "name": "katex",
+      "version": "0.16.11",
+      "role": "all notation, via one [data-tex] (inline) / [data-tex-d] (display) sweep with throwOnError:false and a data-done idempotence guard, plus imperative katex.render calls for the two live statements that change on every interaction (the toll k(r-1)=k*(r-1)=N, and the level inequality e_G(P)=X >= or < k(r-1)=Y). Renders the theorem as an iff, the definition of e_G(P), the two-line necessity chain with the sum over T_i, the two endpoint identities (min over |P|=2 <=> lambda(G) >= k, and e_G(P)=|E| >= k(n-1)), the monotonicity f(r-1) <= f(r), and the max-packing formula min floor(f(r)/(r-1)). All 20 .woff2 faces vendored.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    }
+  ],
+  "building_blocks": [
+    "crossCount(g,part): the single primitive the whole page rests on — count edges whose endpoints carry different labels. Loops never cross; parallel edges count with multiplicity because the edge list stores duplicates",
+    "canon(part) -> {part:Int32Array, r}: relabel any partition to 0..r-1 in first-appearance order; the only way part counts are ever derived, so r and the labels can never disagree",
+    "exhaustiveByR(g) -> {minCross[r], argPart[r], total, dens[r]:Map(cross->count), exact:true}: restricted-growth-string enumeration of EVERY set partition with incremental cross counting (a per-vertex back-adjacency list to lower indices lets each recursion level add only its own new crossings). Returns the exact per-r minimum, the witness, and the full density histogram in one pass — 678,570 partitions in ~20 ms",
+    "minCut(g) -> {value, part}: Stoer-Wagner global minimum cut on a dense weight matrix built from the multigraph, exact, used both for the r=2 endpoint identity and to pin the search's r=2 value",
+    "greedyChain(g) -> chain[r]: deterministic agglomerative average-linkage coarsening — merge the pair maximising w/(|A||B|), ties by larger w then lowest key. The ratio (not raw weight) is load-bearing: raw-weight linkage with index tie-breaks walks a bridge out of a finished clique instead of building the next one, and misses the island structure entirely",
+    "searchByR(g,restarts,seed) -> {minCross[r], argPart[r], exact:false}: stated upper bound for graphs too big to enumerate. Two deterministic linkages (average + heaviest-edge), 500 randomised restarts alternating between them with random tie-breaks and occasional random merges, single-vertex-move local search at each r (refine), a downward pass merging each level-(r+1) solution and re-refining it at r, endpoints pinned exact (Stoer-Wagner at r=2, non-loop edge count at r=n), and an explicit merge repair enforcing f(r-1) <= f(r)",
+    "refine(p,r) / offer(p,r): the reusable local-search + best-keeper pair — move one vertex to another part while the part count is held fixed, accept only strict gains, then canonicalise, recount from scratch and keep if better",
+    "sampleCloud(g,N,seed) -> dens[r]: two-family sampler, because neither family alone covers the axis — half uniform-ish random restricted-growth labellings (these concentrate on MANY parts) and half random edge-contraction chains (each chain visits every r from n down to 1). Reports its own total",
+    "packTrees(g,k) -> {ok, disjoint, trees[], owner, used}: matroid union — greedy growth by per-forest union-find, then multi-source BFS over the edge exchange digraph seeded with every homeless edge, forest-internal BFS to find the cycle an edge would close, end-first swap-chain application; then INDEPENDENT re-verification from the owner array alone (per class: n-1 edges, acyclic, one component; across classes: pairwise disjoint)",
+    "maxKof(minCross,n) -> {k,r}: the Nash-Williams-Tutte formula min_{r>=2} floor(f(r)/(r-1)), plus the argmin resolution, cross-checked in testing against what packTrees actually achieves",
+    "DSU(n): path-compressed disjoint-set with find/union/comps()",
+    "verdict(gid,k) -> {fails[], maxK, cutOK, headOK, pass}: per-graph per-k verdict assembled from f(r) alone; drives the survey table, the tower's failure halos, the readout pill and the §5 degraded-packing branch",
+    "analyse(gid) cache: picks exhaustive vs search by n <= EXHAUSTIVE_LIMIT (11), attaches the chain, the min cut, and a PROSE methodText that literally describes what ran — so the epistemics travel with the data instead of being a static paragraph",
+    "validateSearch(): runs the heuristic beside exhaustive truth on every preset small enough to enumerate and compares at every r, rendered on load as an honesty credential rather than claimed in copy",
+    "makeScene(el,opts) -> {scene,camera,renderer,controls,resize,isVisible}: the reusable Three bootstrap — antialiased WebGLRenderer at capped pixel ratio, sRGB output, hemisphere + two directional lights, a ResizeObserver that resizes renderer and camera together, and an IntersectionObserver so an off-screen scene stops rendering while its rAF loop keeps running",
+    "tube(p1,p2,mat,thick): one shared open CylinderGeometry positioned at the midpoint, oriented by setFromUnitVectors(+Y, dir) and scaled (thick, len, thick) — every edge, bar, tick, rung and trunk in all three scenes is this one call, so line thickness is real geometry instead of the ignored GL linewidth",
+    "arcTube(a,b,lift,mat,thick,group): a QuadraticBezierCurve3 sampled into tube segments — the weld arcs, bowed per tree so k parallel quotient edges stay individually visible",
+    "labelSprite(text,opts) -> Sprite with .userData.redraw(text,colour): canvas-texture sprite with configurable size/alignment and depthTest:false, redrawable in place so a live readout costs no allocation per frame",
+    "disposeGroup(gr): full traversal disposing materials, their maps and geometries while skipping the two shared singletons (_cyl, _sph) — required because every graph/k/mode change rebuilds an entire tower",
+    "fitDist(h,w): frame a world-space box at the live fov and aspect, taking the max of the vertical and horizontal constraints — the reason every camera preset frames every preset graph (n = 5 to 16) without hand-tuned numbers",
+    "camera preset tween: {from,to,tf,tt,t} lerped in the rAF loop across camera.position and controls.target simultaneously, with cubic ease-out, then control returned to OrbitControls",
+    "sticky scroll-scrub: a .track (360vh) wrapping a position:sticky .stick (100vh) enabled only above 1040x660 by media query; scroll fraction maps to r = n - round(p*(n-2)); the slider writes back via window.scrollTo behind a `syncing` flag so the two controls share one source of truth and never feed back",
+    "meter primitive: a bar with an absolute .mfill to the actual count, a diagonally hatched .mdef shortfall band, and a .mtick at the toll carrying its own label — scaled by levelScale(gid,k), the max of (cross, need) over ALL levels, so bars are comparable between resolutions",
+    "verdict strip: one clickable cell per r coloured from the TRUE f(r) (never the chain), current cell ringed — the entire theorem's verdict for a graph in one row, and the clearest single view of 'both ends pass, the middle fails'",
+    "pill(kind,txt) and ul.chk checklist: dot-glyph status chip and a glyph/claim/right-aligned-value list, so verdicts never rely on hue alone",
+    "renderMath(root): one-pass KaTeX sweep over [data-tex] / [data-tex-d] with a data-done idempotence guard",
+    "fold-down page skeleton: hero + numbered .beat sections separated by hairlines, .split / .split.wide-left / .split.three grids whose children carry min-width:0 and collapse to one column at 1040px, and NO scroll-reveal animation anywhere (so a screenshot or a misfiring observer can never catch the page mid-fade)"
+  ],
+  "computations": [
+    "exhaustive minimum cross-edge count over ALL set partitions, indexed by r, for every preset with n <= 11: K5 52 partitions, K6 203, Petersen 115,975, 2xK5+bridge 115,975, Three districts 678,570 — 912,772 partitions of ground truth enumerated on load in well under a second",
+    "3xK5 + 3 bridges, k=2 (n=15, m=33): the headcount passes (33 >= 28) AND the cut test passes (lambda = 2 = k), and the graph still fails at r=3 where the three islands leave only 3 cross edges against a toll of 4 — the intermediate-scale failure the two famous tests cannot see",
+    "Three districts (n=11, m=21, a genuine multigraph: K4 + K4 + a doubled K3, one bridge per pair): lambda = 2 = k passes, 21 >= 2*10 = 20 passes, and it fails at r = 3, 6 AND 9 — the same phenomenon on a graph small enough to certify EXHAUSTIVELY rather than by search",
+    "Petersen, k=2: 3-edge-connected so r=2 passes, but 15 < 18 — fails at r = 8, 9, 10, i.e. only at the fine end",
+    "2xK5 + one bridge, k=2: 21 >= 18 passes but lambda = 1 < 2 — fails at r = 2 only, i.e. only at the coarse end",
+    "K6: f = 0,5,9,12,14,15 for r = 1..6; every level clears k=2 and k=3; max packing = min floor(f(r)/(r-1)) = floor(14/4) = 3 at r=5, and the packing exhibits three edge-disjoint spanning trees using all 15 edges (three Hamiltonian paths)",
+    "Q4 hypercube (n=16, m=32), k=2: the 2k-edge-connectivity corollary case — lambda = 4 = 2k, 32 >= 30, and the packing exhibits two edge-disjoint spanning trees of 15 edges each; max packing 2, attained at r=7 with f(7)=17",
+    "Stoer-Wagner global minimum cut for every preset (5, 4, 3, 2, 2, 1, 4), used as the exact r=2 value and printed as the k-edge-connectivity identity",
+    "monotonicity f(r-1) <= f(r) verified to hold at every r on every preset, and enforced by explicit merge repair inside the search",
+    "the search heuristic run in-page beside exhaustive truth on all five enumerable presets and compared at every r: agreement everywhere — reported on the page as evidence, with the explicit note that it is evidence and not proof",
+    "greedy agglomerative chain cross counts computed per r and plotted against f(r): on 3xK5 and Three districts the chain finds the island structure and attains f at the critical r, on Petersen it does NOT attain the minimum at r = 2..6 — the chain-vs-minimum gap is drawn rather than hidden",
+    "matroid-union packing with independent post-hoc verification for every preset and k in {1,2,3}; packTrees' verdict agrees with min floor(f(r)/(r-1)) on all 21 combinations",
+    "cluster centroids per level, so the tower's geometry (where a supernode sits) is derived from the member vertices' layout rather than placed by hand",
+    "partition density histograms: for each r, how many partitions achieve each cross count — exhaustive for n <= 11, and a two-family 40,000-sample estimate otherwise"
+  ],
+  "interactions": [
+    "§1: r slider (2-8) and k slider (1-3) rebuild r cluster discs and k stars of r-1 bowed weld arcs, and rewrite the toll in prose and in KaTeX; orbit and zoom the widget",
+    "§2 graph picker (7 presets) and k picker (1/2/3): re-analyses, rebuilds the whole tower, rescales the resolution slider to the new n, re-frames the camera, and cascades into the §3 survey, the §4 chart and the §5 packing",
+    "§2 levels mode 'nested chain' vs 'minimisers': in minimisers mode each level shows a partition attaining f(r) and THE TRUNKS DISAPPEAR — the visual proof that the per-r optima do not nest into a hierarchy",
+    "§2 camera presets tower / ladder / look down, tweened over ~0.6 s: 'ladder' turns the tower edge-on so its side face reads as the f(r) vs k(r-1) chart; 'look down' looks straight down the stack at the focus level so it reads as a graph collapsing into clusters",
+    "§2 resolution slider from r = n down to r = 2; on wide screens SCROLLING the sticky section drives the same value, so descending the page is descending the resolutions, and the two controls stay synchronised",
+    "§2 'worst resolution' jumps to the argmin of f(r) - k(r-1)",
+    "§2 verdict strip: one clickable cell per resolution, coloured pass/fail from the true f(r), jumping the tower (and the page scroll) to that level",
+    "every resolution change updates: the tower focus (opacity, member dots, interior edges, cluster hulls), the in-scene ladder readout sprite, the meter with hatched shortfall and toll tick, the KaTeX inequality, the cluster-size chips and interior-edge count, narration that differs at r=n / r=2 / in between, and a note saying whether the shown clustering actually attains f(r) or whether some other partition at the same r is worse",
+    "§3 survey table: computed for all 7 presets at the live k with the two endpoint tests broken out; clicking a row loads that graph into the tower and scrolls to it",
+    "§4: toggle the partition cloud, toggle the nested chain, open a table view of r / f(r) / chain / toll / slack; hovering a cloud point reports how many partitions share that (r, e(P))",
+    "§5 'peel apart' slider lifts each spanning tree into its own layer above the wiring (0 = all coincident and the graph reappears, 1 = fully separated), plus auto-rotate and orbit; when the current k is impossible the scene degrades to the largest packing that does exist and names the partition ruling the rest out"
+  ],
+  "assets": [
+    "lib/three.min.js (UMD, r149 / 0.149.0)",
+    "lib/OrbitControls.js (global, from three 0.137.5 examples/js)",
+    "lib/chart.umd.js (UMD, 4.4.1)",
+    "lib/katex.min.js (UMD, 0.16.11)",
+    "lib/katex.min.css",
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic Bold/Regular, Fraktur Bold/Regular, Main Regular/Bold/Italic/BoldItalic, Math Italic/BoldItalic, SansSerif Regular/Bold/Italic, Script, Size1-4, Typewriter)"
+  ],
+  "gotchas": [
+    "ESM-only builds fail from file:// (origin null => CORS). three.module.js is therefore unusable; the r149 UMD build/three.min.js still exists and is what is vendored. Verified by loading in headless Chrome over file:// WITHOUT --allow-file-access-from-files and asserting zero exceptions, zero console errors and zero failed requests",
+    "Three r149 has NO examples/js directory — it was deleted in r148, so the documented 'globalised OrbitControls' path 404s at that version. The fix is to vendor examples/js/controls/OrbitControls.js from three 0.137.5 (the last line that ships it); it defines THREE.OrbitControls via an IIFE and uses only stable core APIs, so it runs unchanged against r149",
+    "GL linewidth is ignored on essentially every platform, so THREE.Line can only ever draw hairlines. Every edge, bar, tick, rung and trunk that needs real weight is a scaled CylinderGeometry mesh via tube(); Line is reserved for the two profile polylines where hairline is the correct weight anyway",
+    "LineDashedMaterial silently renders solid unless computeLineDistances() is called on the Line after the geometry is set — the straight k(r-1) toll line is the whole point of the ladder, so this one omission would erase the artifact's central contrast",
+    "a rebuilt tower leaks GPU memory fast (7 graphs x 3 k x 2 modes, each ~700 meshes with per-level materials). disposeGroup must collect the traversal into an array BEFORE disposing (mutating during traverse skips children) and must skip the two shared singleton geometries, or the second rebuild renders nothing",
+    "per-level opacity is only possible because each level allocates its OWN materials and stashes them in group.userData.mats; sharing one material across levels makes focus dimming impossible. That is why disposal discipline matters at all",
+    "hand-guessed camera positions frame exactly one graph. With presets from n=5 to n=16 the tower's height ranges 2x-9x and every preset was cropped or lost in space until fitDist(h,w) derived the distance from the live fov AND aspect (taking the max of the two constraints) — the aspect term is what stops the ladder falling off the side on wide panels",
+    "Sprite text with align:'right' ends at the sprite's own right edge, i.e. at position.x + scale/2 — placing a label at x = -1.55 with scale 1.15 puts its text at -0.98, inside a graph of radius 1.25. Labels must be offset by half the sprite scale, and the camera's framing width must then include them",
+    "in the §5 tree stack, camera elevation trades off against the thing being shown: at ~35 degrees the k layers separate cleanly and edge-disjointness is obvious; at ~50 degrees the layers project on top of one another and the whole point is lost. Low elevation wins even though it foreshortens each individual tree",
+    "cluster hull rings drawn for EVERY part turn the r=n level (all singletons) into a field of identical tiny circles; drawing them only for parts of size >= 2 is what makes the finest level legible",
+    "uniform random restricted-growth strings are a terrible sampler for this chart — they concentrate on many parts, so the whole small-r half of the cloud (exactly where the interesting failures live) came out empty. Half the sample must be random edge-contraction chains, since each chain passes through every r",
+    "the agglomerative chain's TIE-BREAK is load-bearing, not cosmetic. With raw-weight linkage every pair starts at weight 1 and the lowest-index tie-break walks a bridge out of the first finished clique instead of starting the second, so the chain never finds the island structure and reports 7 cross edges at r=3 on 3xK5 where the truth is 3. Average linkage w/(|A||B|) fixes it: once a clique has 5 members its bridge ratio is 0.2 against 1.0 inside the next clique",
+    "the same distinction bites the SEARCH: seeding it only with average-linkage chains gave 19 at r=8 on 3xK5 where heaviest-edge linkage gives 17. Running both linkages, and alternating them across the randomised restarts, recovers the tighter bound — a single heuristic family silently reports looser bounds and nothing in the UI would reveal it",
+    "an upper bound on f(r) and a lower bound mean opposite things here, and conflating them would make the page dishonest: a bound that dips below the toll still PROVES failure (it exhibits a violating partition, and necessity does the rest), while a bound that stays above proves nothing. Graphs whose f(r) is only bounded are marked ·bound in the survey, and §5's success verdicts come from the exhibited trees rather than from f",
+    "B_12 = 4,213,597 is already several seconds of enumeration, so EXHAUSTIVE_LIMIT is 11 — which is exactly why the multigraph 'Three districts' (n=11, K4+K4+doubled-K3 with one bridge per pair) exists: it reproduces the 3xK5 middle-failure phenomenon at a size where every one of its 678,570 partitions can actually be enumerated in the page",
+    "a sticky scroll-scrub and a slider bound to the same value feed back into each other forever unless the programmatic scroll is fenced. A `syncing` flag cleared on a short timeout, plus instant (never smooth) scrollTo, keeps one source of truth; the sticky behaviour is gated behind a min-width AND min-height media query and detected at runtime by reading getComputedStyle(...).position === 'sticky' rather than re-checking the breakpoint in JS",
+    "Chart.js legend order follows the dataset ARRAY order while z-stacking follows the `order` property; putting the cloud first for painting reasons buries f(r) at the end of the legend. The two must be set independently",
+    "a Chart.js linear x-axis with min/max padding emits the bounds as ticks, so the axis read '… 14 15 15.4'; ticks.includeBounds:false removes it",
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without all 20 faces vendored the maths silently falls back to a system font with wrong metrics. KaTeX also does not lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>",
+    "scroll-reveal animations were deliberately omitted: under headless capture the class lands but the CSS transition never completes, and the page screenshots at partial opacity. No reveal means no failsafe needed",
+    "the categorical slots #3987e5 / #d95926 / #199e70 were run through the palette validator under --pairs all --mode dark against BOTH page surfaces (#141821 cards and #0b0d12 plane) and pass every gate (worst CVD dE 9.4, worst normal-vision dE 20.9, all >= 3:1); status red #d03b3b is reserved for the shortfall and never used as a series, and every tree additionally carries a glyph and a direct label so identity is never colour-alone"
+  ]
+}

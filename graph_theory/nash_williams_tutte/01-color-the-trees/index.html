@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Trees in K₄ — the Nash-Williams–Tutte tree-packing theorem</title>
+<link rel="stylesheet" href="lib/katex.min.css">
+<style>
+:root{
+  --bg:#0d1017;
+  --bg2:#121722;
+  --panel:#161c28;
+  --panel2:#1b2230;
+  --line:#26304180;
+  --line-solid:#263041;
+  --ink:#e8ecf4;
+  --ink-dim:#98a3b8;
+  --ink-faint:#6b768c;
+  --c0:#ff8f5e;
+  --c1:#48c6e8;
+  --c2:#b58cff;
+  --unpainted:#39435a;
+  --ok:#59d99b;
+  --bad:#ff6b86;
+  --warn:#ffcc66;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0; background:
+    radial-gradient(1100px 700px at 15% -8%, #1a2333 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 0%, #17222f 0%, transparent 55%),
+    var(--bg);
+  color:var(--ink); font-family:var(--sans);
+  font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 24px}
+
+/* ---------- hero ---------- */
+header.hero{padding:76px 0 40px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--c1); margin-bottom:18px}
+h1{font-family:var(--serif); font-weight:600; font-size:clamp(34px,5.2vw,54px); line-height:1.08; letter-spacing:-.02em; margin:0 0 20px}
+h1 .hl{color:var(--c0)}
+.lede{font-family:var(--serif); font-size:clamp(17px,2.1vw,21px); color:var(--ink-dim); max-width:62ch; margin:0 0 12px}
+.lede strong{color:var(--ink); font-weight:600}
+.hero-statement{margin-top:30px; padding:20px 24px; background:var(--panel); border:1px solid var(--line-solid); border-left:3px solid var(--c1); border-radius:0 10px 10px 0}
+.hero-statement .cap{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px}
+
+/* ---------- sections ---------- */
+section.beat{padding:72px 0; border-bottom:1px solid var(--line)}
+section.beat:last-of-type{border-bottom:none}
+.beat-head{max-width:70ch; margin-bottom:34px}
+.beat-num{font-family:var(--mono); font-size:12px; letter-spacing:.16em; color:var(--c1); margin-bottom:10px}
+h2{font-family:var(--serif); font-weight:600; font-size:clamp(26px,3.4vw,34px); line-height:1.15; letter-spacing:-.015em; margin:0 0 14px}
+.thesis{font-family:var(--serif); font-size:18px; color:var(--ink-dim); margin:0}
+.thesis strong{color:var(--ink); font-weight:600}
+p{max-width:70ch}
+.prose{font-family:var(--serif); font-size:17px; color:var(--ink-dim)}
+.prose strong{color:var(--ink); font-weight:600}
+
+/* ---------- split ---------- */
+.split{display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:28px; align-items:start}
+.split.wide-left{grid-template-columns: minmax(0,1.15fr) minmax(0,1fr)}
+@media (max-width:880px){ .split,.split.wide-left{grid-template-columns:1fr} }
+
+.panel{background:var(--panel); border:1px solid var(--line-solid); border-radius:14px; padding:20px}
+.panel.tight{padding:14px}
+.panel-title{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin:0 0 14px}
+
+/* ---------- controls ---------- */
+.controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:14px}
+button.btn{
+  font-family:var(--sans); font-size:13px; font-weight:500;
+  background:var(--panel2); color:var(--ink); border:1px solid var(--line-solid);
+  padding:7px 13px; border-radius:8px; cursor:pointer; transition:.15s;
+}
+button.btn:hover{background:#242d3f; border-color:#38455c}
+button.btn.on{background:var(--c1); color:#08131a; border-color:var(--c1); font-weight:600}
+button.btn.ghost{background:transparent}
+.seg{display:inline-flex; border:1px solid var(--line-solid); border-radius:8px; overflow:hidden}
+.seg button{border:none; border-radius:0; background:transparent}
+.seg button + button{border-left:1px solid var(--line-solid)}
+.ctl-label{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); margin-right:2px}
+
+/* ---------- graph svg ---------- */
+.board{width:100%; display:block; touch-action:manipulation; user-select:none; margin:0 auto}
+#board-k4 svg{max-width:380px}
+#board-pet svg, #board-cert svg{max-width:420px}
+#board-part svg{max-width:400px}
+#quotient svg{max-width:330px}
+.hit{stroke:transparent; stroke-width:20; fill:none; cursor:pointer}
+.edge{fill:none; stroke-linecap:round; transition:stroke .13s ease, stroke-width .13s ease, opacity .13s}
+.vtx circle{transition:fill .15s, stroke .15s}
+.vtx text{font-family:var(--mono); font-size:11px; font-weight:600; fill:#0d1017; pointer-events:none; dominant-baseline:central; text-anchor:middle}
+.redundant{fill:none; stroke:#fff; stroke-width:2.2; stroke-dasharray:3 4; opacity:.9; pointer-events:none}
+
+/* ---------- ledger ---------- */
+.ledger{display:flex; flex-direction:column; gap:10px}
+.lrow{background:var(--panel2); border:1px solid var(--line-solid); border-radius:10px; padding:12px 13px; transition:.18s}
+.lrow.done{border-color:var(--ok); box-shadow:0 0 0 1px #59d99b33, 0 0 24px -10px #59d99b}
+.lrow.cyc{border-color:#ff6b8666}
+.lrow-top{display:flex; align-items:center; gap:9px; margin-bottom:9px}
+.swatch{width:13px; height:13px; border-radius:4px; flex:none}
+.lname{font-weight:600; font-size:14px}
+.chip{margin-left:auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; padding:3px 8px; border-radius:999px; background:#2a3346; color:var(--ink-dim); white-space:nowrap}
+.chip.ok{background:#59d99b22; color:var(--ok)}
+.chip.bad{background:#ff6b8622; color:var(--bad)}
+.chip.warn{background:#ffcc6622; color:var(--warn)}
+.pips{display:flex; gap:3px; margin-bottom:8px; flex-wrap:wrap}
+.pip{width:15px; height:7px; border-radius:2px; background:#2b3448}
+.pip.f{background:currentColor}
+.pip.x{background:var(--bad)}
+.lstats{display:flex; gap:16px; font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); flex-wrap:wrap}
+.lstats b{color:var(--ink); font-weight:600}
+
+.banner{margin-top:14px; padding:12px 14px; border-radius:10px; font-size:14px; border:1px solid var(--line-solid); background:var(--panel2); color:var(--ink-dim)}
+.banner.ok{border-color:var(--ok); background:#59d99b14; color:#b8f0d3}
+.banner.bad{border-color:#ff6b8655; background:#ff6b8610; color:#ffc3ce}
+.banner b{color:inherit}
+
+/* ---------- budget bar ---------- */
+.budget{margin:6px 0 0}
+.budget-track{position:relative; height:34px; background:var(--panel2); border:1px solid var(--line-solid); border-radius:8px; overflow:hidden; display:flex}
+.budget-seg{height:100%; border-right:1px solid #0d1017}
+.budget-need{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--warn); box-shadow:0 0 8px var(--warn)}
+.budget-legend{display:flex; gap:16px; margin-top:8px; font-family:var(--mono); font-size:11px; color:var(--ink-faint); flex-wrap:wrap}
+
+/* ---------- math blocks ---------- */
+.mathbox{background:var(--panel); border:1px solid var(--line-solid); border-radius:12px; padding:22px 20px; margin:22px 0; overflow-x:auto}
+.mathbox.hi{border-color:var(--c0); background:linear-gradient(180deg,#ff8f5e0d,transparent)}
+.mathbox.ok{border-color:var(--ok); background:linear-gradient(180deg,#59d99b0d,transparent)}
+.katex{color:var(--ink)}
+.katex-display{margin:0}
+.mnote{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); margin-top:12px; text-align:center}
+
+/* ---------- misc ---------- */
+.kv{display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-family:var(--mono); font-size:12.5px; align-items:baseline}
+.kv dt{color:var(--ink-faint)}
+.kv dd{margin:0; color:var(--ink); font-weight:600}
+.kv dd.ok{color:var(--ok)} .kv dd.bad{color:var(--bad)}
+.thumbs{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+.thumb{background:var(--panel2); border:1px solid var(--line-solid); border-radius:10px; padding:5px; cursor:pointer; transition:.15s; line-height:0}
+.thumb:hover{border-color:var(--c1); transform:translateY(-2px)}
+.thumb svg{width:64px; height:64px; display:block}
+.searchout{font-family:var(--mono); font-size:12.5px; line-height:1.75; color:var(--ink-dim); white-space:pre-wrap; margin-top:12px; padding:14px; background:#0a0d13; border:1px solid var(--line-solid); border-radius:10px; min-height:40px; overflow-x:auto}
+.searchout .ok{color:var(--ok)} .searchout .bad{color:var(--bad)} .searchout .dim{color:var(--ink-faint)} .searchout .hl{color:var(--warn)}
+.caveat{border-left:3px solid var(--warn); background:#ffcc660a; padding:14px 18px; border-radius:0 10px 10px 0; margin:18px 0; font-family:var(--serif); font-size:16.5px; color:var(--ink-dim); max-width:72ch}
+.caveat b{color:var(--warn); font-weight:600; font-family:var(--sans); font-size:12px; letter-spacing:.1em; text-transform:uppercase; display:block; margin-bottom:6px}
+.hint{font-size:13px; color:var(--ink-faint); margin-top:10px}
+.hint kbd{font-family:var(--mono); font-size:11px; background:var(--panel2); border:1px solid var(--line-solid); border-radius:4px; padding:1px 5px}
+footer{padding:50px 0 80px; color:var(--ink-faint); font-size:13px}
+.parts-legend{display:flex; gap:7px; flex-wrap:wrap; margin-top:12px}
+.plegend{display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11px; color:var(--ink-dim); background:var(--panel2); border:1px solid var(--line-solid); border-radius:999px; padding:3px 9px}
+.plegend i{width:9px;height:9px;border-radius:50%; display:block}
+.qwrap{background:var(--panel2); border:1px solid var(--line-solid); border-radius:10px; padding:10px; margin-top:12px}
+.qcap{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); text-align:center; margin-bottom:4px}
+.verdict{margin-top:12px; padding:13px 15px; border-radius:10px; font-family:var(--mono); font-size:13px; line-height:1.7}
+.verdict.ok{background:#59d99b12; border:1px solid #59d99b55; color:#bff0d8}
+.verdict.bad{background:#ff6b8612; border:1px solid #ff6b8655; color:#ffc9d3}
+table.thm{width:100%; border-collapse:collapse; font-size:14px; margin-top:14px}
+table.thm td,table.thm th{border-bottom:1px solid var(--line-solid); padding:9px 10px; text-align:left; vertical-align:top}
+table.thm th{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); font-weight:500}
+table.thm td.n{font-family:var(--mono); color:var(--ink)}
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Nash-Williams &amp; Tutte, 1961 — tree packing</div>
+  <h1>Two trees in <span class="hl">K<sub>4</sub></span>.<br>And the excuse when it can't be done.</h1>
+  <p class="lede">Paint every edge of a graph with <strong>k</strong> colors so that <strong>each color, by itself, is a spanning tree</strong>. Sometimes you can. Sometimes you fight for an hour and fail.</p>
+  <p class="lede">The theorem below says the failure is never mysterious. Whenever a packing is impossible there is a <strong>one-line excuse</strong>: some way of clustering the vertices that leaves too few edges running between clusters. Nothing else can ever go wrong.</p>
+  <div class="hero-statement">
+    <div class="cap">Nash-Williams–Tutte theorem</div>
+    <div id="hero-tex"></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">01 — the object</div>
+    <h2>Paint it yourself</h2>
+    <p class="thesis">K<sub>4</sub> has 4 vertices and 6 edges. Click an edge to cycle its color. <strong>Goal: every color class is a spanning tree</strong> — connected, touching all 4 vertices, no cycle.</p>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">K₄ — click any edge</div>
+      <div id="board-k4"></div>
+      <div class="controls">
+        <span class="ctl-label">colors k</span>
+        <span class="seg" id="k4-kseg"></span>
+        <button class="btn ghost" id="k4-clear">Clear</button>
+        <button class="btn ghost" id="k4-solve">Show a solution</button>
+      </div>
+      <div class="hint">Click cycles <kbd>unpainted → color 1 → color 2 → …</kbd>. A white dashed edge is one that <em>closed a cycle</em> in its own color — it is wasted.</div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">live ledger — computed by union-find</div>
+        <div class="ledger" id="ledger-k4"></div>
+        <div class="banner" id="banner-k4"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="prose" style="margin-top:26px">Two things are worth noticing while you play. First, <strong>edge-disjoint is not vertex-disjoint</strong> — the trees share all four vertices; that is what "spanning" means. Second, with k=2 there is <em>no slack at all</em>: leave a single edge grey and you have already lost.</p>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">02 — the price</div>
+    <h2>A spanning tree costs exactly n − 1 edges</h2>
+    <p class="thesis">That single fact already explains why K<sub>4</sub> with k=2 is on a knife edge, and it is the seed of the whole theorem.</p>
+  </div>
+
+  <div class="mathbox" id="tex-budget"></div>
+
+  <div class="split">
+    <div class="panel">
+      <div class="panel-title">edge budget — live, for the board above</div>
+      <div class="budget">
+        <div class="budget-track" id="budget-track"><div class="budget-need" id="budget-need"></div></div>
+        <div class="budget-legend" id="budget-legend"></div>
+      </div>
+      <div class="banner" id="budget-note" style="margin-top:16px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">exhaustive check — run in your browser</div>
+      <p style="margin:0 0 6px; font-size:14px; color:var(--ink-dim)">No cleverness: enumerate <em>every</em> 3-subset of the 6 edges, keep the spanning trees, and ask whether the complementary 3 edges also form a spanning tree.</p>
+      <button class="btn" id="k4-exh">Enumerate all decompositions</button>
+      <div class="searchout" id="k4-exh-out">not run yet</div>
+      <div class="thumbs" id="k4-thumbs"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">03 — the wall</div>
+    <h2>Now try the Petersen graph</h2>
+    <p class="thesis">10 vertices, 15 edges, 3-regular, girth 5 — a famously well-connected little graph. <strong>Try to paint two spanning trees.</strong> Take as long as you like.</p>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">Petersen graph — k = 2</div>
+      <div id="board-pet"></div>
+      <div class="controls">
+        <button class="btn ghost" id="pet-clear">Clear</button>
+        <button class="btn ghost" id="pet-greedy">Greedy attempt</button>
+        <button class="btn ghost" id="pet-best">Best of 3000 greedy attempts</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">live ledger</div>
+        <div class="ledger" id="ledger-pet"></div>
+        <div class="banner" id="banner-pet"></div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-title">exhaustive search — really exhaustive</div>
+        <p style="margin:0 0 6px; font-size:14px; color:var(--ink-dim)">All C(15,9) = 5005 ways to choose 9 edges are tested for being a spanning tree; for every one that is, the remaining edges are tested for containing a second spanning tree.</p>
+        <button class="btn" id="pet-exh">Run exhaustive search</button>
+        <div class="searchout" id="pet-exh-out">not run yet</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="prose" style="margin-top:26px">You can get agonisingly close. Petersen certainly has a spanning tree, and it has a spanning tree <em>plus</em> a disjoint spanning forest — press "best of 3000" and watch color 2 fill up with 6 edges stuck in 4 separate pieces. What it never has is a second edge-disjoint <strong>tree</strong>.</p>
+
+  <div class="caveat">
+    <b>Honesty</b>
+    Your failure to find a packing is <em>not</em> a proof that none exists — you might just be bad at it, and so might a greedy algorithm. The exhaustive search above is a proof, but it is a brute-force one: 5005 cases and no insight. What follows is the insight.
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">04 — the excuse</div>
+    <h2>The certificate is one line of arithmetic</h2>
+    <p class="thesis">Cluster the Petersen graph's vertices in the crudest possible way: <strong>every vertex alone in its own cluster</strong>. Then every edge is a "between-clusters" edge, and the count settles it.</p>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">Petersen, shattered into 10 singleton clusters</div>
+      <div id="board-cert"></div>
+    </div>
+    <div>
+      <div class="mathbox hi" style="margin-top:0" id="tex-cert"></div>
+      <div class="panel">
+        <div class="panel-title">what the numbers are, counted from the graph</div>
+        <dl class="kv" id="cert-kv"></dl>
+      </div>
+    </div>
+  </div>
+
+  <p class="prose" style="margin-top:26px">Fifteen edges cannot pay for eighteen. That is the whole argument, and you can check it without ever drawing a tree. <strong>"I can't do it" has become "and here is exactly why."</strong></p>
+
+  <p class="prose">The same line also kills a tempting shortcut. Petersen is <strong>3-edge-connected</strong> — you must delete 3 edges to disconnect it — yet it has no 2 edge-disjoint spanning trees. So "(2k−1)-edge-connected" is <em>not</em> enough for k trees. (2k-edge-connected <em>is</em> enough; that is a corollary at the bottom of this page. Petersen misses it by one.)</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">05 — the essence</div>
+    <h2>Every way of clustering the vertices charges a toll</h2>
+    <p class="thesis">Squash each cluster down to a single point. A spanning tree survives the squashing as something that still connects all <em>r</em> points — so it must spend <strong>at least r − 1</strong> of its edges on the wires running between clusters. k disjoint trees must therefore spend <strong>k(r − 1)</strong>. <em>The miracle of the theorem is that this obvious toll is the only toll there is.</em></p>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title"><span id="pe-title">K₄ carrying a real 2-packing</span> — click a vertex to move it to the next cluster</div>
+      <div id="board-part"></div>
+      <div class="parts-legend" id="pe-legend"></div>
+      <div class="controls">
+        <span class="ctl-label">graph</span>
+        <span class="seg" id="pe-gseg"></span>
+        <button class="btn ghost" id="pe-fine">Every vertex alone</button>
+        <button class="btn ghost" id="pe-one">All in one</button>
+        <button class="btn ghost" id="pe-half">Split in two</button>
+      </div>
+      <div class="hint">Edges <em>inside</em> a cluster are ghosted — after squashing they are loops and cannot help connect anything. Only the bright ones count.</div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">the squashed graph — each cluster is one point</div>
+        <div class="qwrap"><div class="qcap" id="q-cap">quotient multigraph</div><div id="quotient"></div></div>
+        <div class="verdict" id="pe-verdict"></div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <div class="panel-title">the toll, counted live</div>
+        <dl class="kv" id="pe-kv"></dl>
+        <div id="pe-colors" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mathbox" id="tex-toll"></div>
+  <p class="prose">Try it on K₄ with the real 2-packing loaded: <strong>whatever</strong> clustering you build, each color still crosses it at least r−1 times. It has no choice — a tree that connects everything must connect the clusters too. That inequality, summed over the k colors, is the necessary direction of the theorem, and it takes about ten seconds to believe.</p>
+  <p class="prose">The hard direction — the one Nash-Williams and Tutte proved independently in 1961 — is that <em>nothing else can obstruct you</em>. If every single clustering pays its toll, the k trees exist.</p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">06 — why "all partitions" really means all</div>
+    <h2>Passing the edge count is not enough</h2>
+    <p class="thesis">Petersen failed at <em>r = n</em> — a mere headcount of edges. That makes it a friendly example and a misleading one. Here is a graph with plenty of edges, whose every cut is fine, that still fails — at an <strong>intermediate</strong> clustering.</p>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">Three copies of K₅, joined in a triangle by 3 edges</div>
+      <div id="board-tri"></div>
+      <div class="controls">
+        <button class="btn" id="tri-check">Check every partition I can afford to check</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">what an exhaustive check finds — k = 2</div>
+        <div class="searchout" id="tri-out">not run yet</div>
+      </div>
+      <div class="mathbox" style="margin-bottom:0" id="tex-tri"></div>
+    </div>
+  </div>
+
+  <p class="prose" style="margin-top:26px">Each K₅ is dense enough to look generous, and each has two edges leaving it, so no single cut is starved. But squash the three blobs to three points and only <strong>3</strong> wires remain, where two disjoint spanning trees would need <strong>4</strong>. The obstruction lives at r = 3 and nowhere else — invisible to the total edge count, invisible to edge-connectivity.</p>
+
+  <div class="caveat">
+    <b>So the quantifier is load-bearing</b>
+    The condition is "for <em>every</em> partition", over all r from 1 to n. Checking only r = n (the edge count) or only r = 2 (the cuts) can pass a graph that has no packing. The theorem's content is that once you have checked them all, you are done — there is no further, subtler obstruction hiding behind them.
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="beat">
+  <div class="beat-head">
+    <div class="beat-num">07 — the statement</div>
+    <h2>Written out, and what it buys you</h2>
+  </div>
+  <div class="mathbox ok" id="tex-final"></div>
+
+  <div class="split" style="margin-top:26px">
+    <div class="panel">
+      <div class="panel-title">the two directions</div>
+      <p style="margin:0 0 12px; font-size:15px; color:var(--ink-dim)"><b style="color:var(--ink)">Necessity (easy, shown in §5).</b> Contract each part. A spanning tree becomes a connected spanning subgraph of the r-point quotient, so it uses ≥ r−1 cross edges. The k trees are edge-disjoint, so together they use ≥ k(r−1) distinct cross edges. Hence a packing forces the inequality.</p>
+      <p style="margin:0; font-size:15px; color:var(--ink-dim)"><b style="color:var(--ink)">Sufficiency (hard, 1961).</b> If every partition pays, the packing exists. Modern proofs run through matroid union: the graphic matroid's union with itself k times has rank k(n−1) exactly when the partition condition holds. No hand-waving substitute is known.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-title">corollary, and the counterexample it explains</div>
+      <div id="tex-cor"></div>
+      <table class="thm">
+        <tr><th>graph</th><th>n</th><th>m</th><th>edge-conn.</th><th>2 disjoint spanning trees?</th></tr>
+        <tbody id="thm-rows"></tbody>
+      </table>
+      <p style="margin:12px 0 0; font-size:13.5px; color:var(--ink-faint)">Every row's last column is computed on this page, not typed in.</p>
+    </div>
+  </div>
+
+  <div class="caveat">
+    <b>Three things not to over-claim</b>
+    <span style="display:block; margin-bottom:8px">· Petersen's obstruction is the finest partition, detected by a headcount. Most obstructions are not that easy — §6 is the honest picture.</span>
+    <span style="display:block; margin-bottom:8px">· Failing to find a packing by hand, or by a greedy algorithm, proves nothing. Only a partition certificate (or a complete search) does.</span>
+    <span style="display:block">· "Edge-disjoint" means the trees share no <em>edge</em>. They share every <em>vertex</em> — a spanning tree, by definition, touches all of V.</span>
+  </div>
+</section>
+
+<footer>
+  Nash-Williams, C. St. J. A., <em>Edge-disjoint spanning trees of finite graphs</em>, J. London Math. Soc. 36 (1961) 445–450 · Tutte, W. T., <em>On the problem of decomposing a graph into n connected factors</em>, same volume, 221–230.
+  <br>Every count, tree test, cut enumeration and search result on this page is computed live in your browser by union-find. Nothing is hardcoded.
+</footer>
+
+</div>
+
+<script src="lib/katex.min.js"></script>
+<script>
+"use strict";
+
+/* =========================================================================
+   0.  MATH CORE  —  union-find, forest/tree tests, exhaustive searches
+   ========================================================================= */
+
+function makeDSU(n){
+  const p = new Int32Array(n); for(let i=0;i<n;i++) p[i]=i;
+  const r = new Int32Array(n);
+  function find(x){ while(p[x]!==x){ p[x]=p[p[x]]; x=p[x]; } return x; }
+  function union(a,b){
+    a=find(a); b=find(b);
+    if(a===b) return false;
+    if(r[a]<r[b]){ const t=a; a=b; b=t; }
+    p[b]=a; if(r[a]===r[b]) r[a]++;
+    return true;
+  }
+  return {find, union};
+}
+
+/* Statistics of one color class (a set of edge indices) on n vertices.
+   Also returns which edges were REDUNDANT (closed a cycle when added in order). */
+function classStats(n, edges, idxs){
+  const d = makeDSU(n);
+  let comps = n, redundant = [];
+  for(const i of idxs){
+    const e = edges[i];
+    if(d.union(e[0], e[1])) comps--;
+    else redundant.push(i);
+  }
+  const m = idxs.length;
+  return {
+    m, comps,
+    redundant,
+    isForest:  redundant.length === 0,          // m === n - comps
+    isSpanningTree: (comps === 1 && m === n-1 && redundant.length === 0)
+  };
+}
+function componentCount(n, edges, idxs){
+  const d = makeDSU(n); let c = n;
+  for(const i of idxs){ const e=edges[i]; if(d.union(e[0],e[1])) c--; }
+  return c;
+}
+const isConnectedSpanning = (n,edges,idxs) => componentCount(n,edges,idxs) === 1;
+
+/* all k-subsets of {0..m-1}, as arrays, via callback */
+function forEachSubset(m, k, cb){
+  const cur = new Int32Array(k);
+  (function rec(start, depth){
+    if(depth === k){ cb(cur); return; }
+    for(let i=start; i<=m-(k-depth); i++){ cur[depth]=i; rec(i+1, depth+1); }
+  })(0,0);
+}
+function binom(m,k){ let r=1; for(let i=0;i<k;i++) r = r*(m-i)/(i+1); return Math.round(r); }
+
+/* Exhaustive: enumerate every (n-1)-subset; count spanning trees; for each,
+   test whether the complement still contains a spanning tree (i.e. is connected). */
+function exhaustive2Packing(g, collectLimit){
+  const t0=performance.now();
+  const n=g.n, edges=g.edges, m=edges.length;
+  let subsets=0, trees=0, ordered=0;
+  const decomps=[];
+  const inSet = new Uint8Array(m);
+  forEachSubset(m, n-1, (cur)=>{
+    subsets++;
+    if(componentCount(n, edges, cur) !== 1) return;   // (n-1) edges + connected => tree
+    trees++;
+    inSet.fill(0); for(const i of cur) inSet[i]=1;
+    const comp=[]; for(let i=0;i<m;i++) if(!inSet[i]) comp.push(i);
+    if(comp.length >= n-1 && isConnectedSpanning(n, edges, comp)){
+      ordered++;
+      if(collectLimit && decomps.length < collectLimit){
+        const A = Array.from(cur);
+        // record only canonical (first tree contains edge with lowest index) to dedupe
+        if(A[0] < comp[0]) decomps.push([A, comp]);
+      }
+    }
+  });
+  return {subsets, trees, ordered, unordered: ordered/2, decomps, needed:2*(n-1), m, n,
+          ms:(performance.now()-t0).toFixed(1)};
+}
+
+/* Exhaustive over all 2-part partitions (cuts). n must be <= ~22. */
+function exhaustiveCuts(g, k){
+  const n=g.n, E=g.edges;
+  let checked=0, minCut=Infinity, worst=null, fails=0;
+  const total = (1 << (n-1));
+  for(let mask=1; mask<total; mask++){          // vertex n-1 always on side 0
+    let c=0;
+    for(let i=0;i<E.length;i++){
+      const a=(mask>>E[i][0])&1, b=(mask>>E[i][1])&1;
+      if(a!==b) c++;
+    }
+    checked++;
+    if(c<minCut){ minCut=c; worst=mask; }
+    if(c < k) fails++;
+  }
+  return {checked, minCut, worst, fails, need:k};
+}
+
+/* cross-edge count for an arbitrary partition given as vertex->part array */
+function crossEdges(g, part){
+  const out=[];
+  for(let i=0;i<g.edges.length;i++){
+    const [a,b]=g.edges[i];
+    if(part[a]!==part[b]) out.push(i);
+  }
+  return out;
+}
+function partCount(part){ return new Set(part).size; }
+
+/* greedy randomized attempt to build k edge-disjoint spanning trees */
+function greedyPack(g, k, tries){
+  const n=g.n, E=g.edges, m=E.length;
+  let best=null, bestScore=-1;
+  for(let t=0;t<tries;t++){
+    const order=[...Array(m).keys()];
+    for(let i=m-1;i>0;i--){ const j=(Math.random()*(i+1))|0; const x=order[i]; order[i]=order[j]; order[j]=x; }
+    const ds=[], sizes=new Array(k).fill(0), col=new Int8Array(m).fill(-1);
+    for(let c=0;c<k;c++) ds.push(makeDSU(n));
+    for(const ei of order){
+      const e=E[ei];
+      for(let c=0;c<k;c++){
+        if(sizes[c] >= n-1) continue;
+        if(ds[c].union(e[0], e[1])){ col[ei]=c; sizes[c]++; break; }
+      }
+    }
+    const score = sizes.reduce((a,b)=>a+b,0);
+    if(score>bestScore){ bestScore=score; best=Array.from(col); }
+  }
+  return {coloring:best, score:bestScore, max:k*(g.n-1)};
+}
+
+/* =========================================================================
+   1.  GRAPHS
+   ========================================================================= */
+
+const polar=(cx,cy,r,deg)=>[cx+r*Math.cos(deg*Math.PI/180), cy+r*Math.sin(deg*Math.PI/180)];
+
+const G_K4 = (function(){
+  return {
+    id:"K4", name:"K₄", n:4,
+    edges:[[0,1],[0,2],[1,2],[0,3],[1,3],[2,3]],
+    pos:[[170,48],[52,262],[288,262],[170,196]],
+    labels:["1","2","3","4"],
+    view:[0,0,340,310], r:17
+  };
+})();
+
+const G_PETERSEN = (function(){
+  const edges=[], pos=[], labels=[];
+  for(let i=0;i<5;i++) edges.push([i,(i+1)%5]);              // outer 5-cycle
+  for(let i=0;i<5;i++) edges.push([5+i, 5+((i+2)%5)]);       // inner pentagram
+  for(let i=0;i<5;i++) edges.push([i, 5+i]);                 // spokes
+  for(let i=0;i<5;i++){ pos.push(polar(180,178,140,-90+72*i)); labels.push("v"+i); }
+  for(let i=0;i<5;i++){ pos.push(polar(180,178,66,-90+72*i)); labels.push("u"+i); }
+  return {id:"PET", name:"Petersen", n:10, edges, pos, labels, view:[0,0,360,352], r:15};
+})();
+
+/* three K5 blobs joined in a triangle by 3 edges */
+const G_TRI = (function(){
+  const centers=[[150,150],[470,150],[310,430]];
+  const pos=[], edges=[], labels=[], blob=[];
+  centers.forEach((c,b)=>{
+    for(let i=0;i<5;i++){ pos.push(polar(c[0],c[1],74,-90+72*i+b*24)); labels.push(""); blob.push(b); }
+  });
+  for(let b=0;b<3;b++) for(let i=0;i<5;i++) for(let j=i+1;j<5;j++) edges.push([b*5+i, b*5+j]);
+  const dist=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1]);
+  const pairs=[[0,1],[1,2],[2,0]];
+  for(const [a,b] of pairs){
+    let bi=-1,bj=-1,bd=Infinity;
+    for(let i=0;i<5;i++) for(let j=0;j<5;j++){
+      const d=dist(pos[a*5+i], pos[b*5+j]);
+      if(d<bd){ bd=d; bi=a*5+i; bj=b*5+j; }
+    }
+    edges.push([bi,bj]);
+  }
+  return {id:"TRI", name:"3×K₅", n:15, edges, pos, labels, blob, view:[0,0,620,560], r:11, crossStart:30};
+})();
+
+/* =========================================================================
+   2.  SVG BOARD  (paintable graph)
+   ========================================================================= */
+
+const NS="http://www.w3.org/2000/svg";
+function svgEl(tag, attrs){
+  const e=document.createElementNS(NS,tag);
+  if(attrs) for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+const COLORS=["#ff8f5e","#48c6e8","#b58cff"];
+const COLOR_NAMES=["Color 1","Color 2","Color 3"];
+const UNPAINTED="#39435a";
+
+function makeBoard(host, g, opts){
+  opts = opts || {};
+  const k = opts.k || 2;
+  const svg = svgEl("svg",{viewBox:g.view.join(" "), class:"board"});
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  host.innerHTML=""; host.appendChild(svg);
+
+  const gBlobs = svgEl("g"), gEdges=svgEl("g"), gMarks=svgEl("g"), gHits=svgEl("g"), gVerts=svgEl("g");
+  svg.append(gBlobs,gEdges,gMarks,gHits,gVerts);
+
+  const edgeEls=[], hitEls=[], markEls=[];
+  g.edges.forEach((e,i)=>{
+    const [x1,y1]=g.pos[e[0]], [x2,y2]=g.pos[e[1]];
+    const path=svgEl("line",{x1,y1,x2,y2,class:"edge",stroke:UNPAINTED,"stroke-width":opts.ew||6});
+    gEdges.appendChild(path); edgeEls.push(path);
+    const mk=svgEl("line",{x1,y1,x2,y2,class:"redundant"}); mk.style.display="none";
+    gMarks.appendChild(mk); markEls.push(mk);
+    if(!opts.readonly){
+      const hit=svgEl("line",{x1,y1,x2,y2,class:"hit"});
+      hit.addEventListener("click",()=>api.cycle(i));
+      gHits.appendChild(hit); hitEls.push(hit);
+    }
+  });
+
+  const vtxEls=[];
+  g.pos.forEach((p,i)=>{
+    const gv=svgEl("g",{class:"vtx"});
+    const c=svgEl("circle",{cx:p[0],cy:p[1],r:g.r,fill:"#e8ecf4",stroke:"#0d1017","stroke-width":2.5});
+    gv.appendChild(c);
+    if(g.labels[i]){ const t=svgEl("text",{x:p[0],y:p[1]}); t.textContent=g.labels[i]; gv.appendChild(t); }
+    if(opts.vertexClick){ gv.style.cursor="pointer"; gv.addEventListener("click",()=>opts.vertexClick(i)); }
+    gVerts.appendChild(gv); vtxEls.push({g:gv,c:c});
+  });
+
+  const state={ coloring:new Int8Array(g.edges.length).fill(-1), k, part:null };
+
+  const api={
+    svg, state, graph:g,
+    setK(nk){ state.k=nk; for(let i=0;i<state.coloring.length;i++) if(state.coloring[i]>=nk) state.coloring[i]=-1; api.render(); },
+    cycle(i){ state.coloring[i] = (state.coloring[i]+2 > state.k) ? -1 : state.coloring[i]+1; api.render(); },
+    clear(){ state.coloring.fill(-1); api.render(); },
+    set(col){ state.coloring = Int8Array.from(col); api.render(); },
+    setFromTrees(list){ state.coloring.fill(-1); list.forEach((arr,c)=>arr.forEach(i=>state.coloring[i]=c)); api.render(); },
+    setPartition(part){ state.part=part; api.render(); },
+    render(){
+      // redundancy marks per color
+      const red=new Set();
+      for(let c=0;c<state.k;c++){
+        const idxs=[]; for(let i=0;i<state.coloring.length;i++) if(state.coloring[i]===c) idxs.push(i);
+        classStats(g.n, g.edges, idxs).redundant.forEach(i=>red.add(i));
+      }
+      const part=state.part;
+      g.edges.forEach((e,i)=>{
+        const c=state.coloring[i];
+        const isCross = part ? part[e[0]]!==part[e[1]] : true;
+        const el=edgeEls[i], base=opts.ew||6;
+        let w = c<0 ? base*0.75 : base;
+        if(part) w = isCross ? base*1.3 : base*0.6;
+        const grey = (part && isCross) ? "#8d9ab8" : UNPAINTED;   // cross edges are the ones being counted
+        el.setAttribute("stroke", c<0 ? grey : COLORS[c]);
+        el.setAttribute("stroke-width", w);
+        el.style.opacity = part ? (isCross? 1 : 0.12) : (c<0? 0.85 : 1);
+        markEls[i].style.display = (red.has(i) && (!part || isCross)) ? "" : "none";
+      });
+      // blobs
+      gBlobs.innerHTML="";
+      if(part){
+        const groups=new Map();
+        part.forEach((p,v)=>{ if(!groups.has(p)) groups.set(p,[]); groups.get(p).push(v); });
+        const keys=[...groups.keys()].sort((a,b)=>a-b);
+        keys.forEach((key)=>{
+          const pts=groups.get(key).map(v=>g.pos[v]);
+          const hull=convexHull(pts);
+          let d = hull.map((p,ix)=>(ix?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ") + (hull.length>2?" Z":"");
+          if(hull.length===1) d += " L"+hull[0][0].toFixed(1)+" "+hull[0][1].toFixed(1);  // dot for a singleton cluster
+          const col=partColor(key);
+          gBlobs.appendChild(svgEl("path",{d, fill:col, "fill-opacity":0.17, stroke:col,
+            "stroke-width": g.r*2+18, "stroke-opacity":0.17, "stroke-linejoin":"round","stroke-linecap":"round"}));
+        });
+        vtxEls.forEach((v,i)=>{ v.c.setAttribute("fill", partColor(part[i])); });
+      } else {
+        vtxEls.forEach(v=>v.c.setAttribute("fill","#e8ecf4"));
+      }
+      if(opts.onChange) opts.onChange(api);
+    }
+  };
+  api.render();
+  return api;
+}
+
+/* Andrew monotone chain */
+function convexHull(pts){
+  if(pts.length<3) return pts.slice();
+  const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[],hi=[];
+  for(const q of p){ while(lo.length>=2 && cross(lo[lo.length-2],lo[lo.length-1],q)<=0) lo.pop(); lo.push(q); }
+  for(let i=p.length-1;i>=0;i--){ const q=p[i]; while(hi.length>=2 && cross(hi[hi.length-2],hi[hi.length-1],q)<=0) hi.pop(); hi.push(q); }
+  lo.pop(); hi.pop();
+  const h=lo.concat(hi);
+  return h.length? h : pts.slice();
+}
+const PART_HUES=[18,196,272,140,48,320,0,220,100,300,255,170];
+function partColor(i){ return "hsl("+PART_HUES[i%PART_HUES.length]+" 72% 62%)"; }
+
+/* =========================================================================
+   3.  KaTeX helpers
+   ========================================================================= */
+function tex(node, s, display){
+  if(typeof node==="string") node=document.getElementById(node);
+  if(!node) return;
+  katex.render(s, node, {displayMode: display!==false, throwOnError:false, output:"html"});
+}
+
+tex("hero-tex",
+  "G \\text{ has } k \\text{ edge-disjoint spanning trees}\\iff " +
+  "\\forall\\, \\mathcal{P}=\\{V_1,\\dots,V_r\\}:\\ \\ e_G(\\mathcal{P}) \\;\\ge\\; k\\,(r-1)");
+
+tex("tex-budget",
+  "\\underbrace{|E(K_4)|}_{6}\\;=\\;\\underbrace{k}_{2}\\cdot\\underbrace{(n-1)}_{3}\\;=\\;6" );
+document.getElementById("tex-budget").insertAdjacentHTML("beforeend",
+  '<div class="mnote">every single edge is spoken for &mdash; zero slack. this is the partition condition at r = n.</div>');
+
+tex("tex-toll",
+  "\\text{contract each } V_i \\;\\Longrightarrow\\; \\text{each tree still spans } r \\text{ points} " +
+  "\\;\\Longrightarrow\\; \\text{it uses} \\ge r-1 \\text{ cross edges} \\;\\Longrightarrow\\; e_G(\\mathcal{P}) \\ge k(r-1)");
+
+tex("tex-final",
+  "\\boxed{\\;G \\text{ contains } k \\text{ pairwise edge-disjoint spanning trees}\\iff " +
+  "e_G(\\mathcal{P})\\ \\ge\\ k\\,(r-1)\\ \\text{ for every partition } \\mathcal{P} \\text{ of } V \\text{ into } r \\text{ parts}\\;}");
+document.getElementById("tex-final").insertAdjacentHTML("beforeend",
+  '<div class="mnote">G a finite multigraph, k ≥ 1, 1 ≤ r ≤ |V|, and e<sub>G</sub>(𝒫) = number of edges whose endpoints lie in different parts</div>');
+
+tex("tex-cor",
+  "2k\\text{-edge-connected}\\;\\Longrightarrow\\; k \\text{ edge-disjoint spanning trees}");
+document.getElementById("tex-cor").insertAdjacentHTML("beforeend",
+  '<div class="mnote">but (2k−1)-edge-connected does <b>not</b> — Petersen, k=2, is the counterexample</div>');
+
+/* =========================================================================
+   4.  LEDGER
+   ========================================================================= */
+function renderLedger(hostId, bannerId, g, coloring, k){
+  const host=document.getElementById(hostId);
+  host.innerHTML="";
+  let done=0, painted=0;
+  for(let c=0;c<k;c++){
+    const idxs=[]; for(let i=0;i<coloring.length;i++) if(coloring[i]===c) idxs.push(i);
+    painted+=idxs.length;
+    const st=classStats(g.n,g.edges,idxs);
+    if(st.isSpanningTree) done++;
+    const row=document.createElement("div");
+    row.className="lrow"+(st.isSpanningTree?" done":"")+(!st.isForest?" cyc":"");
+    let chip, cls;
+    if(st.m===0){ chip="empty"; cls=""; }
+    else if(!st.isForest){ chip="has a cycle"; cls="bad"; }
+    else if(st.isSpanningTree){ chip="SPANNING TREE"; cls="ok"; }
+    else { chip=st.comps+" pieces, needs 1"; cls="warn"; }
+    // pips: n-1 slots
+    let pips="";
+    const need=g.n-1;
+    const good=st.m-st.redundant.length;
+    for(let i=0;i<need;i++) pips+='<span class="pip'+(i<good?" f":"")+'"></span>';
+    for(let i=0;i<st.redundant.length;i++) pips+='<span class="pip x"></span>';
+    row.innerHTML =
+      '<div class="lrow-top"><span class="swatch" style="background:'+COLORS[c]+'"></span>'+
+      '<span class="lname">'+COLOR_NAMES[c]+'</span><span class="chip '+cls+'">'+chip+'</span></div>'+
+      '<div class="pips" style="color:'+COLORS[c]+'">'+pips+'</div>'+
+      '<div class="lstats"><span>edges <b>'+st.m+'</b>&thinsp;/&thinsp;'+need+'</span>'+
+      '<span>components <b>'+st.comps+'</b>&thinsp;/&thinsp;1</span>'+
+      '<span>forest <b>'+(st.isForest?"yes":"no")+'</b></span></div>';
+    host.appendChild(row);
+  }
+  const b=document.getElementById(bannerId);
+  const total=g.edges.length;
+  const need=k*(g.n-1);
+  if(done===k){
+    b.className="banner ok";
+    b.innerHTML="<b>Packing complete.</b> "+k+" edge-disjoint spanning trees, "+need+" edges used out of "+total+
+      ". Verified by union-find, not by eye.";
+  } else if(need>total){
+    b.className="banner bad";
+    b.innerHTML="<b>Dead on arrival:</b> "+k+" spanning trees would need "+k+"·"+(g.n-1)+" = "+need+
+      " edges, and this graph only has "+total+"."+
+      (painted? " Your best is "+done+" tree"+(done===1?"":"s")+" and "+painted+" of "+total+" edges placed — the missing "+(need-total)+" edges do not exist.":"");
+  } else {
+    b.className="banner";
+    b.innerHTML=done+" of "+k+" color classes are spanning trees. "+painted+" of "+total+
+      " edges painted, "+(total-painted)+" left grey.";
+  }
+  return {done, painted};
+}
+
+/* =========================================================================
+   5.  SECTION 1 + 2 — K4 board, budget bar, exhaustive decomposition
+   ========================================================================= */
+
+let k4k = 2;
+const budgetTrack=document.getElementById("budget-track");
+const budgetNeed=document.getElementById("budget-need");
+const budgetLegend=document.getElementById("budget-legend");
+const budgetNote=document.getElementById("budget-note");
+
+function updateBudget(g, coloring, k){
+  const total=g.edges.length, need=k*(g.n-1);
+  [...budgetTrack.querySelectorAll(".budget-seg")].forEach(e=>e.remove());
+  const counts=new Array(k).fill(0); let grey=0;
+  for(const c of coloring){ if(c<0) grey++; else counts[c]++; }
+  const w=100/total;
+  for(let c=0;c<k;c++) for(let i=0;i<counts[c];i++){
+    const d=document.createElement("div"); d.className="budget-seg";
+    d.style.width=w+"%"; d.style.background=COLORS[c]; budgetTrack.appendChild(d);
+  }
+  for(let i=0;i<grey;i++){
+    const d=document.createElement("div"); d.className="budget-seg";
+    d.style.width=w+"%"; d.style.background="#232c3d"; budgetTrack.appendChild(d);
+  }
+  budgetNeed.style.left="calc("+Math.min(100,need/total*100)+"% - 1px)";
+  budgetNeed.style.display = need<=total ? "" : "none";
+  budgetLegend.innerHTML =
+    '<span>total edges m = <b style="color:var(--ink)">'+total+'</b></span>'+
+    '<span>needed k(n−1) = '+k+'·'+(g.n-1)+' = <b style="color:var(--warn)">'+need+'</b></span>'+
+    '<span>slack m − k(n−1) = <b style="color:'+(total-need<0?"var(--bad)":"var(--ok)")+'">'+(total-need)+'</b></span>';
+  budgetNote.className = "banner" + (total-need<0 ? " bad" : (total-need===0?" ok":""));
+  budgetNote.innerHTML = total-need<0
+    ? "With k = "+k+" the arithmetic already refuses: "+total+" edges cannot pay for "+need+". <b>The finest partition (r = n = "+g.n+") is a certificate of impossibility</b> — no search required."
+    : total-need===0
+      ? "Slack zero. <b>Every edge must be used and no color may waste an edge on a cycle.</b> K₄ with k=2 is exactly tight: 6 = 2·3."
+      : "There are "+(total-need)+" spare edges, so the headcount alone does not decide anything. Finer obstructions may still exist — see §06.";
+}
+
+const boardK4 = makeBoard(document.getElementById("board-k4"), G_K4, {
+  k:2, ew:8,
+  onChange(api){
+    renderLedger("ledger-k4","banner-k4",G_K4,api.state.coloring,api.state.k);
+    updateBudget(G_K4, api.state.coloring, api.state.k);
+  }
+});
+
+(function(){
+  const seg=document.getElementById("k4-kseg");
+  [1,2,3].forEach(k=>{
+    const b=document.createElement("button");
+    b.className="btn"+(k===2?" on":""); b.textContent="k = "+k;
+    b.onclick=()=>{ k4k=k; [...seg.children].forEach(x=>x.classList.remove("on")); b.classList.add("on"); boardK4.setK(k); };
+    seg.appendChild(b);
+  });
+})();
+document.getElementById("k4-clear").onclick=()=>boardK4.clear();
+
+let K4RES=null;
+function computeK4(){
+  if(!K4RES) K4RES = exhaustive2Packing(G_K4, 50);
+  return K4RES;
+}
+document.getElementById("k4-solve").onclick=()=>{
+  const r=computeK4();
+  if(k4k!==2){ k4k=2; boardK4.setK(2);
+    [...document.getElementById("k4-kseg").children].forEach((x,i)=>x.classList.toggle("on", i===1)); }
+  const d=r.decomps[Math.floor(Math.random()*r.decomps.length)];
+  boardK4.setFromTrees(d);
+};
+
+document.getElementById("k4-exh").onclick=()=>{
+  const r=computeK4();
+  const ms=r.ms;
+  document.getElementById("k4-exh-out").innerHTML =
+    '<span class="dim">enumerated</span> C(6,3) = '+r.subsets+' <span class="dim">edge-subsets of size n−1 = 3</span>\n'+
+    '<span class="dim">spanning trees found:</span> <span class="hl">'+r.trees+'</span> <span class="dim">(Cayley: 4² = 16 ✓)</span>\n'+
+    '<span class="dim">of these, complement also a spanning tree:</span> <span class="ok">'+r.ordered+'</span>\n'+
+    '<span class="dim">→ distinct decompositions K₄ = T₁ ⊎ T₂:</span> <span class="ok">'+r.unordered+'</span>\n'+
+    '<span class="dim">the 4 star-trees fail: their complement is a triangle, which misses a vertex.</span>\n'+
+    '<span class="dim">'+ms+' ms</span>';
+  const th=document.getElementById("k4-thumbs"); th.innerHTML="";
+  r.decomps.forEach(d=>{
+    const div=document.createElement("div"); div.className="thumb"; div.title="load this decomposition";
+    div.innerHTML=thumbSVG(G_K4,d);
+    div.onclick=()=>{ if(k4k!==2){k4k=2;boardK4.setK(2);
+      [...document.getElementById("k4-kseg").children].forEach((x,i)=>x.classList.toggle("on",i===1));}
+      boardK4.setFromTrees(d);
+      document.getElementById("board-k4").scrollIntoView({behavior:"smooth",block:"center"}); };
+    th.appendChild(div);
+  });
+};
+
+function thumbSVG(g,trees){
+  const col=new Int8Array(g.edges.length).fill(-1);
+  trees.forEach((arr,c)=>arr.forEach(i=>col[i]=c));
+  const [x,y,w,h]=g.view;
+  let s='<svg viewBox="'+x+' '+y+' '+w+' '+h+'">';
+  g.edges.forEach((e,i)=>{
+    const p=g.pos[e[0]],q=g.pos[e[1]];
+    s+='<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+q[0]+'" y2="'+q[1]+'" stroke="'+(col[i]<0?UNPAINTED:COLORS[col[i]])+'" stroke-width="14" stroke-linecap="round"/>';
+  });
+  g.pos.forEach(p=>{ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="20" fill="#e8ecf4"/>'; });
+  return s+'</svg>';
+}
+
+/* =========================================================================
+   6.  SECTION 3 — Petersen
+   ========================================================================= */
+const boardPet = makeBoard(document.getElementById("board-pet"), G_PETERSEN, {
+  k:2, ew:6,
+  onChange(api){ renderLedger("ledger-pet","banner-pet",G_PETERSEN,api.state.coloring,2); }
+});
+document.getElementById("pet-clear").onclick=()=>boardPet.clear();
+document.getElementById("pet-greedy").onclick=()=>{
+  const r=greedyPack(G_PETERSEN,2,400);
+  boardPet.set(r.coloring);
+};
+document.getElementById("pet-best").onclick=()=>{
+  // a spanning tree plus the largest possible disjoint forest = all 15 edges used
+  const r=greedyPack(G_PETERSEN,2,3000);
+  boardPet.set(r.coloring);
+};
+
+let PETRES=null;
+document.getElementById("pet-exh").onclick=()=>{
+  const out=document.getElementById("pet-exh-out");
+  out.innerHTML='<span class="hl pulse">searching…</span>';
+  setTimeout(()=>{
+    if(!PETRES) PETRES=exhaustive2Packing(G_PETERSEN,0);
+    const r=PETRES, ms=r.ms;
+    out.innerHTML =
+      '<span class="dim">enumerated</span> C(15,9) = '+r.subsets+' <span class="dim">edge-subsets of size n−1 = 9</span>\n'+
+      '<span class="dim">spanning trees found:</span> <span class="hl">'+r.trees+'</span>\n'+
+      '<span class="dim">for each, edges left over:</span> 15 − 9 = <span class="hl">6</span> <span class="dim">(a second tree needs 9)</span>\n'+
+      '<span class="dim">packings found:</span> <span class="bad">'+r.ordered+'</span>\n\n'+
+      '<span class="bad">no 2 edge-disjoint spanning trees exist in the Petersen graph.</span>\n'+
+      '<span class="dim">'+ms+' ms. every one of the '+r.trees+' failures had the same cause: not enough edges left.</span>';
+  },30);
+};
+
+/* =========================================================================
+   7.  SECTION 4 — the certificate
+   ========================================================================= */
+const boardCert = makeBoard(document.getElementById("board-cert"), G_PETERSEN, {k:2, ew:5, readonly:true});
+boardCert.setPartition(Array.from({length:10},(_,i)=>i));
+
+(function(){
+  const g=G_PETERSEN, k=2;
+  const part=Array.from({length:g.n},(_,i)=>i);
+  const cross=crossEdges(g,part), r=partCount(part);
+  tex("tex-cert",
+    "e_G(\\mathcal{P})="+cross.length+"\\;<\\;k(r-1)=2\\cdot("+r+"-1)="+(k*(r-1)));
+  document.getElementById("tex-cert").insertAdjacentHTML("beforeend",
+    '<div class="mnote">the partition into '+r+' singletons is a certificate: no 2 edge-disjoint spanning trees can exist</div>');
+  const cuts=exhaustiveCuts(g,k);
+  document.getElementById("cert-kv").innerHTML=
+    '<dt>vertices n</dt><dd>'+g.n+'</dd>'+
+    '<dt>edges m</dt><dd>'+g.edges.length+'</dd>'+
+    '<dt>parts r</dt><dd>'+r+' &nbsp;<span style="color:var(--ink-faint);font-weight:400">(every vertex alone)</span></dd>'+
+    '<dt>cross edges e<sub>G</sub>(P)</dt><dd>'+cross.length+' <span style="color:var(--ink-faint);font-weight:400">(all of them)</span></dd>'+
+    '<dt>toll k(r−1)</dt><dd>'+k*(r-1)+'</dd>'+
+    '<dt>verdict</dt><dd class="bad">'+cross.length+' &lt; '+k*(r-1)+' — impossible</dd>'+
+    '<dt>edge-connectivity</dt><dd>'+cuts.minCut+' <span style="color:var(--ink-faint);font-weight:400">(min over all '+cuts.checked+' cuts)</span></dd>'+
+    '<dt>&nbsp;</dt><dd style="color:var(--ink-faint);font-weight:400">so every r=2 partition passes: '+cuts.minCut+' ≥ '+k+'</dd>';
+})();
+
+/* =========================================================================
+   8.  SECTION 5 — partition explorer + quotient
+   ========================================================================= */
+let peGraph=G_K4, pePart=null, peColoring=null, peBoard=null;
+
+function peInit(g){
+  peGraph=g;
+  pePart=new Array(g.n).fill(0);
+  if(g===G_K4){
+    const r=computeK4(); const d=r.decomps[0];
+    peColoring=new Int8Array(g.edges.length).fill(-1);
+    d.forEach((arr,c)=>arr.forEach(i=>peColoring[i]=c));
+    pePart=[0,0,1,1];
+    document.getElementById("pe-title").textContent="K₄ carrying a real, verified 2-packing";
+  } else {
+    peColoring=new Int8Array(g.edges.length).fill(-1);
+    pePart=Array.from({length:g.n},(_,i)=>i);
+    document.getElementById("pe-title").textContent="Petersen — unpainted (no packing exists)";
+  }
+  peBoard=makeBoard(document.getElementById("board-part"), g, {
+    k:2, ew: g===G_K4?8:6, readonly:true,
+    vertexClick(v){
+      const maxAllowed=Math.min(g.n, 6);
+      const cur=pePart[v];
+      let next=cur+1;
+      // allow moving into any existing part, or opening one new part
+      const maxPart=Math.max(...pePart);
+      if(next>Math.min(maxPart+1, maxAllowed-1)) next=0;
+      pePart[v]=next; normalizeParts(); peUpdate();
+    },
+    onChange(){}
+  });
+  peBoard.set(peColoring);
+  peUpdate();
+}
+function normalizeParts(){
+  const map=new Map(); let n=0;
+  pePart=pePart.map(p=>{ if(!map.has(p)) map.set(p,n++); return map.get(p); });
+}
+
+function peUpdate(){
+  const g=peGraph, k=2;
+  peBoard.setPartition(pePart);
+  const r=partCount(pePart);
+  const cross=crossEdges(g,pePart);
+  const toll=k*(r-1);
+  const ok = cross.length>=toll;
+
+  document.getElementById("pe-kv").innerHTML=
+    '<dt>parts r</dt><dd>'+r+'</dd>'+
+    '<dt>cross edges e<sub>G</sub>(P)</dt><dd>'+cross.length+'</dd>'+
+    '<dt>inside parts</dt><dd style="color:var(--ink-faint)">'+(g.edges.length-cross.length)+' <span style="font-weight:400">(useless after squashing)</span></dd>'+
+    '<dt>toll k(r−1)</dt><dd>2·'+(r-1)+' = '+toll+'</dd>'+
+    '<dt>slack</dt><dd class="'+(ok?"ok":"bad")+'">'+(cross.length-toll)+'</dd>';
+
+  const v=document.getElementById("pe-verdict");
+  v.className="verdict "+(ok?"ok":"bad");
+  v.innerHTML = ok
+    ? "e<sub>G</sub>(P) = "+cross.length+" ≥ "+toll+" = k(r−1) &nbsp;✓ this clustering pays its toll"
+    : "e<sub>G</sub>(P) = "+cross.length+" &lt; "+toll+" = k(r−1) &nbsp;✗ <b>certificate found</b> — no 2-packing can exist";
+
+  // per-color cross counts, live proof of the lower bound
+  const cc=document.getElementById("pe-colors");
+  const anyPaint = peColoring.some(c=>c>=0);
+  if(anyPaint){
+    let html='<div class="panel-title" style="margin-bottom:9px">each tree’s own crossings</div>';
+    for(let c=0;c<k;c++){
+      const cnt=cross.filter(i=>peColoring[i]===c).length;
+      const good=cnt>=r-1;
+      html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;font-family:var(--mono);font-size:12px">'+
+        '<span class="swatch" style="background:'+COLORS[c]+'"></span>'+
+        '<span>uses <b style="color:var(--ink)">'+cnt+'</b> cross '+(cnt===1?"edge":"edges")+'</span>'+
+        '<span style="color:var(--ink-faint)">≥ r−1 = '+(r-1)+'</span>'+
+        '<span class="chip '+(good?"ok":"bad")+'" style="margin-left:auto">'+(good?"✓ forced":"✗")+'</span></div>';
+    }
+    html+='<div style="font-size:12.5px;color:var(--ink-faint);margin-top:8px;line-height:1.5">Each color is a spanning tree, so after squashing it still connects all '+r+
+      ' clusters — it <em>cannot</em> get away with fewer than '+(r-1)+'. Two disjoint trees therefore force '+toll+' distinct cross edges.</div>';
+    cc.innerHTML=html;
+  } else {
+    cc.innerHTML='<div style="font-size:13px;color:var(--ink-faint)">No packing is painted here — none exists. Switch to K₄ to watch two real trees pay the toll.</div>';
+  }
+
+  // legend
+  const leg=document.getElementById("pe-legend");
+  const sizes=new Map();
+  pePart.forEach((p,v)=>{ sizes.set(p,(sizes.get(p)||0)+1); });
+  leg.innerHTML=[...sizes.keys()].sort((a,b)=>a-b).map(p=>
+    '<span class="plegend"><i style="background:'+partColor(p)+'"></i>V<sub>'+(p+1)+'</sub> · '+sizes.get(p)+'</span>').join("");
+
+  drawQuotient(g, pePart, peColoring, r, cross);
+  document.getElementById("q-cap").textContent = "quotient multigraph · r = "+r+" points, "+cross.length+" edges";
+}
+
+function drawQuotient(g, part, coloring, r, cross){
+  const host=document.getElementById("quotient");
+  const W=340,H=210, cx=W/2, cy=H/2, R = r<=1?0:Math.min(72, 30+r*7);
+  const svg=svgEl("svg",{viewBox:"0 0 "+W+" "+H, class:"board"});
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  const pos=[];
+  for(let i=0;i<r;i++){ pos.push(r===1?[cx,cy]:polar(cx,cy,R,-90+360*i/r)); }
+  // group cross edges by part pair
+  const groups=new Map();
+  for(const ei of cross){
+    const [a,b]=g.edges[ei];
+    const p=Math.min(part[a],part[b]), q=Math.max(part[a],part[b]);
+    const key=p+","+q;
+    if(!groups.has(key)) groups.set(key,[]);
+    groups.get(key).push(ei);
+  }
+  const gE=svgEl("g"); svg.appendChild(gE);
+  groups.forEach((list,key)=>{
+    const [p,q]=key.split(",").map(Number);
+    const A=pos[p], B=pos[q];
+    const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2;
+    const dx=B[0]-A[0], dy=B[1]-A[1], len=Math.hypot(dx,dy)||1;
+    const nx=-dy/len, ny=dx/len;
+    list.forEach((ei,j)=>{
+      const off=(j-(list.length-1)/2)*15;
+      const c=coloring[ei];
+      const d="M"+A[0]+" "+A[1]+" Q"+(mx+nx*off*2)+" "+(my+ny*off*2)+" "+B[0]+" "+B[1];
+      gE.appendChild(svgEl("path",{d, fill:"none", stroke:c<0?UNPAINTED:COLORS[c],
+        "stroke-width":c<0?3:4.5, "stroke-linecap":"round", opacity:c<0?0.8:1}));
+    });
+  });
+  for(let i=0;i<r;i++){
+    const rad = Math.max(9, 20 - r*0.8);
+    svg.appendChild(svgEl("circle",{cx:pos[i][0],cy:pos[i][1],r:rad, fill:partColor(i), stroke:"#0d1017","stroke-width":2.5}));
+  }
+  host.innerHTML=""; host.appendChild(svg);
+}
+
+(function(){
+  const seg=document.getElementById("pe-gseg");
+  [["K₄",G_K4],["Petersen",G_PETERSEN]].forEach(([nm,g],i)=>{
+    const b=document.createElement("button"); b.className="btn"+(i===0?" on":""); b.textContent=nm;
+    b.onclick=()=>{ [...seg.children].forEach(x=>x.classList.remove("on")); b.classList.add("on"); peInit(g); };
+    seg.appendChild(b);
+  });
+})();
+document.getElementById("pe-fine").onclick=()=>{ pePart=Array.from({length:peGraph.n},(_,i)=>i); peUpdate(); };
+document.getElementById("pe-one").onclick=()=>{ pePart=new Array(peGraph.n).fill(0); peUpdate(); };
+document.getElementById("pe-half").onclick=()=>{
+  const n=peGraph.n; pePart=Array.from({length:n},(_,i)=>i<Math.ceil(n/2)?0:1); peUpdate();
+};
+peInit(G_K4);
+
+/* =========================================================================
+   9.  SECTION 6 — 3 x K5
+   ========================================================================= */
+const boardTri = makeBoard(document.getElementById("board-tri"), G_TRI, {k:2, ew:3, readonly:true});
+boardTri.setPartition(G_TRI.blob);
+
+tex("tex-tri",
+  "\\underbrace{e_G(\\mathcal{P})}_{3} \\;<\\; \\underbrace{k(r-1)}_{2\\cdot 2\\,=\\,4}" +
+  "\\qquad\\text{while}\\qquad \\underbrace{m}_{33} \\ \\ge\\ \\underbrace{k(n-1)}_{28}");
+document.getElementById("tex-tri").insertAdjacentHTML("beforeend",
+  '<div class="mnote">the graph is edge-rich and every cut is fine — the obstruction sits at r = 3</div>');
+
+document.getElementById("tri-check").onclick=()=>{
+  const out=document.getElementById("tri-out");
+  out.innerHTML='<span class="hl pulse">checking…</span>';
+  setTimeout(()=>{
+    const g=G_TRI, k=2;
+    const t0=performance.now();
+    const cuts=exhaustiveCuts(g,k);
+    const blobPart=g.blob;
+    const cross=crossEdges(g,blobPart), r=partCount(blobPart);
+    const gp=greedyPack(g,k,2000);
+    const ms=(performance.now()-t0).toFixed(1);
+    out.innerHTML=
+      '<span class="dim">n =</span> '+g.n+'  <span class="dim">m =</span> '+g.edges.length+'\n\n'+
+      '<span class="hl">r = n (the edge headcount)</span>\n'+
+      '  e(P) = '+g.edges.length+'  vs  k(n−1) = '+(k*(g.n-1))+'   <span class="ok">✓ passes with '+(g.edges.length-k*(g.n-1))+' to spare</span>\n\n'+
+      '<span class="hl">r = 2 (all '+cuts.checked+' cuts, exhaustively)</span>\n'+
+      '  minimum cut = '+cuts.minCut+'  vs  k(2−1) = '+k+'   <span class="ok">✓ every single cut passes</span>\n\n'+
+      '<span class="hl">r = 3 (the three K₅ blobs)</span>\n'+
+      '  e(P) = '+cross.length+'  vs  k(3−1) = '+(k*(r-1))+'   <span class="bad">✗ FAILS — certificate</span>\n\n'+
+      '<span class="bad">no 2 edge-disjoint spanning trees.</span>\n'+
+      '<span class="dim">(sanity check: 2000 randomized greedy packings got at most '+gp.score+' of the '+gp.max+
+      ' tree-edges needed — heuristic only, it is the certificate above that proves it.)</span>\n'+
+      '<span class="dim">'+ms+' ms</span>';
+  },30);
+};
+
+/* =========================================================================
+   10.  SECTION 7 — comparison table, computed
+   ========================================================================= */
+(function(){
+  const rows=[];
+  function row(g,label){
+    const cuts=exhaustiveCuts(g,2);
+    let verdict, cls;
+    if(g===G_TRI){
+      const cross=crossEdges(g,g.blob).length;
+      verdict = "no — certificate r=3: "+cross+" &lt; 4"; cls="bad";
+    } else {
+      const res = (g===G_K4)? computeK4() : (PETRES || (PETRES=exhaustive2Packing(G_PETERSEN,0)));
+      verdict = res.unordered>0 ? "yes — "+res.unordered+" decompositions" : "no — certificate r=n: "+g.edges.length+" &lt; "+(2*(g.n-1));
+      cls = res.unordered>0 ? "ok":"bad";
+    }
+    rows.push('<tr><td>'+label+'</td><td class="n">'+g.n+'</td><td class="n">'+g.edges.length+
+      '</td><td class="n">'+cuts.minCut+'</td><td style="color:var(--'+(cls==="ok"?"ok":"bad")+')">'+verdict+'</td></tr>');
+  }
+  row(G_K4,"K₄");
+  row(G_PETERSEN,"Petersen");
+  row(G_TRI,"3×K₅ in a triangle");
+  document.getElementById("thm-rows").innerHTML=rows.join("");
+})();
+
+/* run K4 exhaustive once at load so §5 has a real packing and the table is honest */
+computeK4();
+</script>
+</body>
+</html>

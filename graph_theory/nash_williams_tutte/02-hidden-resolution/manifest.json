@@ -1,0 +1,107 @@
+{
+  "concept": "02-hidden-resolution",
+  "angle": "Sweep the clustering resolution r from 2 to n and compare the exact minimum cross-edge count against the toll k(r-1): three K5 islands joined by three single bridges pass the cut test (r=2) AND the headcount test (r=n) yet fail at r=3, proving that the Nash-Williams-Tutte condition genuinely quantifies over every partition because sparsity can hide at an intermediate resolution — then 2k-edge-connectivity is shown to be the cheap sufficient condition via double counting.",
+  "libraries": [
+    {
+      "name": "cytoscape",
+      "version": "3.30.2",
+      "role": "renders every clustered graph view: a partition is drawn as cytoscape COMPOUND PARENT NODES (one labelled box per part) with the vertices at hand-authored preset positions, re-clustering is node.move({parent}) plus empty-parent removal, cross vs internal edges are edge classes recoloured on every change, click-to-recluster is a tap handler on node.v, and the contracted quotient multigraph G/P is a second instance using curve-style:bezier so parallel cross edges fan out",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"
+    },
+    {
+      "name": "echarts",
+      "version": "5.5.1",
+      "role": "the centrepiece resolution-scan chart (two stacked grids sharing one category axis r: bars of exact minimum cross edges + dashed toll line k(r-1) on top, diverging slack bars below, linked axisPointer, per-item status colours, a markPoint annotating only the FIRST failing r, and a click handler that loads that r's minimising partition into the graph); also the live toll meters (horizontal 2-bar comparison of cross edges vs toll) and the 1-bridge-vs-2-bridges comparison line chart",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"
+    },
+    {
+      "name": "katex",
+      "version": "0.16.11",
+      "role": "renders the iff-statement of the theorem, the contraction/toll implication chain T -> T/P -> >= r-1, the r=2 specialisation to k-edge-connectivity, the r=n headcount, the 2k-edge-connectivity corollary, the double-counting line e_G(P) = 1/2 sum |delta(V_i)| >= kr > k(r-1), and the closing min-over-partitions restatement",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    }
+  ],
+  "building_blocks": [
+    "graph descriptor {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, groups?, bridgeIdx?} with hand-authored preset layouts",
+    "buildCycle(n, R): cycle graph on a regular n-gon",
+    "buildIslands(b): three K5 islands at the corners of a triangle joined pairwise by b bridges, with bridge endpoints chosen geometrically as the unused vertices nearest the target island's centre, returning bridgeIdx so the bridges can be emphasised",
+    "buildPetersen(): outer 5-cycle + inner pentagram + spokes on two concentric polar rings",
+    "completeEdges(ids), adjacency(g): edge list of a clique on given ids; adjacency lists with multiplicity",
+    "crossCount(g, part) and crossEdgeIdx(g, part): cross-edge count and index list for an arbitrary vertex->part map",
+    "normalize(part) / partsOf(part) / rOf(part): canonical relabelling of a partition to 0,1,2,... in order of first appearance, sorted part ids, and r",
+    "minCutExhaustive(g): enumerate all 2^(n-1)-1 bipartitions, return {min, part, checked}",
+    "partDegrees(g, part): per-part {p, size, deg} where deg = |delta(V_i)|, the double-counting tally",
+    "heuristicMinR(g, adj, r, restarts, rng): randomised restart + single-vertex-move local search for a low-cross partition into exactly r parts, never emptying a part; returns a genuine partition (used only as a pruning seed)",
+    "exactMinR(g, adj, r, seedBest, nodeBudget): EXACT minimum cross-edge count over all partitions into exactly r parts by DFS over restricted-growth strings with branch-and-bound (monotone partial cross count vs incumbent, plus a 'can still reach r parts' cut); returns {min, part, complete, nodes, found} and reports truncation honestly",
+    "fullScan(g): complete brute force over every set partition (Bell(n)) returning min cross edges and an argmin per r — the cross-check for small graphs",
+    "resolutionScan(g, restarts, seed): heuristic-seeded exact scan for every r in 2..n, aggregating DFS node counts, completeness and elapsed ms",
+    "makeDSU(n): path-compressed disjoint-set forest",
+    "greedyPack(g, k, tries, rng): randomised first-fit edge-disjoint forest packer returning {col, cnt, score, target}, explicitly labelled a heuristic",
+    "makeRNG(seed): xorshift32 so every reload reports identical numbers",
+    "makeGraphView(hostId, graph, opts): cytoscape clustered-graph widget — preset positions, compound cluster boxes created/removed on demand, setPartition(part, isShort), setShort(v), paintTrees(col), noBoxes/emphasize options for static specimen views, onVertexTap callback, fit()",
+    "makeQuotientView(hostId): cytoscape contracted-multigraph widget, .render(graph, part, short) placing r super-nodes on a circle and fanning the cross edges as bezier parallel edges",
+    "CY_STYLE: cytoscape stylesheet with node.v / node.cluster (round-rectangle compound box, top-anchored label) / node.qn (quotient super-node) / edge / edge.cross / edge.cross.short / edge.emph / edge.t0 / edge.t1 / edge.dim",
+    "verdict(min, req) -> {key, glyph, word, colour}: the single source of truth for pass / exactly-on-the-toll / short, reused by chips, tooltips, bars and logs so colour is never the only channel",
+    "scanOption(rows, k, opt): ECharts option for the two-grid resolution scan (bars + dashed toll line + diverging slack strip, shared axisPointer, first-failure markPoint, optional click-to-load)",
+    "meterOption(cross, req, k, r): ECharts horizontal 2-bar toll meter with value labels and a status-coloured actual bar",
+    "LEGEND_HTML(extra): plain-HTML swatch legend pairing every status colour with its glyph and words",
+    "stat(label, value) / chip(verdict): stat tile and verdict pill (dot + glyph + text)",
+    "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false",
+    "deferred job queue: heavy computations pushed onto a jobs[] array and run one per setTimeout tick after first paint, with .busy placeholders swapped in beforehand",
+    "debounced onResize that calls chart.resize() and cy.resize()+cy.fit() on every live instance",
+    "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number / title / thesis) and an optional .split (wide-left / wide-right) grid collapsing at 900px, plus .panel / .callout / .log / .readout primitives"
+  ],
+  "computations": [
+    "exhaustive minimum cut on 3xK5 by enumerating all 16383 bipartitions of 15 vertices -> min cut 2, so the graph is exactly 2-edge-connected and meets the r=2 requirement k=2 with zero slack",
+    "exhaustive minimum cut on C6 (31 bipartitions -> 2) and on Petersen (511 bipartitions -> 3 = 2k-1 for k=2)",
+    "headcount test on 3xK5: m = 33 >= k(n-1) = 2*14 = 28, slack +5",
+    "EXACT minimum cross-edge count over all partitions into exactly r parts, for every r from 2 to 15 on 3xK5, by branch-and-bound over restricted-growth strings; every branch resolves (no node-budget truncation) so all 14 values are proved minima, with per-r surviving DFS node counts printed",
+    "the certificate: exact minimum at r=3 on 3xK5 is 3 < k(r-1) = 4, and the minimiser returned by the search is exactly the three-island partition whose cross edges are the three bridges",
+    "the full k=2 scan on 3xK5 is 2,3,7,10,12,13,17,20,22,23,27,30,32,33 against tolls 2,4,6,...,28 — exactly one negative slack, at r=3",
+    "complete brute force over all Bell(6) = 203 partitions of C6: min cross per r = 2,3,4,5,6 for r = 2..6, failing from r=3 onward and also at r=6 (6 < 10)",
+    "complete brute force over all Bell(10) = 115975 partitions of the Petersen graph: first resolution short is r = 8 (13 < 14), two resolutions before the r = 10 headcount (15 < 18)",
+    "exact resolution scan of the doubled-bridge graph 3xK5 with 2 bridges per pair: min cut rises to 4 = 2k and every r clears the toll with slack >= 2",
+    "per-part double-counting tally on the live clustering: |V_i|, delta(V_i), the test delta(V_i) >= 2k, the identity sum delta(V_i) = 2 e_G(P), and the resulting bound e_G(P) >= kr > k(r-1)",
+    "randomised first-fit packing, 6000 restarts: 27/28 tree edges on the one-bridge graph (labelled a heuristic, not a proof) and 28/28 on the two-bridge graph, delivering two explicit edge-disjoint spanning trees",
+    "live cross-edge count, r, toll k(r-1), slack and verdict recomputed on every user edit of the partition"
+  ],
+  "interactions": [
+    "click any vertex in the C6 lab or the island lab to move it into the next cluster (a new cluster is created when you pass the last one); the cluster boxes, cross-edge highlighting, quotient multigraph, toll meter, four stat tiles and the verdict chip all recompute",
+    "C6 cluster presets: all-one / two-halves / three-arcs / every-vertex-alone",
+    "switch k in {1,2,3} in either lab: the toll line, the meter, the stats, the verdict and the scan-chart caption update while the exact-minimum bars stay put (they are properties of the graph, not of k)",
+    "click any bar in the resolution scan to load that r's exact minimising clustering into the graph below and scroll to it",
+    "hover the resolution scan for a linked crosshair tooltip giving r, the cheapest clustering's cross-edge count, the toll, the slack and the verdict",
+    "island presets: jump to the min cut (r=2), the three islands (r=3), every-vertex-alone (r=15), all-one",
+    "toggle bridges per pair between 1 and 2 in section 06: the graph is rebuilt, the min cut readout and the per-part delta tally recompute, the clustering resets to r=3 and the packer log clears",
+    "section 06 clustering presets: cluster-by-island / min-cut / all-alone, each redrawing the per-part double-count table",
+    "run the randomised packer (6000 restarts): the best packing is painted onto the graph as two edge-coloured spanning forests and the log reports edges placed per tree, elapsed ms, and whether the result is a genuine packing",
+    "hover the 1-bridge-vs-2-bridges comparison chart for a three-way tooltip (toll, 1 bridge, 2 bridges) with per-series pass/fail glyphs"
+  ],
+  "assets": [
+    "lib/cytoscape.min.js (UMD)",
+    "lib/echarts.min.js (UMD)",
+    "lib/katex.min.js (UMD)",
+    "lib/katex.min.css",
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic, Fraktur, Main, Math, SansSerif, Script, Size1-4, Typewriter)"
+  ],
+  "gotchas": [
+    "ESM-only packages fail from file:// (origin null triggers CORS), so all three libraries are the plain UMD dist builds loaded by classic <script> tags — verified by opening the page over file:// in headless Chrome with Runtime/Log domains enabled and asserting zero exceptions and zero console errors",
+    "Web Workers cannot be used from file:// in Chrome (the worker script load is cross-origin), so the ~200 ms branch-and-bound and the ~120 ms Bell(10) brute force run on the main thread; they are pushed onto a jobs[] queue and drained one job per setTimeout(0) tick after first paint, with .busy placeholders in the chart hosts so nothing looks broken while they run",
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without vendoring all 20 faces the math silently falls back to a system font with wrong metrics",
+    "KaTeX does not lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>",
+    "long single-line KaTeX display formulas overflow narrow panel columns and get visually clipped even inside an overflow-x:auto box; fixed by breaking each statement into a \\begin{aligned} block of short lines AND scoping .panel .texblock .katex to 0.9em (0.82em under 1080px)",
+    "a branch-and-bound seeded with a heuristic value will silently ECHO that seed if the seed is wrong (an early buggy local search returned impossible values like 0 cross edges for r=3 and the exact search dutifully reported them); fixed by pruning against seed+1 instead of seed and returning a found flag, so the reported minimum is always a partition the DFS actually built",
+    "the local search must update its current part index after a move — keeping the pre-move index stale lets the size>1 guard pass twice and empties parts, silently returning partitions with fewer than r parts",
+    "cytoscape's node.move({parent}) removes and re-adds the element, so the old reference is dead; every re-parent re-fetches by cy.getElementById, and moves are done OUTSIDE cy.batch() (only the class/style repaint is batched)",
+    "a cytoscape compound parent with no children still renders as a stray node, so empty cluster boxes are removed explicitly after every re-parent",
+    "cy.fit() must be called after re-parenting because the compound boxes change the bounding box; user zoom/pan are disabled and autoungrabify is on so the hand-authored positions stay meaningful",
+    "colouring 15 clusters by identity would need far more categorical hues than any palette safely provides; sidestepped entirely by giving cluster identity to a labelled box and spending the whole colour budget on the one semantic distinction that matters (cross vs internal, paid vs short)",
+    "green/red is the classic CVD-confusable pair and the dataviz validator flags it, so every status colour on the page is shipped with a glyph (check / equals / cross) and a written verdict, never as colour alone",
+    "ECharts multi-grid charts need explicit xAxisIndex/yAxisIndex on every series plus axisPointer.link to share the crosshair between the bar grid and the slack grid",
+    "annotating every failing r cluttered the Petersen chart (three overlapping markPoint labels), so only the FIRST failing r is annotated — which is also the pedagogically interesting one",
+    "performance.now() does not advance under headless Chrome's virtual time, so elapsed-time readouts show 0.0 ms in a screenshot harness while being real in a normal browser; the page says so"
+  ]
+}

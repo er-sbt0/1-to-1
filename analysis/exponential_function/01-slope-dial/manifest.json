@@ -1,0 +1,90 @@
+{
+  "concept": "01-slope-dial",
+  "angle": "Every a^x is proportional to its own derivative with constant C(a) = lim (a^h-1)/h; e is not a given number but the unique base found by solving the condition C(a) = 1, hunted numerically with a base slider and a bisection that never uses ln or Math.E.",
+  "libraries": [
+    {
+      "name": "KaTeX",
+      "version": "0.16.11",
+      "role": "Renders every mathematical statement on screen: the difference-quotient factoring chain in beat 1, the definition of C(a), the condition C(a)=1, and the closing C(a)=ln a reveal. Driven by a data-tex attribute sweep plus imperative katex.render for live-updating expressions.",
+      "build": "global",
+      "source": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    },
+    {
+      "name": "D3.js",
+      "version": "7.9.0",
+      "role": "Numeric toolkit rather than chart library: scaleLinear for all five plot frames, axisBottom/axisLeft for ticks, d3.line for curve paths, and d3.drag for the two draggable sample points in beat 1 and the point of tangency in beat 4. All marks (gap ribbon, subtangent bar, unit ruler, secant rise blocks, bisection bracket) are hand-authored SVG.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"
+    },
+    {
+      "name": "decimal.js",
+      "version": "10.4.3",
+      "role": "Arbitrary-precision arithmetic at 60-70 significant digits. Supplies the honest column of the beat-2 convergence table (where double precision dies of catastrophic cancellation), the 40-digit reference value of C(a), and the 128-step high-precision bisection that recovers e to 35 correct decimals from difference quotients alone.",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/decimal.min.js"
+    }
+  ],
+  "building_blocks": [
+    "scroll-narrative-shell: vertical stack of full-width <section> beats, each with kicker/h2/intro, separated by hairlines",
+    "fixed-progress-rail: left-edge dot nav, one dot per beat, lit by a centre-band IntersectionObserver, labels revealed on hover",
+    "progressive-enhancement-fade: fade-up-on-approach where the hidden start state is gated behind an html.js-anim class added only after IntersectionObserver is confirmed, plus a timeout failsafe and prefers-reduced-motion opt-out",
+    "shared-parameter-store: single global state object with a registry of render callbacks; every widget mutates one value and calls render()",
+    "synced-dial-widget-factory: reusable slider+readout+preset-chips+nudge-buttons control, instantiated once per beat, all instances bound to the same shared parameter and mutually synchronised",
+    "auto-sweep-animator: requestAnimationFrame loop that drives the shared parameter back and forth across a critical value, with velocity damped near the root so the crossing is legible, plus toggle button state",
+    "d3-plot-frame-factory: returns {svg, x, y, clipped plot layer, unclipped overlay layer} from a viewBox-sized SVG with grid, zero-emphasised gridlines, and axes",
+    "function-sampler: samples an arbitrary JS function across a d3 scale's domain into [x,y] pairs for d3.line",
+    "signed-gap-ribbon: closed path between two sampled curves (forward along one, reversed along the other), fill colour switched by the sign of the difference and opacity scaled by its magnitude",
+    "draggable-point-on-curve: d3.drag handle constrained to a curve, inverting the x scale and writing back to shared state",
+    "secant-rise-block: right-triangle overlay at (x, x+h) showing run, rise, secant line and a numeric rise label",
+    "subtangent-ruler: tangent line extended to the x-axis, a thick measured bar for the subtangent, and an adjacent fixed-length unit ruler for direct visual comparison",
+    "centred-divergence-meter: horizontal bar filled outward from a centre target, colour-coded by sign of the deviation",
+    "verdict-badge: pill label whose text and colour class are driven by the sign/magnitude of a computed residual (lags / overshoots / fused)",
+    "digit-agreement-highlighter: splits a numeric string against a reference string at the first differing character and renders the matching prefix and diverging tail in contrasting colours",
+    "convergence-table: per-row limit estimates at shrinking h, dual-precision columns, with a status flag that distinguishes not-yet-converged from rounding-noise-dominated",
+    "bisection-console: scrolling monospace log of bracket iterations with step/run/reset controls and a synchronised bracket rectangle drawn on the companion plot",
+    "richardson-extrapolator: generic O(h^2)-series extrapolation table over halved step sizes",
+    "honesty-callout: bordered aside for stated-but-unproved assumptions and for clearly labelling any value used as an external accuracy check",
+    "katex-attribute-sweep: renders every [data-tex] node once on load, honouring a data-display flag"
+  ],
+  "computations": [
+    "Pointwise numerical derivative of a^x via symmetric difference quotient (a^{x+h}-a^{x-h})/2h with 4 levels of Richardson extrapolation (h0=1/64, halving), accurate to ~1e-14",
+    "C(a) = lim (a^h-1)/h evaluated as the numerical slope of a^x at x=0 — never as ln a",
+    "Live verification that f'(x)/f(x) is the same constant at x = -2,-1,0,1,2 (the proportionality, checked numerically at five points)",
+    "Forward difference quotient (a^h-1)/h tabulated for h = 1e-1 .. 1e-18 in double precision, exhibiting catastrophic cancellation and exact collapse to 0 at h = 1e-16",
+    "The same quotient at 60 significant digits via decimal.js, converging monotonically past the double-precision floor",
+    "High-precision C(a) via symmetric quotient at h = 1e-30 in 70-digit arithmetic (~40 correct digits), used as the convergence reference for digit highlighting",
+    "Truncation-vs-noise discrimination: observed error compared against the legitimate truncation term C^2*h/2 to flag only genuinely noise-dominated rows",
+    "Subtangent length 1/C(a), recomputed as the point of tangency is dragged, demonstrating invariance in x",
+    "C(a) sampled across a in (0.15, 5] to plot the dial function itself, showing C(1)=0, continuity and strict monotonicity",
+    "Bisection for the root of C(a)-1 on the bracket [2,3]: 50 steps in doubles, then 128 steps at 70 digits, recovering 2.718281828459045235360287471352662497... to 35 correct decimals",
+    "Accuracy check (labelled as such) comparing the found root against a stored reference expansion of e and against Math.E",
+    "Residual table |C(a) - ln a| at 8 bases, the single place ln is invoked, confirming agreement to ~1e-14"
+  ],
+  "interactions": [
+    "Global base slider a in [1.08, 5], mirrored as an independent dial widget in beats 1-4 with all copies kept in sync; updates every curve, ribbon, tangent, readout and table on the page",
+    "Preset chips (a = 2, 3, 4, and 2.7 in beat 2) jump the dial to the canonical lag/overshoot failure modes",
+    "Nudge buttons (-.01, -.001, +.001, +.01) and left/right arrow keys (Shift for 10x finer) for hunting the fusion point by hand",
+    "'Snap to the base we found' button sets the dial to the root discovered by in-page bisection (not to Math.E)",
+    "Auto-sweep toggle animates the base back and forth through the crossing, slowing near the root, so the derivative curve is seen sliding through the function curve",
+    "Beat 1: drag either of two sample points along the curve, and slide the step width h in [0.05, 1.2]; the two rise blocks, their ratio, and the predicted a^{x2-x1} update live",
+    "Beat 4: drag the point of tangency P along the curve; the tangent, its foot on the x-axis, the subtangent bar and all readouts follow, while the bar's length demonstrably does not change",
+    "Beat 5: 'Step once' advances one bisection iteration, 'Run to double limit' animates to the double-precision floor, 'Finish in 70-digit arithmetic' runs 128 decimal.js steps, 'Reset' restarts the bracket; the console log and the on-plot bracket rectangle update together",
+    "Scroll drives beat progression, rail highlighting, fade-in, and gating of the expensive high-precision table"
+  ],
+  "assets": [
+    "katex .woff2 fonts (all 20 faces, in lib/katex/fonts/)",
+    "katex.min.css with relative url(fonts/...) references preserved",
+    "no images, icons or external fonts — page uses system font stacks only"
+  ],
+  "gotchas": [
+    "KaTeX silently fails to lay out in quirks mode; the document must open with <!DOCTYPE html> and real <head>/<body> tags",
+    "katex.min.css references url(fonts/*.woff2) relatively, so the fonts/ directory must be vendored alongside the CSS or every formula falls back to system glyphs",
+    "Decimal.set({precision}) mutates global state, so the beat-2 table helper reads Decimal.precision, sets its own, and restores it afterwards to avoid corrupting the 70-digit reference computation",
+    "Naive (a^h-1)/h in doubles is destroyed by catastrophic cancellation below h~1e-9 and returns exactly 0 below h~1e-16; the fix for the display path was a Richardson-extrapolated symmetric quotient at moderate h (1/64 down to 1/512), which stays above the cancellation floor while reaching ~1e-14 accuracy",
+    "Flagging table rows purely by 'error > tolerance' wrongly condemns large-h rows that simply have not converged yet; the flag had to be measured against the legitimate truncation term C^2*h/2 instead",
+    "A scroll fade-in that sets opacity:0 by default can leave the whole page invisible if IntersectionObserver or the CSS transition misbehaves; the hidden state is now applied only under an html.js-anim class added by JS after feature detection, with a timeout failsafe",
+    "Gating section renders on a narrow centre-of-viewport IntersectionObserver band left sections holding stale values when the shared dial changed off-screen; only the expensive decimal.js beat is now gated, on a generous 400px root margin, while the cheap beats always re-render",
+    "ESM-only builds cannot be loaded from file:// via a classic script tag; D3 and decimal.js were vendored as UMD bundles from jsDelivr rather than from GitHub source trees",
+    "Bisection resolution, not the method, limits the final digit count: 128 halvings of a width-1 bracket bottoms out around 3e-39, which matches the ~1e-40 accuracy of the 70-digit C(a) and yields 35 correct decimals of e"
+  ]
+}

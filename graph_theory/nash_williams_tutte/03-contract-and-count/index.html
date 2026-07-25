@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Contraction Camera — Nash-Williams–Tutte, the easy direction made physical</title>
+<link rel="stylesheet" href="lib/katex.min.css">
+<style>
+:root{
+  --plane:#0b0d10;
+  --surface:#14161b;
+  --surface-2:#1a1d24;
+  --line:#2b303b;
+  --line-soft:rgba(255,255,255,.08);
+  --ink:#f2f4f7;
+  --ink-2:#a8adb8;
+  --muted:#7b818e;
+
+  --t1:#3987e5;   /* categorical slot 1 */
+  --t2:#d95926;   /* categorical slot 2 */
+  --t3:#199e70;   /* categorical slot 3 */
+  --spare:#8b93a3;
+
+  --good:#0ca30c;
+  --warn:#fab219;
+  --crit:#d03b3b;
+
+  --radius:14px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--plane)}
+body{
+  margin:0;background:var(--plane);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-size:clamp(32px,5.2vw,56px);line-height:1.06;margin:14px 0 0;letter-spacing:-.02em;font-weight:700}
+h1 .accent{color:var(--t1)}
+.lede{font-size:clamp(17px,2vw,20px);color:var(--ink-2);max-width:68ch;margin:20px 0 0}
+.lede strong{color:var(--ink);font-weight:600}
+.theorembox{
+  margin-top:30px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px 24px;
+}
+.theorembox .lab{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px}
+.tocrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.tocrow a{
+  font-size:13px;color:var(--ink-2);text-decoration:none;border:1px solid var(--line);
+  border-radius:999px;padding:6px 13px;background:var(--surface);transition:.15s;
+}
+.tocrow a:hover{border-color:var(--t1);color:var(--ink)}
+
+/* ---------- sections ---------- */
+section.beat{padding:64px 0;border-bottom:1px solid var(--line)}
+.beat-head{display:flex;gap:20px;align-items:flex-start;margin-bottom:26px}
+.beat-num{
+  flex:0 0 auto;width:42px;height:42px;border-radius:11px;background:var(--surface-2);
+  border:1px solid var(--line);display:grid;place-items:center;
+  font-variant-numeric:tabular-nums;font-weight:700;color:var(--t1);font-size:17px;
+}
+.beat-title{font-size:clamp(23px,3vw,31px);line-height:1.15;margin:0;letter-spacing:-.015em;font-weight:700}
+.beat-thesis{color:var(--ink-2);margin:9px 0 0;max-width:76ch;font-size:16.5px}
+.beat-thesis strong{color:var(--ink);font-weight:600}
+
+.split{display:grid;gap:20px;grid-template-columns:1fr 1fr;align-items:start}
+.split.wide-left{grid-template-columns:1.32fr 1fr}
+.split.wide-right{grid-template-columns:1fr 1.25fr}
+.split > *{min-width:0}
+@media (max-width:960px){.split,.split.wide-left,.split.wide-right{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.panel + .panel{margin-top:16px}
+.panel-title{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px}
+
+canvas.scene{
+  display:block;width:100%;height:var(--ch,360px);
+  background:#101319;border-radius:10px;border:1px solid var(--line);touch-action:none;
+}
+canvas.scene.grab{cursor:grab}
+@media (max-width:960px){canvas.scene{height:calc(var(--ch,360px) * .86)}}
+
+/* ---------- controls ---------- */
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:13px}
+.ctrl-lab{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-right:2px}
+button.btn{
+  font:inherit;font-size:13px;font-weight:600;color:var(--ink-2);background:var(--surface-2);
+  border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;transition:.13s;
+}
+button.btn:hover{border-color:var(--t1);color:var(--ink)}
+button.btn.on{background:var(--t1);border-color:var(--t1);color:#fff}
+button.btn.prime{background:#1c2a3d;border-color:#33507a;color:#cfe1fb}
+button.btn.prime:hover{background:#23374f}
+button.btn:disabled{opacity:.4;cursor:default}
+.slider-row{display:flex;align-items:center;gap:11px;margin-top:13px}
+.slider-row label{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
+input[type=range]{flex:1;accent-color:var(--t1);height:22px}
+.slider-val{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--muted);margin-top:11px;line-height:1.5}
+.hint kbd{font-family:var(--mono);font-size:11.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--ink-2)}
+
+/* ---------- ledger ---------- */
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+@media (max-width:520px){.statrow{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.stat .k{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat .v{display:block;font-size:23px;font-weight:700;line-height:1.25;font-variant-numeric:tabular-nums}
+
+table.ledger{width:100%;border-collapse:collapse;font-size:14px}
+table.ledger th{
+  text-align:left;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;padding:0 7px 7px 0;border-bottom:1px solid var(--line);line-height:1.3;
+}
+table.ledger td:last-child,table.ledger th:last-child{padding-right:0}
+table.ledger td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+table.ledger tr:last-child td{border-bottom:none}
+table.ledger td.num{font-variant-numeric:tabular-nums;text-align:right;padding-right:12px;white-space:nowrap}
+.tname{display:flex;align-items:center;gap:7px;font-weight:600;white-space:nowrap}
+.swatch{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+.glyph{font-size:11px;color:var(--muted)}
+
+/* spend bar */
+.bar{position:relative;height:15px;background:#20242d;border-radius:4px;min-width:96px;overflow:visible}
+.bar .seg{position:absolute;top:0;bottom:0;border-radius:4px}
+.bar .seg.dimseg{opacity:.40}
+.bar .floor{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px}
+
+.verdict{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;white-space:nowrap}
+.verdict .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.v-good{color:#59d15c}.v-good .dot{background:var(--good)}
+.v-warn{color:#f5c33f}.v-warn .dot{background:var(--warn)}
+.v-crit{color:#f0706f}.v-crit .dot{background:var(--crit)}
+
+.totalline{
+  margin-top:14px;padding:13px 15px;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface-2);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+}
+.totalline.pass{border-color:#1d5f28;background:#101d13}
+.totalline.fail{border-color:#6b2626;background:#1e1112}
+.totalline .expr{font-size:15px}
+.totalline .expr b{font-variant-numeric:tabular-nums}
+
+/* callouts */
+.callout{
+  border-left:3px solid var(--t1);background:var(--surface-2);border-radius:0 10px 10px 0;
+  padding:13px 16px;margin-top:16px;font-size:14.5px;color:var(--ink-2);
+}
+.callout strong{color:var(--ink)}
+.callout.warn{border-left-color:var(--warn)}
+.callout.crit{border-left-color:var(--crit)}
+.callout.good{border-left-color:var(--good)}
+.callout .ct{display:block;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:5px}
+
+.texblock{margin:14px 0;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.texblock .katex{font-size:1.02em}
+.panel .texblock .katex{font-size:.95em}
+@media (max-width:1080px){.texblock .katex{font-size:.92em}.panel .texblock .katex{font-size:.86em}}
+
+.log{
+  font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--ink-2);
+  background:#0d1015;border:1px solid var(--line);border-radius:9px;padding:12px 14px;
+  white-space:pre-wrap;overflow-x:auto;
+}
+.log .ok{color:#59d15c}.log .no{color:#f0706f}.log .dim{color:var(--muted)}
+.log b{color:var(--ink);font-weight:600}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12.5px;color:var(--ink-2)}
+.legend .li{display:flex;align-items:center;gap:6px}
+.legend .line-s{width:22px;height:0;border-top-width:3px;border-top-style:solid;border-radius:2px}
+
+.partlist{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.pchip{
+  font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:7px;padding:4px 9px;color:var(--ink-2);
+}
+.pchip b{color:var(--ink)}
+.pchip.bad{border-color:#7a4a12;background:#231a0e;color:#f5c33f}
+
+.two-col-note{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:760px){.two-col-note{grid-template-columns:1fr}}
+
+footer{padding:44px 0 70px;color:var(--muted);font-size:13.5px}
+footer a{color:var(--ink-2)}
+h3.sub{font-size:16px;margin:22px 0 8px;font-weight:700}
+p.body{color:var(--ink-2);max-width:76ch}
+p.body strong{color:var(--ink);font-weight:600}
+ul.body{color:var(--ink-2);max-width:76ch;padding-left:20px}
+ul.body li{margin:7px 0}
+ul.body strong{color:var(--ink)}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Nash-Williams–Tutte tree-packing theorem · the necessity direction</div>
+  <h1>The Contraction<br><span class="accent">Camera</span></h1>
+  <p class="lede">
+    Pull the camera back until clusters of vertices blur into single dots. Everything inside a cluster
+    disappears; only the edges <em>between</em> clusters survive. Do this to a graph that already carries
+    <strong>k edge-disjoint spanning trees</strong> and something is forced: each tree still has to hold the
+    <em>r</em> blurred dots together, so it must keep at least <strong>r−1</strong> of its own edges.
+    The trees share no edges, so the bill adds up: <strong>at least k(r−1) edges must cross</strong>.
+    That inequality is not a technicality bolted onto the theorem — it is the receipt the trees leave behind
+    when you zoom out.
+  </p>
+
+  <div class="theorembox">
+    <div class="lab">Nash-Williams (1961) &amp; Tutte (1961)</div>
+    <div class="texblock" data-tex-d="G=(V,E)\ \text{a finite multigraph},\ k\ge 1.\qquad
+      G\ \text{contains}\ k\ \text{pairwise edge-disjoint spanning trees}
+      \iff
+      e_G(P)\ \ge\ k\,(r-1)"></div>
+    <div class="texblock" data-tex-d="\text{for every partition } P=\{V_1,\dots,V_r\}\ \text{of}\ V\ \text{into}\ r\ \text{nonempty parts},\quad 1\le r\le |V|,"></div>
+    <div class="texblock" data-tex-d="\text{where } e_G(P)=\#\{\,e\in E:\ e \text{ has its two ends in different parts}\,\}."></div>
+    <p class="body" style="margin:6px 0 0;font-size:14.5px">
+      This page builds the arrow <b style="color:var(--ink)">⇒</b> in your hands, with real computation at every step.
+      The arrow <b style="color:var(--ink)">⇐</b> is the hard half of the theorem and is <em>not</em> proved here — see the last section.
+    </p>
+  </div>
+
+  <nav class="tocrow">
+    <a href="#s1">1 · the trees are already there</a>
+    <a href="#s2">2 · the camera</a>
+    <a href="#s3">3 · why r−1 is forced</a>
+    <a href="#s4">4 · parts must be connected</a>
+    <a href="#s5">5 · reading the receipt backwards</a>
+    <a href="#s6">6 · what this does not prove</a>
+  </nav>
+</header>
+</div>
+
+<!-- ═══════════════════════ 1 ═══════════════════════ -->
+<section class="beat reveal" id="s1"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">1</div>
+    <div>
+      <h2 class="beat-title">The trees are already there</h2>
+      <p class="beat-thesis">
+        Everything below starts from a graph whose edges have <strong>already been split into k spanning trees</strong>.
+        Nothing is asserted about that: the page runs union–find on each colour class and reports what it finds.
+        <strong>K₄ has exactly two edge-disjoint spanning trees</strong>, and its six edges are exactly 2·(4−1).
+      </p>
+    </div>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">K₄ · 6 edges · pre-packed with k = 2 trees</div>
+      <canvas class="scene" id="cv-k4" style="--ch:380px"></canvas>
+      <div class="ctrls">
+        <span class="ctrl-lab">show</span>
+        <button class="btn on" data-k4="-1">both trees</button>
+        <button class="btn" data-k4="0">T₁ only</button>
+        <button class="btn" data-k4="1">T₂ only</button>
+      </div>
+      <div class="legend" id="lg-k4"></div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">live verification (union–find, run in this page)</div>
+        <div class="log" id="log-k4"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">what a packing is</div>
+        <div class="texblock" data-tex-d="T_1,\dots,T_k\subseteq E,\qquad
+          \text{each } T_i \text{ a spanning tree of } G,\qquad
+          T_i\cap T_j=\varnothing\ \ (i\ne j)"></div>
+        <p class="body" style="font-size:14.5px;margin:4px 0 0">
+          Each tree owns <em>n−1</em> edges and no edge is owned twice, so a packing needs
+          <span class="tex-i" data-tex="m\ \ge\ k(n-1)"></span> edges just to exist.
+          That is the partition condition at its coarsest setting — every vertex alone in its own part.
+          The rest of this page is about all the settings in between.
+        </p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═══════════════════════ 2 ═══════════════════════ -->
+<section class="beat reveal" id="s2"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">2</div>
+    <div>
+      <h2 class="beat-title">The camera: drag vertices together, watch the graph blur</h2>
+      <p class="beat-thesis">
+        K₆'s fifteen edges split perfectly into <strong>three spanning trees</strong> (three Hamiltonian paths).
+        Group the vertices however you like, then pull the camera back. Edges with both ends inside one blob
+        become loops and are <strong>deleted</strong>. Edges between blobs survive — <strong>all of them, with multiplicity</strong>,
+        because two different edges joining the same two blobs become two parallel edges of the quotient.
+        The ledger on the right tallies, per colour, what each tree had to leave behind.
+      </p>
+    </div>
+  </div>
+
+  <div class="split wide-left">
+    <!-- LEFT: the camera -->
+    <div class="panel">
+      <div class="panel-title">G with your clustering · the camera</div>
+      <canvas class="scene grab" id="cv-main" style="--ch:470px"></canvas>
+      <div class="slider-row">
+        <label for="sl-main">camera · zoom out</label>
+        <input type="range" id="sl-main" min="0" max="100" value="0">
+        <span class="slider-val" id="sv-main">0%</span>
+      </div>
+      <div class="ctrls">
+        <button class="btn prime" id="btn-contract">contract ▶</button>
+        <button class="btn" id="btn-expand">◀ expand</button>
+        <span style="width:8px"></span>
+        <span class="ctrl-lab">presets</span>
+        <span id="presets-main" style="display:contents"></span>
+      </div>
+      <p class="hint">
+        <b style="color:var(--ink-2)">Drag</b> a vertex onto another vertex or onto a blob to merge them ·
+        <b style="color:var(--ink-2)">Draw a lasso</b> on empty space to group everything inside ·
+        <b style="color:var(--ink-2)">Double-click</b> a vertex to set it free ·
+        vertices stay where you drop them, so you can physically pile them up.
+      </p>
+      <div class="legend" id="lg-main"></div>
+      <div class="partlist" id="pl-main"></div>
+    </div>
+
+    <!-- RIGHT: quotient + ledger -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">the quotient multigraph <span class="tex-i" data-tex="G/P"></span> · redrawn live</div>
+        <canvas class="scene" id="cv-quot" style="--ch:290px"></canvas>
+        <div class="ctrls">
+          <span class="ctrl-lab">isolate</span>
+          <button class="btn on" data-qf="-1">all</button>
+          <button class="btn" data-qf="0">T₁</button>
+          <button class="btn" data-qf="1">T₂</button>
+          <button class="btn" data-qf="2">T₃</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">the ledger — each colour pays r−1</div>
+        <div class="statrow" id="stats-main"></div>
+        <div style="overflow-x:auto"><table class="ledger" id="ledger-main"></table></div>
+        <div id="total-main"></div>
+        <div class="hint" id="loops-main"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col-note">
+    <div class="callout">
+      <span class="ct">what contraction does, precisely</span>
+      Write <span class="tex-i" data-tex="G/P"></span> for the multigraph on <span class="tex-i" data-tex="r"></span> supernodes
+      <span class="tex-i" data-tex="V_1,\dots,V_r"></span>. An edge with both ends in one part becomes a <strong>loop and is deleted</strong>
+      — it can never be a cross edge, at this resolution or any coarser one. Every other edge survives as one edge of
+      <span class="tex-i" data-tex="G/P"></span>, <strong>counted separately even when it is parallel to another</strong>.
+      So <span class="tex-i" data-tex="|E(G/P)| = e_G(P)"></span>, exactly the quantity the theorem bounds.
+    </div>
+    <div class="callout good">
+      <span class="ct">the two endpoints of the slider r</span>
+      At <span class="tex-i" data-tex="r=1"></span> the toll is <span class="tex-i" data-tex="k\cdot 0=0"></span> — vacuous.
+      At <span class="tex-i" data-tex="r=n"></span> every vertex is its own part, no edge is a loop, and the condition reads
+      <span class="tex-i" data-tex="m\ge k(n-1)"></span>: the raw headcount. K₆ meets it with zero slack
+      (15 = 3·5), which is why its three trees use up literally every edge.
+    </div>
+  </div>
+</div></section>
+
+<!-- ═══════════════════════ 3 ═══════════════════════ -->
+<section class="beat reveal" id="s3"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">3</div>
+    <div>
+      <h2 class="beat-title">Why r−1 is forced: watch one tree weld the blobs</h2>
+      <p class="beat-thesis">
+        Take a single colour and feed its surviving edges into the quotient one at a time.
+        Some edges <strong>weld two separate pieces into one</strong>; the rest land inside a piece that is already joined
+        and change nothing. Starting from <strong>r</strong> loose pieces and finishing at <strong>1</strong> takes exactly
+        <strong>r−1</strong> welds — so the tree cannot possibly have kept fewer than r−1 edges.
+        <strong>It may well have kept more</strong>, and those extra edges are the visible reason a tree's image need not be a tree.
+      </p>
+    </div>
+  </div>
+
+  <div class="split wide-right">
+    <div>
+      <div class="panel">
+        <div class="panel-title">the argument</div>
+        <div class="texblock" data-tex-d="\begin{aligned}
+          &amp;T_i \text{ is connected and spans } V \\[2pt]
+          &amp;\Rightarrow\ \text{its image } T_i/P \text{ is connected and spans the } r \text{ supernodes} \\[2pt]
+          &amp;\Rightarrow\ |T_i\cap E(P)|\ \ge\ r-1
+        \end{aligned}"></div>
+        <p class="body" style="font-size:14.5px">
+          The first arrow is the only thing to check, and it is immediate: any two supernodes
+          <span class="tex-i" data-tex="V_a,V_b"></span> contain vertices <span class="tex-i" data-tex="u,v"></span>,
+          and the <span class="tex-i" data-tex="u\!-\!v"></span> path inside <span class="tex-i" data-tex="T_i"></span> maps to
+          a walk from <span class="tex-i" data-tex="V_a"></span> to <span class="tex-i" data-tex="V_b"></span> in the image.
+          Contraction never disconnects anything. The second arrow is the fact that a connected graph on
+          <span class="tex-i" data-tex="r"></span> vertices has at least <span class="tex-i" data-tex="r-1"></span> edges.
+        </p>
+        <div class="texblock" data-tex-d="e_G(P)\;=\;|E(P)|\;\ge\;\sum_{i=1}^{k}\bigl|T_i\cap E(P)\bigr|\;\ge\;\sum_{i=1}^{k}(r-1)\;=\;k\,(r-1)"></div>
+        <p class="body" style="font-size:14.5px;margin-top:2px">
+          The first <span class="tex-i" data-tex="\ge"></span> is where <strong>edge-disjointness</strong> is spent, and it is
+          the whole use of it: the sets <span class="tex-i" data-tex="T_i\cap E(P)"></span> are pairwise disjoint subsets of
+          <span class="tex-i" data-tex="E(P)"></span>, so their sizes add up to at most <span class="tex-i" data-tex="e_G(P)"></span>.
+          Any edge belonging to no tree only widens the gap. <b style="color:var(--ink)">∎</b>
+        </p>
+      </div>
+      <div class="callout warn" id="cycle-note">
+        <span class="ct">the caveat you must not skip</span>
+        <span id="cycle-note-body"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">weld playback · your clustering from section 2</div>
+      <canvas class="scene" id="cv-weld" style="--ch:330px"></canvas>
+      <div class="ctrls">
+        <span class="ctrl-lab">colour</span>
+        <span id="weld-colors" style="display:contents"></span>
+      </div>
+      <div class="slider-row">
+        <label for="sl-weld">edges fed in</label>
+        <input type="range" id="sl-weld" min="0" max="1" value="0">
+        <span class="slider-val" id="sv-weld">0</span>
+      </div>
+      <div class="ctrls">
+        <button class="btn prime" id="btn-weld">play weld ▶</button>
+        <button class="btn" id="btn-weld-reset">reset</button>
+      </div>
+      <div class="log" id="log-weld" style="margin-top:13px"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═══════════════════════ 4 ═══════════════════════ -->
+<section class="beat reveal" id="s4"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">4</div>
+    <div>
+      <h2 class="beat-title">A part that falls apart is a wasted part</h2>
+      <p class="beat-thesis">
+        Build a blob whose vertices are <strong>not joined to each other inside G</strong> — the octahedron below has three such
+        antipodal pairs. Nothing about the cross count changes when you split that blob into its components:
+        there were no edges inside it to lose. But <strong>r goes up</strong>, so the toll <strong>k(r−1) goes up</strong>.
+        The refined partition is a <em>strictly harder</em> test at no cost. That is why it is enough to check
+        partitions whose parts induce connected subgraphs.
+      </p>
+    </div>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">the octahedron K<sub>2,2,2</sub> · 12 edges · pre-packed with k = 2 trees, 2 edges spare</div>
+      <canvas class="scene grab" id="cv-oct" style="--ch:400px"></canvas>
+      <div class="slider-row">
+        <label for="sl-oct">camera · zoom out</label>
+        <input type="range" id="sl-oct" min="0" max="100" value="0">
+        <span class="slider-val" id="sv-oct">0%</span>
+      </div>
+      <div class="ctrls">
+        <button class="btn prime" id="btn-contract-oct">contract ▶</button>
+        <button class="btn" id="btn-expand-oct">◀ expand</button>
+        <span style="width:8px"></span>
+        <span class="ctrl-lab">presets</span>
+        <span id="presets-oct" style="display:contents"></span>
+      </div>
+      <div class="ctrls">
+        <span class="ctrl-lab">toll for k =</span>
+        <button class="btn" data-ok="1">1</button>
+        <button class="btn on" data-ok="2">2</button>
+        <button class="btn" data-ok="3">3</button>
+        <span class="hint" style="margin:0 0 0 6px" id="k-note"></span>
+      </div>
+      <div class="partlist" id="pl-oct"></div>
+    </div>
+
+    <div>
+      <div class="panel" id="refine-panel">
+        <div class="panel-title">connectivity of each part · checked live</div>
+        <div class="log" id="log-oct"></div>
+        <div class="ctrls">
+          <button class="btn prime" id="btn-refine" disabled>refine: split every disconnected part ▶</button>
+          <button class="btn" id="btn-unrefine" disabled>undo refine</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">the ledger</div>
+        <div class="statrow" id="stats-oct"></div>
+        <div style="overflow-x:auto"><table class="ledger" id="ledger-oct"></table></div>
+        <div id="total-oct"></div>
+        <div class="hint" id="loops-oct"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split" style="margin-top:18px">
+    <div class="callout">
+      <span class="ct">the reduction, in symbols</span>
+      <div class="texblock" data-tex-d="\begin{aligned}
+        &amp;A\in P \text{ induces components } A_1,\dots,A_j\ (j\ge 2)\\[2pt]
+        &amp;P' := (P\setminus\{A\})\cup\{A_1,\dots,A_j\}\\[2pt]
+        &amp;e_G(P')=e_G(P),\qquad r'=r+j-1\\[2pt]
+        &amp;\Rightarrow\ k(r'-1)\ >\ k(r-1)
+      \end{aligned}"></div>
+      No edge of G joins two different components of <span class="tex-i" data-tex="G[A]"></span> — that is what "component" means —
+      so splitting A creates no new cross edges and destroys none. Same numerator, bigger requirement.
+    </div>
+    <div class="callout good">
+      <span class="ct">why you are allowed to forget the rest</span>
+      Every partition with a disconnected part is <strong>dominated</strong> by its refinement: if the refinement passes, the
+      original passes automatically, since <span class="tex-i" data-tex="e_G(P)=e_G(P')\ge k(r'-1)\ge k(r-1)"></span>.
+      So the partition condition holds for <em>all</em> partitions as soon as it holds for those with connected parts.
+      Set the toll above to <b style="color:var(--ink)">k = 3</b> on the three-antipodal-pairs preset and refine:
+      a partition that comfortably passed becomes a certificate that <strong>no three edge-disjoint spanning trees exist</strong>
+      in the octahedron.
+    </div>
+  </div>
+</div></section>
+
+<!-- ═══════════════════════ 5 ═══════════════════════ -->
+<section class="beat reveal" id="s5"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">5</div>
+    <div>
+      <h2 class="beat-title">Reading the receipt backwards</h2>
+      <p class="beat-thesis">
+        Necessity is only half a theorem, but it is the useful half for saying <em>no</em>.
+        Three copies of K₅ joined in a triangle by <strong>one bridge each</strong>: 15 vertices, 33 edges, densely connected
+        inside. Contract each island. Three supernodes, three surviving edges — but two edge-disjoint spanning trees
+        would owe <strong>2·(3−1) = 4</strong>. There is no packing to load here, and the ledger tells you why.
+      </p>
+    </div>
+  </div>
+
+  <div class="split wide-left">
+    <div class="panel">
+      <div class="panel-title">3 × K₅ + 3 bridges · n = 15, m = 33 · no k = 2 packing exists</div>
+      <canvas class="scene grab" id="cv-isl" style="--ch:490px"></canvas>
+      <div class="slider-row">
+        <label for="sl-isl">camera · zoom out</label>
+        <input type="range" id="sl-isl" min="0" max="100" value="0">
+        <span class="slider-val" id="sv-isl">0%</span>
+      </div>
+      <div class="ctrls">
+        <button class="btn prime" id="btn-contract-isl">contract ▶</button>
+        <button class="btn" id="btn-expand-isl">◀ expand</button>
+        <span style="width:8px"></span>
+        <span class="ctrl-lab">presets</span>
+        <span id="presets-isl" style="display:contents"></span>
+      </div>
+      <div class="hint">Edges are drawn uncoloured: <strong>there are no k = 2 trees to colour</strong>. Claiming otherwise would be a lie, and the ledger below is the proof.</div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">the ledger, run in reverse</div>
+        <div class="statrow" id="stats-isl"></div>
+        <div id="total-isl"></div>
+        <div class="hint" id="loops-isl"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">the contrapositive</div>
+        <div class="texblock" data-tex-d="\begin{aligned}
+          &amp;\text{Suppose } T_1,T_2 \text{ were edge-disjoint spanning trees.}\\[3pt]
+          &amp;\text{By section 3, } |T_1\cap E(P)|\ge 2 \ \text{ and } \ |T_2\cap E(P)|\ge 2.\\[3pt]
+          &amp;\text{Disjointness } \Rightarrow\ e_G(P)\ \ge\ 4.\\[3pt]
+          &amp;\text{But } e_G(P)=3. \qquad \Rightarrow\!\Leftarrow
+        \end{aligned}"></div>
+        <p class="body" style="font-size:14.5px;margin-top:2px">
+          Note what does <em>not</em> save this graph: it has 33 edges, comfortably more than
+          <span class="tex-i" data-tex="k(n-1)=28"></span>, and it is 2-edge-connected so no single cut betrays it.
+          The obstruction lives at one specific resolution, <span class="tex-i" data-tex="r=3"></span>, which is exactly why the
+          theorem quantifies over <em>every</em> partition and not over cuts.
+        </p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═══════════════════════ 6 ═══════════════════════ -->
+<section class="beat reveal" id="s6"><div class="wrap">
+  <div class="beat-head">
+    <div class="beat-num">6</div>
+    <div>
+      <h2 class="beat-title">What this page proved, and what it did not</h2>
+      <p class="beat-thesis">Honest accounting of the accounting.</p>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="panel">
+      <div class="panel-title">proved here, in full</div>
+      <div class="texblock" data-tex-d="k \text{ edge-disjoint spanning trees exist}\ \Longrightarrow\ e_G(P)\ge k(r-1)\ \ \forall P"></div>
+      <p class="body" style="font-size:15px">
+        Contract, observe that each tree's image is a connected spanning submultigraph of
+        <span class="tex-i" data-tex="G/P"></span>, count <span class="tex-i" data-tex="r-1"></span>, sum over the
+        <span class="tex-i" data-tex="k"></span> disjoint trees. Every number you saw was computed from the graph:
+        the tree check is union–find, the quotient is rebuilt from the vertex→part map on every drag, the per-colour
+        survivor counts come from replaying those edges through a second union–find on the <span class="tex-i" data-tex="r"></span> supernodes.
+      </p>
+    </div>
+    <div class="panel">
+      <div class="panel-title">NOT proved here</div>
+      <div class="texblock" data-tex-d="e_G(P)\ge k(r-1)\ \ \forall P\ \Longrightarrow\ k \text{ edge-disjoint spanning trees exist}"></div>
+      <p class="body" style="font-size:15px">
+        This is the hard half — Nash-Williams' and Tutte's actual contribution, and the miracle of the theorem:
+        <strong>the obvious price is the only price</strong>. The standard proofs go by matroid union (the union of
+        <span class="tex-i" data-tex="k"></span> copies of the graphic matroid has rank
+        <span class="tex-i" data-tex="k(n-1)"></span> exactly when the condition holds) or by an augmenting-path
+        exchange argument. Nothing on this page establishes it, and no amount of dragging will.
+      </p>
+    </div>
+  </div>
+
+  <h3 class="sub">Three things it is easy to get wrong</h3>
+  <ul class="body">
+    <li><strong>A tree's image need not be a tree.</strong> <span class="tex-i" data-tex="T_i/P"></span> is connected and spanning
+      on <span class="tex-i" data-tex="r"></span> supernodes, nothing more. It can carry cycles, and it can carry parallel edges.
+      That is precisely why the bound reads <span class="tex-i" data-tex="\ge r-1"></span> and not
+      <span class="tex-i" data-tex="=r-1"></span>. Section 3 shows a colour paying 5 where 2 was owed.</li>
+    <li><strong>Parallel edges are counted, never merged.</strong> G may be simple; <span class="tex-i" data-tex="G/P"></span>
+      almost never is. Two distinct edges joining the same two parts contribute 2 to
+      <span class="tex-i" data-tex="e_G(P)"></span>. Merging them would understate the cross count and break the theorem —
+      which is also why the statement is about multigraphs.</li>
+    <li><strong>Loops are deleted, not counted.</strong> An edge inside one part contributes nothing at this resolution.
+      This is not a convention chosen for convenience: a loop can never join two parts, so it can never help any tree
+      pay its <span class="tex-i" data-tex="r-1"></span>.</li>
+  </ul>
+
+  <div class="callout">
+    <span class="ct">the one sentence to keep</span>
+    The partition condition is not an inequality someone invented to characterise packability — it is the
+    <strong>shadow k disjoint spanning trees cast when you defocus the graph</strong>. Necessity says the shadow
+    is always there. The theorem says the shadow is the whole story.
+  </div>
+</div></section>
+
+<div class="wrap"><footer>
+  Built offline: Paper.js (scene, blobs, morph), GSAP (camera + weld timelines), KaTeX (notation).
+  Every count on this page is recomputed from the graph in the browser — nothing is hard-coded output.
+</footer></div>
+
+<script src="lib/paper-core.min.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   0 · palette, constants
+   ══════════════════════════════════════════════════════════════════ */
+var TREE_COL   = ['#3987e5', '#d95926', '#199e70'];   // validated categorical slots 1-3 (dark)
+var TREE_NAME  = ['T\u2081', 'T\u2082', 'T\u2083'];
+var TREE_GLYPH = ['\u25cf', '\u25b2', '\u25a0'];       // secondary encoding: never colour alone
+var TREE_DASH  = [[], [12, 7], [2.6, 6.5]];            // secondary encoding in the scene
+var SPARE_COL  = '#8b93a3';
+var INK        = '#f2f4f7', INK2 = '#a8adb8', MUTED = '#7b818e';
+var LINE_DIM   = '#39404e';
+var HULL_FILL  = 'rgba(120,140,175,0.11)';
+var HULL_EDGE  = 'rgba(150,170,205,0.42)';
+var SUPER_FILL = '#232a36', SUPER_EDGE = '#7f8ca3';
+var GOOD = '#0ca30c', WARN = '#fab219', CRIT = '#d03b3b';
+var PART_LETTER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+var NODE_R  = 17;
+var HULL_PAD = 40;
+var FAN     = 17;
+
+/* ══════════════════════════════════════════════════════════════════
+   1 · maths core — union-find, packing verification, quotient
+   ══════════════════════════════════════════════════════════════════ */
+function DSU(n){
+  var p = new Int32Array(n), i;
+  for(i=0;i<n;i++) p[i]=i;
+  this.find = function(x){ while(p[x]!==x){ p[x]=p[p[x]]; x=p[x]; } return x; };
+  this.union = function(a,b){ a=this.find(a); b=this.find(b); if(a===b) return false; p[a]=b; return true; };
+  this.roots = function(){ var s={}, c=0, v; for(v=0;v<n;v++){ var r=this.find(v); if(!s[r]){s[r]=1;c++;} } return c; };
+}
+
+/* Is each colour class a spanning tree?  Are the classes edge-disjoint? */
+function verifyPacking(g){
+  var out = [], c, i;
+  for(c=0;c<g.k;c++){
+    var es = [];
+    for(i=0;i<g.edges.length;i++) if(g.color[i]===c) es.push(i);
+    var d = new DSU(g.n), cyc = false;
+    for(i=0;i<es.length;i++){
+      var e = g.edges[es[i]];
+      if(!d.union(e[0], e[1])) cyc = true;
+    }
+    var comps = d.roots();
+    out.push({
+      c:c, edges:es, m:es.length, need:g.n-1,
+      acyclic:!cyc, comps:comps, spanning:comps===1,
+      ok: es.length === g.n-1 && !cyc && comps === 1
+    });
+  }
+  // edge-disjointness is structural (one colour slot per edge) but we assert it anyway
+  var multi = false, seen = {};
+  for(i=0;i<g.edges.length;i++){
+    if(g.color[i] >= 0){ if(seen[i]) multi = true; seen[i] = 1; }
+  }
+  return { perColor: out, ok: out.every(function(x){return x.ok;}) && !multi, disjoint: !multi };
+}
+
+/* Full live analysis of (graph, vertex->part map, k). Nothing cached, nothing faked. */
+function analyze(g, raw, k){
+  var n = g.n, i, v;
+
+  // how many trees are ACTUALLY painted on this graph (independent of the toll parameter k)
+  if(g.ktrees === undefined){
+    var cs = {};
+    for(i=0;i<g.color.length;i++) if(g.color[i] >= 0) cs[g.color[i]] = 1;
+    g.ktrees = Object.keys(cs).length;
+  }
+
+  // canonical part indices 0..r-1 in order of first appearance
+  var seen = {}, q = new Int32Array(n), rawOf = [], r = 0;
+  for(v=0; v<n; v++){
+    var key = raw[v];
+    if(!(key in seen)){ seen[key] = r; rawOf.push(key); r++; }
+    q[v] = seen[key];
+  }
+  var members = []; for(i=0;i<r;i++) members.push([]);
+  for(v=0;v<n;v++) members[q[v]].push(v);
+
+  // cross vs loop
+  var cross = [], loops = [];
+  for(i=0;i<g.edges.length;i++){
+    var e = g.edges[i];
+    if(q[e[0]] === q[e[1]]) loops.push(i); else cross.push(i);
+  }
+
+  // fan index: multiplicity of parallel quotient edges
+  var bucket = {}, fanIdx = {}, fanCnt = {};
+  for(i=0;i<cross.length;i++){
+    var ei = cross[i], ee = g.edges[ei];
+    var a = Math.min(q[ee[0]], q[ee[1]]), b = Math.max(q[ee[0]], q[ee[1]]);
+    var kk = a + ':' + b;
+    if(!(kk in bucket)) bucket[kk] = 0;
+    fanIdx[ei] = bucket[kk]++;
+  }
+  for(i=0;i<cross.length;i++){
+    var ei2 = cross[i], e2 = g.edges[ei2];
+    var a2 = Math.min(q[e2[0]], q[e2[1]]), b2 = Math.max(q[e2[0]], q[e2[1]]);
+    fanCnt[ei2] = bucket[a2 + ':' + b2];
+  }
+
+  // per colour: which survivors weld, which are surplus, is the image connected.
+  // NOTE: this iterates over the trees ACTUALLY loaded on g, never over the toll parameter k —
+  // raising k must not conjure a tree that does not exist.
+  var perColor = [], c;
+  for(c=0;c<g.ktrees;c++){
+    var es = [], useful = [], surplus = [];
+    for(i=0;i<cross.length;i++) if(g.color[cross[i]] === c) es.push(cross[i]);
+    var d = new DSU(r);
+    for(i=0;i<es.length;i++){
+      var ec = g.edges[es[i]];
+      if(d.union(q[ec[0]], q[ec[1]])) useful.push(es[i]); else surplus.push(es[i]);
+    }
+    perColor.push({
+      c:c, es:es, surv:es.length, useful:useful, surplus:surplus,
+      comps: d.roots(), connected: d.roots() === 1,
+      toll: r-1, pays: es.length >= r-1
+    });
+  }
+
+  var spare = [];
+  for(i=0;i<cross.length;i++) if(g.color[cross[i]] < 0) spare.push(cross[i]);
+
+  // does each part induce a connected subgraph?
+  var partComps = members.map(function(vs){
+    var idx = {}, j;
+    for(j=0;j<vs.length;j++) idx[vs[j]] = j;
+    var dd = new DSU(vs.length);
+    for(j=0;j<g.edges.length;j++){
+      var eg = g.edges[j];
+      if((eg[0] in idx) && (eg[1] in idx)) dd.union(idx[eg[0]], idx[eg[1]]);
+    }
+    var grp = {};
+    for(j=0;j<vs.length;j++){
+      var rt = dd.find(j);
+      if(!grp[rt]) grp[rt] = [];
+      grp[rt].push(vs[j]);
+    }
+    return Object.keys(grp).map(function(t){ return grp[t]; });
+  });
+
+  return {
+    q:q, r:r, members:members, rawOf:rawOf,
+    cross:cross, loops:loops, fanIdx:fanIdx, fanCnt:fanCnt,
+    perColor:perColor, spare:spare, partComps:partComps,
+    totalCross: cross.length, toll: k*(r-1), k:k, ktrees: g.ktrees,
+    pass: cross.length >= k*(r-1),
+    hasDisconnected: partComps.some(function(x){ return x.length > 1; })
+  };
+}
+
+/* refine: split every disconnected part into its components */
+function refinePartition(g, raw, A, nextIdFn){
+  var out = new Int32Array(raw.length), v;
+  for(v=0;v<raw.length;v++) out[v] = raw[v];
+  for(var p=0;p<A.partComps.length;p++){
+    var comps = A.partComps[p];
+    if(comps.length < 2) continue;
+    for(var j=1;j<comps.length;j++){
+      var id = nextIdFn();
+      for(var t=0;t<comps[j].length;t++) out[comps[j][t]] = id;
+    }
+  }
+  return out;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   2 · geometry — convex hull, organic blob outline
+   ══════════════════════════════════════════════════════════════════ */
+function hullOf(pts){
+  var p = pts.slice().sort(function(a,b){ return a.x - b.x || a.y - b.y; });
+  if(p.length < 3) return p;
+  function cr(o,a,b){ return (a.x-o.x)*(b.y-o.y) - (a.y-o.y)*(b.x-o.x); }
+  var lo = [], up = [], i;
+  for(i=0;i<p.length;i++){
+    while(lo.length>=2 && cr(lo[lo.length-2], lo[lo.length-1], p[i]) <= 0) lo.pop();
+    lo.push(p[i]);
+  }
+  for(i=p.length-1;i>=0;i--){
+    while(up.length>=2 && cr(up[up.length-2], up[up.length-1], p[i]) <= 0) up.pop();
+    up.push(p[i]);
+  }
+  lo.pop(); up.pop();
+  var h = lo.concat(up);
+  return h.length ? h : p;
+}
+function circlePts(c, rad, m){
+  var o = [], i;
+  for(i=0;i<m;i++){ var th = 2*Math.PI*i/m; o.push({x:c.x+rad*Math.cos(th), y:c.y+rad*Math.sin(th)}); }
+  return o;
+}
+function stadiumPts(a, b, pad){
+  var dx = b.x-a.x, dy = b.y-a.y, L = Math.hypot(dx,dy);
+  if(L < 1e-6) return circlePts(a, pad, 26);
+  var base = Math.atan2(dy, dx), o = [], i, M = 12, th;
+  for(i=0;i<=M;i++){ th = base - Math.PI/2 + Math.PI*i/M; o.push({x:b.x+pad*Math.cos(th), y:b.y+pad*Math.sin(th)}); }
+  for(i=0;i<=M;i++){ th = base + Math.PI/2 + Math.PI*i/M; o.push({x:a.x+pad*Math.cos(th), y:a.y+pad*Math.sin(th)}); }
+  return o;
+}
+/* round-join outward offset of the convex hull — a real offset, not a scaled copy */
+function blobPts(pts, pad){
+  if(!pts.length) return [];
+  if(pts.length === 1) return circlePts(pts[0], pad, 26);
+  var h = hullOf(pts);
+  if(h.length < 3) return stadiumPts(h[0], h[h.length-1], pad);
+  var area = 0, i;
+  for(i=0;i<h.length;i++){ var a=h[i], b=h[(i+1)%h.length]; area += a.x*b.y - b.x*a.y; }
+  var H = area < 0 ? h.slice().reverse() : h;
+  var N = H.length, out = [], norms = [];
+  for(i=0;i<N;i++){
+    var p0 = H[i], p1 = H[(i+1)%N];
+    var dx = p1.x-p0.x, dy = p1.y-p0.y, L = Math.hypot(dx,dy) || 1;
+    norms.push({x: dy/L, y: -dx/L});
+  }
+  for(i=0;i<N;i++){
+    var A0 = H[i], B0 = H[(i+1)%N], nn = norms[i];
+    out.push({x:A0.x + nn.x*pad, y:A0.y + nn.y*pad});
+    out.push({x:B0.x + nn.x*pad, y:B0.y + nn.y*pad});
+    // round join at B0 between norms[i] and norms[i+1]
+    var n2 = norms[(i+1)%N];
+    var a1 = Math.atan2(nn.y, nn.x), a2 = Math.atan2(n2.y, n2.x);
+    var dth = a2 - a1;
+    while(dth >  Math.PI) dth -= 2*Math.PI;
+    while(dth < -Math.PI) dth += 2*Math.PI;
+    var steps = Math.max(1, Math.round(Math.abs(dth) / 0.45));
+    for(var s=1;s<steps;s++){
+      var th = a1 + dth*s/steps;
+      out.push({x:B0.x + pad*Math.cos(th), y:B0.y + pad*Math.sin(th)});
+    }
+  }
+  return out;
+}
+function lerp(a,b,t){ return a + (b-a)*t; }
+function smoothstep(a,b,x){ var t = Math.max(0, Math.min(1, (x-a)/(b-a||1e-9))); return t*t*(3-2*t); }
+
+/* ══════════════════════════════════════════════════════════════════
+   3 · graph builders — positions computed, not eyeballed
+   ══════════════════════════════════════════════════════════════════ */
+function ellipsePos(cx, cy, rx, ry, m, phaseDeg){
+  var o = [], i;
+  for(i=0;i<m;i++){
+    var th = (phaseDeg + 360*i/m) * Math.PI/180;
+    o.push([cx + rx*Math.cos(th), cy + ry*Math.sin(th)]);
+  }
+  return o;
+}
+function polyPos(cx, cy, R, m, phaseDeg){
+  var o = [], i;
+  for(i=0;i<m;i++){
+    var th = (phaseDeg + 360*i/m) * Math.PI/180;
+    o.push([cx + R*Math.cos(th), cy + R*Math.sin(th)]);
+  }
+  return o;
+}
+function edgeIndexMap(edges){
+  var m = {}, i;
+  for(i=0;i<edges.length;i++) m[edges[i][0] + '-' + edges[i][1]] = i;
+  return m;
+}
+function paintTrees(edges, treeSpecs){
+  var idx = edgeIndexMap(edges), col = new Int32Array(edges.length).fill(-1), c, j;
+  for(c=0;c<treeSpecs.length;c++){
+    for(j=0;j<treeSpecs[c].length;j++){
+      var pr = treeSpecs[c][j], key = Math.min(pr[0],pr[1]) + '-' + Math.max(pr[0],pr[1]);
+      col[idx[key]] = c;
+    }
+  }
+  return col;
+}
+function completeEdges(ids){
+  var e = [], i, j;
+  for(i=0;i<ids.length;i++) for(j=i+1;j<ids.length;j++) e.push([ids[i], ids[j]]);
+  return e;
+}
+
+function G_K4(){
+  var edges = completeEdges([0,1,2,3]);
+  return {
+    id:'k4', n:4, world:[620,420],
+    labels:['1','2','3','4'],
+    pos:[[150,110],[470,110],[470,310],[150,310]],
+    edges: edges,
+    color: paintTrees(edges, [ [[0,1],[1,2],[2,3]], [[0,2],[0,3],[1,3]] ]),
+    k:2, presets:[]
+  };
+}
+function G_K6(){
+  var edges = completeEdges([0,1,2,3,4,5]);
+  return {
+    id:'k6', n:6, world:[1000,700],
+    labels:['1','2','3','4','5','6'],
+    pos: ellipsePos(500, 350, 295, 218, 6, -90),
+    edges: edges,
+    color: paintTrees(edges, [
+      [[0,1],[1,2],[2,3],[3,4],[4,5]],          // T1  Hamiltonian path
+      [[1,3],[3,5],[0,5],[0,2],[2,4]],          // T2  Hamiltonian path
+      [[0,3],[0,4],[1,4],[1,5],[2,5]]           // T3  Hamiltonian path
+    ]),
+    k:3,
+    presets:[
+      {name:'all alone (r = 6)', part:[0,1,2,3,4,5]},
+      {name:'three pairs (r = 3)', part:[0,0,1,1,2,2]},
+      {name:'two triples (r = 2)', part:[0,0,0,1,1,1]},
+      {name:'one blob (r = 1)', part:[0,0,0,0,0,0]}
+    ]
+  };
+}
+function G_OCTA(){
+  // K(2,2,2): three antipodal (non-adjacent) pairs, drawn as three columns
+  var nonEdge = {'0-1':1, '2-3':1, '4-5':1};
+  var edges = completeEdges([0,1,2,3,4,5]).filter(function(e){ return !nonEdge[e[0]+'-'+e[1]]; });
+  return {
+    id:'octa', n:6, world:[1000,700],
+    labels:['a','a\u2032','b','b\u2032','c','c\u2032'],
+    pos:[[185,190],[185,530],[500,118],[500,432],[815,190],[815,530]],
+    edges: edges,
+    color: paintTrees(edges, [
+      [[0,4],[0,2],[1,2],[1,3],[3,5]],
+      [[3,4],[0,3],[0,5],[1,5],[2,5]]
+    ]),
+    k:2,
+    presets:[
+      {name:'three antipodal pairs (r = 3)', part:[0,0,1,1,2,2]},
+      {name:'all alone (r = 6)', part:[0,1,2,3,4,5]},
+      {name:'two columns vs one (r = 2)', part:[0,0,0,0,1,1]}
+    ]
+  };
+}
+function G_ISLANDS(){
+  var cent = [[248,212],[752,212],[500,552]];
+  var pos = [], i, j;
+  for(i=0;i<3;i++){
+    var p = polyPos(cent[i][0], cent[i][1], 108, 5, -90 + i*24);
+    for(j=0;j<5;j++) pos.push(p[j]);
+  }
+  var edges = [];
+  for(i=0;i<3;i++) edges = edges.concat(completeEdges([0,1,2,3,4].map(function(x){ return 5*i + x; })));
+  // bridge endpoints CHOSEN BY GEOMETRY: in each island, the vertex nearest the other island's centre
+  function nearest(island, target){
+    var best = -1, bd = Infinity;
+    for(var v=5*island; v<5*island+5; v++){
+      var d = Math.hypot(pos[v][0]-cent[target][0], pos[v][1]-cent[target][1]);
+      if(d < bd){ bd = d; best = v; }
+    }
+    return best;
+  }
+  var bridges = [[0,1],[1,2],[0,2]].map(function(pr){
+    return [nearest(pr[0], pr[1]), nearest(pr[1], pr[0])].sort(function(a,b){return a-b;});
+  });
+  edges = edges.concat(bridges);
+  var part3 = []; for(i=0;i<15;i++) part3.push(Math.floor(i/5));
+  var all = []; for(i=0;i<15;i++) all.push(i);
+  return {
+    id:'isl', n:15, world:[1000,700],
+    labels: (function(){ var L=[]; for(i=0;i<15;i++) L.push(String(i+1)); return L; })(),
+    pos: pos, edges: edges,
+    color: new Int32Array(edges.length).fill(-1),
+    k:2, bridges: bridges,
+    presets:[
+      {name:'three islands (r = 3)', part:part3},
+      {name:'all alone (r = 15)', part:all},
+      {name:'one blob (r = 1)', part:all.map(function(){return 0;})}
+    ]
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   4 · Paper.js scene helpers
+   ══════════════════════════════════════════════════════════════════ */
+function mkScope(canvas){
+  var S = new paper.PaperScope();
+  S.setup(canvas);
+  return S;
+}
+function fitScope(S, canvas, W, H){
+  fitBox(S, canvas, {x:0, y:0, w:W, h:H});
+}
+function fitBox(S, canvas, B){
+  var rect = canvas.getBoundingClientRect();
+  if(rect.width < 2) return;
+  S.activate();
+  S.view.viewSize = new S.Size(rect.width, rect.height);
+  S.view.zoom = Math.min(rect.width / B.w, rect.height / B.h);
+  S.view.center = new S.Point(B.x + B.w/2, B.y + B.h/2);
+}
+/* the drawable region: the graph's own extent plus room to drag into */
+function viewBoxOf(g, pad){
+  var x0=1e9, y0=1e9, x1=-1e9, y1=-1e9;
+  g.pos.forEach(function(p){
+    x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]);
+    x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]);
+  });
+  return {x:x0-pad, y:y0-pad, w:(x1-x0)+2*pad, h:(y1-y0)+2*pad};
+}
+function pathFrom(S, pts, closed){
+  var p = new S.Path({ closed: !!closed });
+  for(var i=0;i<pts.length;i++) p.add(new S.Point(pts[i].x, pts[i].y));
+  return p;
+}
+function edgeCurve(S, p1, p2, off){
+  if(Math.abs(off) < 0.5){
+    return new S.Path.Line(new S.Point(p1.x,p1.y), new S.Point(p2.x,p2.y));
+  }
+  var dx = p2.x-p1.x, dy = p2.y-p1.y, L = Math.hypot(dx,dy) || 1;
+  var nx = -dy/L, ny = dx/L;
+  var mx = (p1.x+p2.x)/2 + nx*off*2, my = (p1.y+p2.y)/2 + ny*off*2;
+  var p = new S.Path();
+  p.moveTo(new S.Point(p1.x,p1.y));
+  p.quadraticCurveTo(new S.Point(mx,my), new S.Point(p2.x,p2.y));
+  return p;
+}
+function selfLoop(S, c, rad, ang){
+  // a loop drawn as a small circle tangent to the supernode — only used to show what gets deleted
+  var cx = c.x + Math.cos(ang)*rad*1.25, cy = c.y + Math.sin(ang)*rad*1.25;
+  return new S.Path.Circle(new S.Point(cx,cy), rad*0.7);
+}
+function textAt(S, str, x, y, size, col, weight){
+  var t = new S.PointText(new S.Point(x, y));
+  t.content = str;
+  t.fillColor = col;
+  t.fontFamily = 'system-ui, -apple-system, Segoe UI, sans-serif';
+  t.fontSize = size;
+  t.fontWeight = weight || 'normal';
+  t.justification = 'center';
+  return t;
+}
+function colOf(g, ei){ var c = g.color[ei]; return c >= 0 ? TREE_COL[c] : SPARE_COL; }
+function dashOf(g, ei){ var c = g.color[ei]; return c >= 0 ? TREE_DASH[c] : (g.ktrees ? [4,5] : []); }
+
+/* ══════════════════════════════════════════════════════════════════
+   5 · ContractionScene — the camera
+   ══════════════════════════════════════════════════════════════════ */
+function ContractionScene(canvas, g, opts){
+  opts = opts || {};
+  var S = mkScope(canvas);
+  var VB = viewBoxOf(g, opts.pad === undefined ? 82 : opts.pad);
+  var st = {
+    part: new Int32Array(g.n),
+    pos: g.pos.map(function(p){ return [p[0], p[1]]; }),
+    t: 0, k: g.k, focus: -1,
+    drag: null, lasso: null, hoverTarget: null, nextId: g.n
+  };
+  var i;
+  for(i=0;i<g.n;i++) st.part[i] = i;              // start: every vertex alone
+  var A = analyze(g, st.part, st.k);
+  var api = {};
+
+  /* ---- drawing ---- */
+  function centroids(){
+    return A.members.map(function(vs){
+      var sx=0, sy=0;
+      for(var j=0;j<vs.length;j++){ sx += st.pos[vs[j]][0]; sy += st.pos[vs[j]][1]; }
+      return {x: sx/vs.length, y: sy/vs.length};
+    });
+  }
+  function disp(cent, v){
+    var c = cent[A.q[v]], e = smoothstep(0,1,st.t);
+    return { x: lerp(st.pos[v][0], c.x, e), y: lerp(st.pos[v][1], c.y, e) };
+  }
+  function superR(size){ return NODE_R + Math.min(16, 5*Math.sqrt(Math.max(0,size-1))); }
+
+  function draw(){
+    S.activate();
+    S.project.clear();
+    var cent = centroids();
+    var t = st.t;
+    var hullA  = 1 - smoothstep(0.28, 0.82, t);
+    var superA = smoothstep(0.30, 0.86, t);
+    var nodeA  = 1 - smoothstep(0.52, 0.94, t);
+    var loopA  = Math.max(0, 1 - t/0.55);
+    var j, ei, e, pu, pv;
+
+    /* blobs — a part of size 1 IS its vertex, so it gets a letter but no box */
+    if(hullA > 0.01){
+      for(j=0;j<A.r;j++){
+        var vs = A.members[j];
+        if(vs.length < 2){
+          if(opts.static) continue;
+          var dv = disp(cent, vs[0]);
+          var sl = textAt(S, PART_LETTER[j % 26], dv.x, dv.y - NODE_R - 9, 14, HULL_EDGE, 'bold');
+          sl.opacity = hullA * 0.85;
+          continue;
+        }
+        var pts = vs.map(function(v){ var d = disp(cent, v); return {x:d.x, y:d.y}; });
+        var pad = HULL_PAD * (1 - 0.55*smoothstep(0,1,t));
+        var bp = blobPts(pts, pad);
+        var pth = pathFrom(S, bp, true);
+        pth.smooth({ type:'continuous' });
+        pth.fillColor = HULL_FILL;
+        pth.strokeColor = HULL_EDGE;
+        pth.strokeWidth = 1.6;
+        pth.dashArray = [7,6];
+        pth.opacity = hullA * (st.hoverTarget === A.rawOf[j] ? 1 : 0.85);
+        if(st.hoverTarget === A.rawOf[j]){ pth.strokeColor = TREE_COL[0]; pth.strokeWidth = 2.6; }
+        var bnd = pth.bounds;
+        var lab = textAt(S, PART_LETTER[j % 26], bnd.x + bnd.width/2, bnd.y - 8, 17, HULL_EDGE, 'bold');
+        lab.opacity = hullA;
+      }
+    }
+
+    /* interior edges (loops-to-be): dissolve */
+    if(loopA > 0.01){
+      for(j=0;j<A.loops.length;j++){
+        ei = A.loops[j]; e = g.edges[ei];
+        pu = disp(cent, e[0]); pv = disp(cent, e[1]);
+        var lp = new S.Path.Line(new S.Point(pu.x,pu.y), new S.Point(pv.x,pv.y));
+        lp.strokeColor = colOf(g, ei);
+        lp.strokeWidth = 2;
+        lp.dashArray = [3,6];
+        lp.opacity = loopA * 0.42 * (st.focus < 0 || g.color[ei] === st.focus ? 1 : 0.22);
+      }
+    }
+
+    /* cross edges: survive, fan out into parallel quotient edges */
+    for(j=0;j<A.cross.length;j++){
+      ei = A.cross[j]; e = g.edges[ei];
+      pu = disp(cent, e[0]); pv = disp(cent, e[1]);
+      var m = A.fanCnt[ei], idx = A.fanIdx[ei];
+      var off = (idx - (m-1)/2) * FAN * smoothstep(0,1,t) * (m > 1 ? 1 : 0);
+      var cp = edgeCurve(S, pu, pv, off);
+      cp.strokeColor = colOf(g, ei);
+      cp.strokeWidth = 3.2;
+      cp.strokeCap = 'round';
+      var da = dashOf(g, ei);
+      if(da.length) cp.dashArray = da;
+      cp.opacity = (st.focus < 0 || g.color[ei] === st.focus) ? 1 : 0.13;
+    }
+
+    /* supernodes */
+    if(superA > 0.01){
+      for(j=0;j<A.r;j++){
+        var c = cent[j], rr = superR(A.members[j].length);
+        var circ = new S.Path.Circle(new S.Point(c.x,c.y), rr);
+        circ.fillColor = SUPER_FILL;
+        circ.strokeColor = SUPER_EDGE;
+        circ.strokeWidth = 2.4;
+        circ.opacity = superA;
+        var tl = textAt(S, PART_LETTER[j % 26], c.x, c.y + 6.5, 18, INK, 'bold');
+        tl.opacity = superA;
+        if(A.members[j].length > 1){
+          var sz = textAt(S, '|' + A.members[j].length + '|', c.x, c.y + rr + 17, 12, MUTED, 'bold');
+          sz.opacity = superA;
+        }
+      }
+    }
+
+    /* vertices */
+    if(nodeA > 0.01){
+      for(var v=0; v<g.n; v++){
+        var d = disp(cent, v);
+        var nc = new S.Path.Circle(new S.Point(d.x,d.y), NODE_R);
+        nc.fillColor = '#171b23';
+        nc.strokeColor = (st.drag && st.drag.v === v) ? TREE_COL[0] : '#8d97a8';
+        nc.strokeWidth = (st.drag && st.drag.v === v) ? 3 : 2;
+        nc.opacity = nodeA;
+        var tx = textAt(S, g.labels[v], d.x, d.y + 5, 13.5, INK, '600');
+        tx.opacity = nodeA;
+      }
+    }
+
+    /* lasso */
+    if(st.lasso && st.lasso.length > 1){
+      var lz = pathFrom(S, st.lasso, false);
+      lz.strokeColor = TREE_COL[0];
+      lz.strokeWidth = 2;
+      lz.dashArray = [6,5];
+      var lz2 = pathFrom(S, st.lasso, true);
+      lz2.fillColor = 'rgba(57,135,229,0.10)';
+      lz2.strokeWidth = 0;
+      lz2.sendToBack();
+    }
+    S.view.update();
+  }
+
+  /* ---- state ---- */
+  function recompute(){
+    A = analyze(g, st.part, st.k);
+    if(opts.onChange) opts.onChange(api, A);
+  }
+  function setPart(arr, silent){
+    for(var v=0; v<g.n; v++) st.part[v] = arr[v];
+    var mx = 0;
+    for(v=0; v<g.n; v++) mx = Math.max(mx, st.part[v]);
+    st.nextId = Math.max(st.nextId, mx + 1);
+    recompute();
+    if(!silent) draw();
+  }
+
+  /* ---- interaction ---- */
+  function toProject(ev){
+    var rect = canvas.getBoundingClientRect();
+    S.activate();
+    return S.view.viewToProject(new S.Point(ev.clientX - rect.left, ev.clientY - rect.top));
+  }
+  function vertexAt(p){
+    var best = -1, bd = NODE_R + 9;
+    var cent = centroids();
+    for(var v=0; v<g.n; v++){
+      var d = disp(cent, v);
+      var dist = Math.hypot(d.x - p.x, d.y - p.y);
+      if(dist < bd){ bd = dist; best = v; }
+    }
+    return best;
+  }
+  function partAt(p, skipV){
+    // which existing blob does this point land inside? (blob = padded hull of its members)
+    var cent = centroids();
+    for(var j=0;j<A.r;j++){
+      var vs = A.members[j].filter(function(v){ return v !== skipV; });
+      if(vs.length < 2) continue;   // singletons are captured by vertexAt, not by a blob
+      var pts = vs.map(function(v){ var d = disp(cent, v); return {x:d.x, y:d.y}; });
+      // point-in-blob via distance to hull offset: cheap + robust
+      var bp = blobPts(pts, HULL_PAD * 0.92);
+      if(pointInPoly(p, bp)) return A.rawOf[j];
+    }
+    return null;
+  }
+  function pointInPoly(p, poly){
+    var inside = false, n = poly.length;
+    for(var i=0, j=n-1; i<n; j=i++){
+      var xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+      if(((yi > p.y) !== (yj > p.y)) && (p.x < (xj-xi)*(p.y-yi)/((yj-yi)||1e-9) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+
+  if(!opts.static){
+    canvas.addEventListener('pointerdown', function(ev){
+      if(st.t > 0.02){ api.setT(0, true); return; }
+      var p = toProject(ev);
+      var v = vertexAt(p);
+      if(v >= 0){
+        st.drag = { v:v, dx: p.x - st.pos[v][0], dy: p.y - st.pos[v][1], moved:false };
+      } else {
+        st.lasso = [{x:p.x, y:p.y}];
+      }
+      // capture is a nicety, not a precondition — never let it abort the gesture
+      try { canvas.setPointerCapture(ev.pointerId); } catch(err) {}
+      draw();
+    });
+    canvas.addEventListener('pointermove', function(ev){
+      if(st.drag){
+        var p = toProject(ev);
+        st.pos[st.drag.v][0] = p.x - st.drag.dx;
+        st.pos[st.drag.v][1] = p.y - st.drag.dy;
+        st.drag.moved = true;
+        var over = vertexAt({x:p.x, y:p.y});
+        if(over >= 0 && over !== st.drag.v) st.hoverTarget = st.part[over];
+        else st.hoverTarget = partAt(p, st.drag.v);
+        canvas.style.cursor = 'grabbing';
+        draw();
+      } else if(st.lasso){
+        var q = toProject(ev);
+        var last = st.lasso[st.lasso.length-1];
+        if(Math.hypot(q.x-last.x, q.y-last.y) > 6) st.lasso.push({x:q.x, y:q.y});
+        draw();
+      } else {
+        var pp = toProject(ev);
+        canvas.style.cursor = vertexAt(pp) >= 0 ? 'grab' : 'crosshair';
+      }
+    });
+    canvas.addEventListener('pointerup', function(ev){
+      canvas.style.cursor = 'grab';
+      if(st.drag){
+        var v = st.drag.v;
+        if(st.hoverTarget !== null && st.hoverTarget !== undefined){
+          st.part[v] = st.hoverTarget;
+        } else if(st.drag.moved){
+          st.part[v] = st.nextId++;               // dropped into empty space => set free
+        }
+        st.drag = null; st.hoverTarget = null;
+        recompute(); draw();
+      } else if(st.lasso){
+        var poly = st.lasso;
+        if(poly.length > 4){
+          var cent = centroids(), grabbed = [];
+          for(var v2=0; v2<g.n; v2++){
+            var d = disp(cent, v2);
+            if(pointInPoly({x:d.x, y:d.y}, poly)) grabbed.push(v2);
+          }
+          if(grabbed.length > 0){
+            var id = st.nextId++;
+            for(var t2=0;t2<grabbed.length;t2++) st.part[grabbed[t2]] = id;
+          }
+        }
+        st.lasso = null;
+        recompute(); draw();
+      }
+    });
+    canvas.addEventListener('pointercancel', function(){ st.drag = null; st.lasso = null; st.hoverTarget = null; draw(); });
+    canvas.addEventListener('dblclick', function(ev){
+      if(st.t > 0.02) return;
+      var p = toProject(ev);
+      var v = vertexAt(p);
+      if(v >= 0){ st.part[v] = st.nextId++; recompute(); draw(); }
+    });
+  }
+
+  /* ---- public API ---- */
+  api.g = g;
+  api.state = st;
+  api.analysis = function(){ return A; };
+  api.draw = draw;
+  api.setPart = setPart;
+  api.newId = function(){ return st.nextId++; };
+  api.setK = function(k){ st.k = k; recompute(); draw(); };
+  api.setFocus = function(c){ st.focus = c; draw(); };
+  api.setT = function(v, animate){
+    if(animate){
+      gsap.to(st, { t: v, duration: 0.95, ease: 'power2.inOut',
+        onUpdate: function(){ draw(); if(opts.onT) opts.onT(st.t); },
+        onComplete: function(){ if(opts.onT) opts.onT(st.t); } });
+    } else {
+      st.t = v; draw(); if(opts.onT) opts.onT(st.t);
+    }
+  };
+  api.resetPositions = function(){
+    st.pos = g.pos.map(function(p){ return [p[0], p[1]]; });
+    draw();
+  };
+  api.fit = function(){ fitBox(S, canvas, VB); draw(); };
+  api.fit();
+  recompute();
+  draw();
+  return api;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   6 · QuotientView — the canonical G/P, plus weld playback
+   ══════════════════════════════════════════════════════════════════ */
+function QuotientView(canvas){
+  var S = mkScope(canvas);
+  var W = 860, H = 430;
+  var cur = null;
+  function nodePos(r){
+    if(r === 1) return [{x:W/2, y:H/2}];
+    if(r === 2) return [{x:W/2 - 210, y:H/2}, {x:W/2 + 210, y:H/2}];
+    // an ellipse, not a circle: the hosting canvases are wide and short
+    var rx = Math.min(230, 84 + 22*r), ry = Math.max(96, rx*0.62), o = [], i;
+    for(i=0;i<r;i++){
+      var th = (-90 + 360*i/r) * Math.PI/180;
+      o.push({x: W/2 + rx*Math.cos(th), y: H/2 + ry*Math.sin(th)});
+    }
+    return o;
+  }
+  /* fit the view to the ring we are about to draw, so no canvas is mostly empty */
+  function fitToRing(P, rr){
+    var pad = rr + 40;
+    if(P.length === 1){ fitBox(S, canvas, {x:W/2-290, y:H/2-104, w:580, h:250}); return; }
+    var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    P.forEach(function(p){ x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); });
+    var B = {x:x0-pad, y:y0-pad-16, w:(x1-x0)+2*pad, h:(y1-y0)+2*pad+16};
+    fitBox(S, canvas, B);
+    if(S.view.zoom > 1.45){ S.view.zoom = 1.45; }
+  }
+  function render(g, A, view){
+    view = view || {};
+    cur = {g:g, A:A, view:view};
+    S.activate();
+    S.project.clear();
+    var P = nodePos(A.r), rr = A.r > 8 ? 22 : 30, i, j;
+    fitToRing(P, rr);
+
+    if(A.r === 1){
+      var c1 = new S.Path.Circle(new S.Point(W/2, H/2 - 14), 42);
+      c1.fillColor = SUPER_FILL; c1.strokeColor = SUPER_EDGE; c1.strokeWidth = 2.4;
+      textAt(S, 'A', W/2, H/2 - 6, 22, INK, 'bold');
+      textAt(S, 'r = 1 \u00b7 every edge became a loop \u00b7 toll k(r\u22121) = 0', W/2, H/2 + 76, 20, MUTED, '600');
+      S.view.update(); return;
+    }
+
+    var focus = (view.focus === undefined) ? -1 : view.focus;
+    var reveal = view.reveal;      // when set: only the first `reveal` edges of the focused colour
+    var shown = A.cross;
+    if(reveal !== undefined && reveal !== null && focus >= 0){
+      shown = A.perColor[focus].es.slice(0, reveal);
+    }
+
+    /* component blobs during weld playback */
+    if(view.welds && focus >= 0){
+      var d = new DSU(A.r), grp = {}, kk;
+      for(i=0;i<shown.length;i++){
+        var es = g.edges[shown[i]];
+        d.union(A.q[es[0]], A.q[es[1]]);
+      }
+      for(i=0;i<A.r;i++){
+        kk = d.find(i);
+        if(!grp[kk]) grp[kk] = [];
+        grp[kk].push(i);
+      }
+      Object.keys(grp).forEach(function(key){
+        var pts = grp[key].map(function(pi){ return P[pi]; });
+        var bp = blobPts(pts, rr + 22);
+        var pth = pathFrom(S, bp, true);
+        pth.smooth({type:'continuous'});
+        pth.fillColor = grp[key].length > 1 ? 'rgba(57,135,229,0.13)' : 'rgba(139,147,163,0.07)';
+        pth.strokeColor = grp[key].length > 1 ? TREE_COL[focus] : 'rgba(139,147,163,0.30)';
+        pth.strokeWidth = grp[key].length > 1 ? 2.2 : 1.3;
+        pth.dashArray = [6,5];
+      });
+    }
+
+    /* deleted loops, shown as a faint ghost ring so "deleted" is visible, not silent */
+    if(view.showLoops !== false){
+      var loopBy = {};
+      for(i=0;i<A.loops.length;i++){
+        var pi = A.q[g.edges[A.loops[i]][0]];
+        loopBy[pi] = (loopBy[pi] || 0) + 1;
+      }
+      Object.keys(loopBy).forEach(function(pi){
+        var c = P[+pi];
+        var gl = new S.Path.Circle(new S.Point(c.x, c.y - rr - 15), 12);
+        gl.strokeColor = 'rgba(139,147,163,0.35)';
+        gl.strokeWidth = 1.4;
+        gl.dashArray = [2,4];
+        var lt = textAt(S, '\u2013' + loopBy[pi], c.x, c.y - rr - 10, 11, MUTED, 'bold');
+        lt.opacity = 0.9;
+      });
+    }
+
+    /* quotient edges, fanned */
+    var usefulSet = {};
+    if(view.welds && focus >= 0){
+      var dd = new DSU(A.r);
+      for(i=0;i<shown.length;i++){
+        var e2 = g.edges[shown[i]];
+        if(dd.union(A.q[e2[0]], A.q[e2[1]])) usefulSet[shown[i]] = 1;
+      }
+    }
+    for(i=0;i<shown.length;i++){
+      var ei = shown[i], e = g.edges[ei];
+      var a = P[A.q[e[0]]], b = P[A.q[e[1]]];
+      var m = A.fanCnt[ei], idx = A.fanIdx[ei];
+      var off = (idx - (m-1)/2) * 21;
+      var cp = edgeCurve(S, a, b, off);
+      cp.strokeColor = colOf(g, ei);
+      cp.strokeWidth = 3.4;
+      cp.strokeCap = 'round';
+      var da = dashOf(g, ei);
+      if(da.length) cp.dashArray = da;
+      var dim = (focus >= 0 && g.color[ei] !== focus);
+      cp.opacity = dim ? 0.10 : 1;
+      if(view.welds && focus >= 0 && !usefulSet[ei]){
+        cp.opacity = 0.34;          // surplus edge: kept, but it welds nothing
+        cp.dashArray = [3,7];
+      }
+    }
+
+    /* supernodes */
+    for(i=0;i<A.r;i++){
+      var c = P[i];
+      var circ = new S.Path.Circle(new S.Point(c.x, c.y), rr);
+      circ.fillColor = SUPER_FILL; circ.strokeColor = SUPER_EDGE; circ.strokeWidth = 2.4;
+      textAt(S, PART_LETTER[i % 26], c.x, c.y + (A.r > 8 ? 6 : 8), A.r > 8 ? 15 : 20, INK, 'bold');
+    }
+    S.view.update();
+  }
+  return {
+    render: render,
+    fit: function(){ if(cur) render(cur.g, cur.A, cur.view); else fitScope(S, canvas, W, H); }
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   7 · ledger rendering (DOM)
+   ══════════════════════════════════════════════════════════════════ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function statCard(k, v, tone){
+  return '<div class="stat"><span class="k">' + k + '</span><span class="v"' +
+         (tone ? ' style="color:' + tone + '"' : '') + '>' + v + '</span></div>';
+}
+function verdictHTML(ok, exact, textOK, textNO){
+  if(ok) return '<span class="verdict ' + (exact ? 'v-warn' : 'v-good') + '"><span class="dot"></span>' +
+                (exact ? '= ' : '\u2713 ') + esc(textOK) + '</span>';
+  return '<span class="verdict v-crit"><span class="dot"></span>\u2717 ' + esc(textNO) + '</span>';
+}
+/* one bar per tree: the r-1 it is FORCED to leave behind (solid) + whatever surplus it also
+   left behind (washed out), with a tick at the obligation line. */
+function spendBar(surv, need, scaleMax){
+  var unit = 100 / Math.max(1, scaleMax);
+  var reqW = Math.min(surv, need) * unit;
+  var surW = Math.max(0, surv - need) * unit;
+  var h = '<div class="bar">';
+  if(reqW > 0) h += '<div class="seg" style="left:0;width:' + reqW + '%;background:currentColor"></div>';
+  if(surW > 0) h += '<div class="seg dimseg" style="left:calc(' + reqW + '% + 2px);width:calc(' + surW + '% - 2px);background:currentColor"></div>';
+  h += '<div class="floor" style="left:' + Math.min(100, need*unit) + '%"></div></div>';
+  return h;
+}
+
+function renderLedger(g, A, els){
+  var i, k = A.k, r = A.r, need = Math.max(0, r-1);
+  var scaleMax = Math.max(need, 1);
+  for(i=0;i<A.perColor.length;i++) scaleMax = Math.max(scaleMax, A.perColor[i].surv);
+
+  if(els.stats){
+    els.stats.innerHTML =
+      statCard('parts &nbsp;r', r) +
+      statCard('toll / tree &nbsp;r\u22121', need) +
+      statCard(A.k === A.ktrees ? 'trees &nbsp;k' : 'toll for &nbsp;k', k, A.k === A.ktrees ? null : WARN) +
+      statCard('total toll &nbsp;k(r\u22121)', A.toll,
+               A.totalCross >= A.toll ? null : CRIT);
+  }
+
+  if(els.table){
+    var rows = '<tr><th>tree</th><th style="width:34%">what it left behind</th><th class="num">kept</th>' +
+               '<th class="num">owes</th><th>pays?</th><th>T/P&nbsp;connected?</th></tr>';
+    if(!A.perColor.length){
+      rows += '<tr><td colspan="6" style="color:var(--muted)">no packing is loaded on this graph &mdash; ' +
+              'there is nothing to tally, which is exactly the point below</td></tr>';
+    }
+    for(i=0;i<A.perColor.length;i++){
+      var pc = A.perColor[i];
+      rows += '<tr>' +
+        '<td><span class="tname"><span class="swatch" style="background:' + TREE_COL[i] + '"></span>' +
+            TREE_NAME[i] + ' <span class="glyph">' + TREE_GLYPH[i] + '</span></span></td>' +
+        '<td style="color:' + TREE_COL[i] + '">' + spendBar(pc.surv, need, scaleMax) + '</td>' +
+        '<td class="num"><b>' + pc.surv + '</b></td>' +
+        '<td class="num" style="color:var(--ink-2)">' + need + '</td>' +
+        '<td>' + verdictHTML(pc.pays, pc.surv === need && need > 0, pc.surv === need ? 'exactly' : 'over by ' + (pc.surv-need), 'short') + '</td>' +
+        '<td>' + (r === 1
+            ? '<span style="color:var(--muted)">trivial</span>'
+            : verdictHTML(pc.connected, false, 'yes, 1 piece', pc.comps + ' pieces')) + '</td>' +
+      '</tr>';
+    }
+    els.table.innerHTML = rows;
+  }
+
+  if(els.total){
+    var pass = A.totalCross >= A.toll;
+    var hasTrees = A.perColor.length > 0;
+    var spareTxt = (hasTrees && A.spare.length)
+      ? ' &nbsp;<span style="color:var(--muted)">(incl. ' + A.spare.length + ' owned by no tree)</span>' : '';
+    var sum = A.perColor.reduce(function(s,p){ return s + p.surv; }, 0);
+    var note = '';
+    if(hasTrees){
+      note = '<div class="hint">the ' + A.ktrees + ' loaded tree' + (A.ktrees === 1 ? '' : 's') +
+             ' left <b style="color:var(--ink-2)">' + sum + '</b> edge' + (sum === 1 ? '' : 's') +
+             ' crossing between them; the other <b style="color:var(--ink-2)">' + A.spare.length +
+             '</b> cross edge' + (A.spare.length === 1 ? '' : 's') + ' belong to no tree and only widen the gap.' +
+             (A.k !== A.ktrees
+               ? (pass
+                   ? ' <b style="color:' + WARN + '">The toll shown is for a hypothetical k = ' + A.k + '; only ' + A.ktrees +
+                     ' tree' + (A.ktrees === 1 ? ' is' : 's are') + ' actually loaded. Clearing it proves nothing &mdash; necessity only ever says no.</b>'
+                   : ' <b style="color:' + WARN + '">The toll shown is for a hypothetical k = ' + A.k + '; only ' + A.ktrees +
+                     ' tree' + (A.ktrees === 1 ? ' is' : 's are') + ' actually loaded. This shortfall is a <b>certificate that no k = ' +
+                     A.k + ' packing can exist</b> in this graph.</b>')
+               : '') +
+             '</div>';
+    } else {
+      note = '<div class="hint">No tree owns any of these edges &mdash; no k = ' + A.k + ' packing is loaded here. ' +
+             (pass
+               ? 'This resolution clears the toll, which settles <b style="color:var(--ink-2)">nothing</b>: necessity can only ever rule a packing out, never in. Try a coarser clustering.'
+               : 'The shortfall is therefore not an audit but a <b style="color:var(--ink-2)">proof that no such packing exists</b>.') +
+             '</div>';
+    }
+    els.total.innerHTML =
+      '<div class="totalline ' + (pass ? 'pass' : 'fail') + '">' +
+        '<span class="expr">cross edges <b>' + A.totalCross + '</b>' + spareTxt +
+          ' &nbsp;' + (pass ? (A.totalCross === A.toll ? '=' : '\u2265') : '<b style="color:#f0706f">&lt;</b>') +
+          '&nbsp; k(r\u22121) = ' + A.k + '\u00b7' + Math.max(0,r-1) + ' = <b>' + A.toll + '</b></span>' +
+        verdictHTML(pass, pass && A.totalCross === A.toll,
+                    A.totalCross === A.toll ? 'exactly on the toll' : 'slack +' + (A.totalCross - A.toll),
+                    'short by ' + (A.toll - A.totalCross)) +
+      '</div>' + note;
+  }
+
+  if(els.loops){
+    var loopBy = {}, j;
+    for(j=0;j<A.loops.length;j++){
+      var pi = A.q[g.edges[A.loops[j]][0]];
+      loopBy[pi] = (loopBy[pi] || 0) + 1;
+    }
+    var parts = Object.keys(loopBy).map(function(p){ return PART_LETTER[+p % 26] + ': ' + loopBy[p]; });
+    els.loops.innerHTML = '<b style="color:var(--ink-2)">' + A.loops.length + '</b> ' +
+      (A.loops.length === 1 ? 'edge became a loop and was deleted' : 'edges became loops and were deleted') +
+      (parts.length ? ' &nbsp;(' + parts.join(' \u00b7 ') + ')' : '') +
+      '. &nbsp;|E(G/P)| = ' + A.totalCross + ' = e<sub>G</sub>(P).';
+  }
+}
+
+function renderPartList(g, A, el){
+  var h = '', j;
+  for(j=0;j<A.r;j++){
+    var vs = A.members[j].map(function(v){ return g.labels[v]; }).join(',');
+    var bad = A.partComps[j].length > 1;
+    h += '<span class="pchip' + (bad ? ' bad' : '') + '"><b>' + PART_LETTER[j % 26] + '</b> = {' + vs + '}' +
+         (bad ? ' \u26a0 ' + A.partComps[j].length + ' pieces' : '') + '</span>';
+  }
+  el.innerHTML = h;
+}
+
+function legendHTML(g, k, extra){
+  var h = '', i;
+  for(i=0;i<k;i++){
+    var d = TREE_DASH[i].length ? 'dashed' : 'solid';
+    h += '<span class="li"><span class="line-s" style="border-top-color:' + TREE_COL[i] + ';border-top-style:' +
+         (i === 0 ? 'solid' : (i === 1 ? 'dashed' : 'dotted')) + '"></span>' + TREE_NAME[i] +
+         ' <span class="glyph">' + TREE_GLYPH[i] + '</span></span>';
+  }
+  if(extra) h += extra;
+  return h;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   8 · KaTeX
+   ══════════════════════════════════════════════════════════════════ */
+function renderMath(root){
+  var nodes = (root || document).querySelectorAll('[data-tex],[data-tex-d]');
+  Array.prototype.forEach.call(nodes, function(el){
+    if(el.dataset.texDone) return;
+    var d = el.hasAttribute('data-tex-d');
+    var src = d ? el.getAttribute('data-tex-d') : el.getAttribute('data-tex');
+    try {
+      katex.render(src, el, { throwOnError:false, displayMode:d, output:'html' });
+      el.dataset.texDone = '1';
+    } catch(err){ el.textContent = src; }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   9 · wire up the page
+   ══════════════════════════════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function on(el, ev, fn){ if(el) el.addEventListener(ev, fn); }
+function groupButtons(container, attr, fn){
+  var bs = container.querySelectorAll('[' + attr + ']');
+  Array.prototype.forEach.call(bs, function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(bs, function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      fn(parseInt(b.getAttribute(attr), 10), b);
+    });
+  });
+}
+
+var scenes = [];
+
+document.addEventListener('DOMContentLoaded', function(){
+  renderMath(document);
+
+  /* ---------- section 1 : K4 ---------- */
+  var k4 = G_K4();
+  var s1 = ContractionScene($('cv-k4'), k4, { static:true });
+  scenes.push(s1);
+  $('lg-k4').innerHTML = legendHTML(k4, 2, '');
+
+  (function(){
+    var V = verifyPacking(k4);
+    var L = ['<b>graph</b>  n = ' + k4.n + '   m = ' + k4.edges.length + '   k = ' + k4.k];
+    L.push('<span class="dim">k(n\u22121) = ' + (k4.k*(k4.n-1)) + '  \u2014  every edge is spoken for</span>');
+    L.push('');
+    V.perColor.forEach(function(pc){
+      var names = pc.edges.map(function(ei){
+        return k4.labels[k4.edges[ei][0]] + k4.labels[k4.edges[ei][1]];
+      }).join(' ');
+      L.push('<b>' + TREE_NAME[pc.c] + '</b> = {' + names + '}');
+      L.push('   edges ' + pc.m + ' = n\u22121 ' + (pc.m === k4.n-1 ? '<span class="ok">\u2713</span>' : '<span class="no">\u2717</span>'));
+      L.push('   union-find: no cycle ' + (pc.acyclic ? '<span class="ok">\u2713</span>' : '<span class="no">\u2717</span>') +
+             '   components ' + pc.comps + ' ' + (pc.spanning ? '<span class="ok">\u2713 spans V</span>' : '<span class="no">\u2717</span>'));
+      L.push('   <b>' + (pc.ok ? '<span class="ok">spanning tree</span>' : '<span class="no">NOT a spanning tree</span>') + '</b>');
+      L.push('');
+    });
+    L.push('every edge carries at most one colour ' + (V.disjoint ? '<span class="ok">\u2713 edge-disjoint</span>' : '<span class="no">\u2717</span>'));
+    L.push('<b>' + (V.ok ? '<span class="ok">\u2713 verified: a genuine 2-packing</span>' : '<span class="no">\u2717 not a packing</span>') + '</b>');
+    $('log-k4').innerHTML = L.join('\n');
+  })();
+
+  groupButtons($('s1'), 'data-k4', function(c){ s1.setFocus(c); });
+
+  /* ---------- section 2 : the camera on K6, feeding section 3 ---------- */
+  var k6 = G_K6();
+  var quot = QuotientView($('cv-quot'));
+  var weld = QuotientView($('cv-weld'));
+  var weldState = { focus:0, reveal:null, tween:null };
+
+  var main = ContractionScene($('cv-main'), k6, {
+    onChange: function(api, A){
+      renderLedger(k6, A, { stats:$('stats-main'), table:$('ledger-main'), total:$('total-main'), loops:$('loops-main') });
+      renderPartList(k6, A, $('pl-main'));
+      quot.render(k6, A, { focus: quotFocus });
+      if(weldState.tween){ weldState.tween.kill(); weldState.tween = null; }
+      refreshWeld(A, true);
+    },
+    onT: function(t){
+      $('sl-main').value = Math.round(t*100);
+      $('sv-main').textContent = Math.round(t*100) + '%';
+    }
+  });
+  scenes.push(main, { fit: quot.fit }, { fit: weld.fit });
+  $('lg-main').innerHTML = legendHTML(k6, 3,
+    '<span class="li"><span class="line-s" style="border-top-color:' + LINE_DIM + ';border-top-style:dotted"></span>inside a blob \u2192 becomes a loop, deleted</span>');
+
+  var quotFocus = -1;
+  groupButtons($('s2'), 'data-qf', function(c){
+    quotFocus = c;
+    main.setFocus(c);
+    quot.render(k6, main.analysis(), { focus:c });
+  });
+
+  (function(){
+    var host = $('presets-main');
+    k6.presets.forEach(function(p){
+      var b = document.createElement('button');
+      b.className = 'btn'; b.textContent = p.name;
+      b.onclick = function(){ main.setT(0); main.resetPositions(); main.setPart(p.part); };
+      host.appendChild(b);
+    });
+    var rb = document.createElement('button');
+    rb.className = 'btn'; rb.textContent = 'reset layout';
+    rb.onclick = function(){ main.setT(0); main.resetPositions(); };
+    host.appendChild(rb);
+  })();
+
+  on($('sl-main'), 'input', function(){ main.setT(this.value/100); });
+  on($('btn-contract'), 'click', function(){ main.setT(1, true); });
+  on($('btn-expand'), 'click', function(){ main.setT(0, true); });
+
+  /* ---------- section 3 : weld playback, driven by section 2's clustering ---------- */
+  (function(){
+    var host = $('weld-colors');
+    for(var c=0;c<3;c++){
+      (function(cc){
+        var b = document.createElement('button');
+        b.className = 'btn' + (cc === 0 ? ' on' : '');
+        b.innerHTML = '<span style="color:' + TREE_COL[cc] + '">' + TREE_GLYPH[cc] + '</span> ' + TREE_NAME[cc];
+        b.onclick = function(){
+          Array.prototype.forEach.call(host.children, function(x){ x.classList.remove('on'); });
+          b.classList.add('on');
+          weldState.focus = cc; weldState.reveal = null;
+          refreshWeld(main.analysis());
+        };
+        host.appendChild(b);
+      })(c);
+    }
+  })();
+
+  function refreshWeld(A, resetReveal){
+    var pc = A.perColor[weldState.focus];
+    var total = pc ? pc.surv : 0;
+    if(resetReveal) weldState.reveal = null;
+    var sl = $('sl-weld');
+    sl.max = Math.max(1, total);
+    if(weldState.reveal === null || weldState.reveal > total) weldState.reveal = total;
+    sl.value = weldState.reveal;
+    $('sv-weld').textContent = weldState.reveal + ' / ' + total;
+    weld.render(k6, A, { focus: weldState.focus, reveal: weldState.reveal, welds:true, showLoops:false });
+
+    // live union-find replay report
+    var d = new DSU(A.r), merges = 0, lines = [];
+    var shown = pc ? pc.es.slice(0, weldState.reveal) : [];
+    lines.push('<b>' + TREE_NAME[weldState.focus] + '</b> on G/P   r = ' + A.r + '   owes r\u22121 = ' + Math.max(0,A.r-1));
+    lines.push('');
+    for(var i=0;i<shown.length;i++){
+      var e = k6.edges[shown[i]];
+      var a = PART_LETTER[A.q[e[0]]], b = PART_LETTER[A.q[e[1]]];
+      var ok = d.union(A.q[e[0]], A.q[e[1]]);
+      if(ok) merges++;
+      lines.push('  ' + (i+1) + '. ' + k6.labels[e[0]] + k6.labels[e[1]] + '  \u2192  ' + a + '\u2013' + b + '   ' +
+        (ok ? '<span class="ok">weld \u2713</span>' : '<span class="dim">already joined \u2014 surplus, closes a cycle in G/P</span>'));
+    }
+    if(!shown.length) lines.push('  <span class="dim">(feed edges in with the slider or press play)</span>');
+    lines.push('');
+    var comps = d.roots();
+    lines.push('  pieces remaining: <b>' + comps + '</b>' + (comps === 1 ? ' <span class="ok">\u2014 welded into one</span>' : ''));
+    lines.push('  welds used: <b>' + merges + '</b>' + (merges === Math.max(0,A.r-1) && A.r > 1 ? ' <span class="ok">= r\u22121, the forced minimum</span>' : ''));
+    if(pc && A.r > 1){
+      lines.push('  surplus over the whole colour: <b>' + (pc.surv - Math.max(0,A.r-1)) + '</b>' +
+        (pc.surv > A.r-1
+          ? ' <span class="dim">\u2014 so ' + TREE_NAME[weldState.focus] + '/P is NOT a tree</span>'
+          : ' <span class="dim">\u2014 ' + TREE_NAME[weldState.focus] + '/P really is a spanning tree of G/P</span>'));
+    }
+    $('log-weld').innerHTML = lines.join('\n');
+
+    // the caveat callout reads the live numbers
+    var over = A.perColor.filter(function(p){ return p.surv > Math.max(0,A.r-1); });
+    var body;
+    if(A.r <= 1){
+      body = 'At <b>r = 1</b> there is nothing to weld and the toll is 0. Group some vertices in section 2 to give the argument something to bite on.';
+    } else if(over.length){
+      var o = over[0];
+      body = 'Right now <b style="color:' + TREE_COL[o.c] + '">' + TREE_NAME[o.c] + '</b> keeps <b>' + o.surv +
+        '</b> cross edges but owes only <b>' + (A.r-1) + '</b>. The extra ' + (o.surv - (A.r-1)) +
+        ' close cycles in <span style="font-style:italic">G/P</span> \u2014 sometimes as <b>parallel edges</b> between the same two supernodes. ' +
+        'So <span style="font-style:italic">T</span>/P is connected and spanning but <b>not a tree</b>, and the bound is genuinely \u2265 r\u22121, never = r\u22121. ' +
+        'That surplus is pure profit for the inequality: it can only push e<sub>G</sub>(P) further above k(r\u22121).';
+    } else {
+      body = 'At this clustering every colour pays <b>exactly</b> r\u22121 = ' + (A.r-1) +
+        ' \u2014 each tree\u2019s image really is a spanning tree of G/P, and the total sits exactly on the toll k(r\u22121). ' +
+        'Regroup so that one tree crosses the same pair of blobs twice and the surplus (and a parallel edge) appears.';
+    }
+    $('cycle-note-body').innerHTML = body;
+  }
+
+  on($('sl-weld'), 'input', function(){
+    if(weldState.tween){ weldState.tween.kill(); weldState.tween = null; }
+    weldState.reveal = parseInt(this.value, 10);
+    refreshWeld(main.analysis());
+  });
+  on($('btn-weld'), 'click', function(){
+    var A = main.analysis();
+    var pc = A.perColor[weldState.focus];
+    if(!pc || !pc.surv) return;
+    if(weldState.tween) weldState.tween.kill();
+    var o = { i:0 };
+    weldState.reveal = 0; refreshWeld(A);
+    weldState.tween = gsap.to(o, {
+      i: pc.surv, duration: Math.max(1.1, pc.surv*0.62), ease:'none',
+      onUpdate: function(){
+        var v = Math.min(pc.surv, Math.ceil(o.i));
+        if(v !== weldState.reveal){ weldState.reveal = v; refreshWeld(main.analysis()); }
+      }
+    });
+  });
+  on($('btn-weld-reset'), 'click', function(){
+    if(weldState.tween){ weldState.tween.kill(); weldState.tween = null; }
+    weldState.reveal = 0; refreshWeld(main.analysis());
+  });
+
+  /* start section 2 on a partition that makes the point immediately */
+  main.setPart([0,0,1,1,2,2]);
+
+  /* ---------- section 4 : octahedron, connected-parts reduction ---------- */
+  var oct = G_OCTA();
+  var octPrev = null;
+  var octScene = ContractionScene($('cv-oct'), oct, {
+    onChange: function(api, A){
+      renderLedger(oct, A, { stats:$('stats-oct'), table:$('ledger-oct'), total:$('total-oct'), loops:$('loops-oct') });
+      renderPartList(oct, A, $('pl-oct'));
+      renderOctLog(A);
+      $('btn-refine').disabled = !A.hasDisconnected;
+      $('btn-unrefine').disabled = !octPrev;
+    },
+    onT: function(t){
+      $('sl-oct').value = Math.round(t*100);
+      $('sv-oct').textContent = Math.round(t*100) + '%';
+    }
+  });
+  scenes.push(octScene);
+
+  function renderOctLog(A){
+    var L = [], any = false, j;
+    for(j=0;j<A.r;j++){
+      var comps = A.partComps[j];
+      var vs = A.members[j].map(function(v){ return oct.labels[v]; }).join(',');
+      if(comps.length > 1){
+        any = true;
+        L.push('<b>' + PART_LETTER[j] + '</b> = {' + vs + '}  <span class="no">\u2717 induces ' + comps.length + ' components:</span> ' +
+          comps.map(function(c){ return '{' + c.map(function(v){ return oct.labels[v]; }).join(',') + '}'; }).join('  '));
+      } else {
+        L.push('<b>' + PART_LETTER[j] + '</b> = {' + vs + '}  <span class="ok">\u2713 connected</span>');
+      }
+    }
+    L.push('');
+    if(any){
+      var extraParts = A.partComps.reduce(function(s,c){ return s + c.length - 1; }, 0);
+      var r2 = A.r + extraParts;
+      L.push('<span class="dim">splitting them gives r\u2032 = ' + r2 + ' with the SAME e_G(P) = ' + A.totalCross + ',</span>');
+      L.push('<span class="dim">so the requirement rises ' + A.toll + ' \u2192 ' + (A.k*(r2-1)) + '  \u2014 a strictly harder test.</span>');
+    } else {
+      L.push('<span class="dim">every part is connected \u2014 this partition is already in the reduced family.</span>');
+    }
+    $('log-oct').innerHTML = L.join('\n');
+  }
+
+  (function(){
+    var host = $('presets-oct');
+    oct.presets.forEach(function(p){
+      var b = document.createElement('button');
+      b.className = 'btn'; b.textContent = p.name;
+      b.onclick = function(){ octPrev = null; octScene.setT(0); octScene.resetPositions(); octScene.setPart(p.part); };
+      host.appendChild(b);
+    });
+  })();
+  on($('sl-oct'), 'input', function(){ octScene.setT(this.value/100); });
+  on($('btn-contract-oct'), 'click', function(){ octScene.setT(1, true); });
+  on($('btn-expand-oct'), 'click', function(){ octScene.setT(0, true); });
+  on($('btn-refine'), 'click', function(){
+    var A = octScene.analysis();
+    octPrev = Array.prototype.slice.call(octScene.state.part);
+    var np = refinePartition(oct, octScene.state.part, A, octScene.newId);
+    octScene.setPart(np);
+  });
+  on($('btn-unrefine'), 'click', function(){
+    if(!octPrev) return;
+    octScene.setPart(octPrev);
+    octPrev = null;
+    $('btn-unrefine').disabled = true;
+  });
+  groupButtons($('s4'), 'data-ok', function(k){
+    octScene.setK(k);
+    $('k-note').innerHTML = k === 2
+      ? 'k = 2 is the packing actually loaded here.'
+      : 'only the toll changes \u2014 the graph still carries the same 2 loaded trees.';
+  });
+  $('k-note').innerHTML = 'k = 2 is the packing actually loaded here.';
+  octScene.setPart([0,0,1,1,2,2]);
+
+  /* ---------- section 5 : the certificate ---------- */
+  var isl = G_ISLANDS();
+  var islScene = ContractionScene($('cv-isl'), isl, {
+    onChange: function(api, A){
+      renderLedger(isl, A, { stats:$('stats-isl'), table:null, total:$('total-isl'), loops:$('loops-isl') });
+    },
+    onT: function(t){
+      $('sl-isl').value = Math.round(t*100);
+      $('sv-isl').textContent = Math.round(t*100) + '%';
+    }
+  });
+  scenes.push(islScene);
+  (function(){
+    var host = $('presets-isl');
+    isl.presets.forEach(function(p){
+      var b = document.createElement('button');
+      b.className = 'btn'; b.textContent = p.name;
+      b.onclick = function(){ islScene.setT(0); islScene.resetPositions(); islScene.setPart(p.part); };
+      host.appendChild(b);
+    });
+  })();
+  on($('sl-isl'), 'input', function(){ islScene.setT(this.value/100); });
+  on($('btn-contract-isl'), 'click', function(){ islScene.setT(1, true); });
+  on($('btn-expand-isl'), 'click', function(){ islScene.setT(0, true); });
+  islScene.setPart(isl.presets[0].part);
+
+  /* ---------- resize + scroll reveal ---------- */
+  var rt = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){ scenes.forEach(function(s){ if(s && s.fit) s.fit(); }); }, 120);
+  });
+  setTimeout(function(){ scenes.forEach(function(s){ if(s && s.fit) s.fit(); }); }, 60);
+
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold:0.06 });
+    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function(el){ io.observe(el); });
+  } else {
+    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function(el){ el.classList.add('in'); });
+  }
+  // failsafe: content must never stay invisible because an observer misfired
+  setTimeout(function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.reveal'), function(el){ el.classList.add('in'); });
+  }, 4000);
+});
+})();
+</script>
+</body>
+</html>

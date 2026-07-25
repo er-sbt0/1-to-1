@@ -1,0 +1,70 @@
+{
+  "concept": "01-color-the-trees",
+  "angle": "Paint each edge with one of k colors so every color class is a spanning tree; K4 with k=2 succeeds and is exactly tight (6 = 2*3) while Petersen fails, and the failure hands you a one-line partition certificate — making concrete that the ONLY obstruction to packing k spanning trees is a clustering of the vertices whose k(r-1) toll cannot be paid.",
+  "libraries": [
+    {
+      "name": "katex",
+      "version": "0.16.11",
+      "role": "renders every mathematical statement on the page: the iff-statement in the hero, the tight budget identity |E(K4)| = k(n-1), the Petersen certificate 15 < 2*(10-1), the contraction/toll implication chain, the 3xK5 intermediate-partition inequality, the boxed final theorem, and the 2k-edge-connectivity corollary",
+      "build": "umd",
+      "source": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    }
+  ],
+  "building_blocks": [
+    "makeDSU(n): path-compressed union-by-rank disjoint-set forest returning {find, union}",
+    "classStats(n, edges, idxs): per-color-class report {m, comps, redundant[], isForest, isSpanningTree} where redundant[] lists the edges that closed a cycle",
+    "componentCount(n, edges, idxs) and isConnectedSpanning(n, edges, idxs) built on DSU",
+    "forEachSubset(m, k, cb): allocation-free enumeration of all C(m,k) index subsets into a reused Int32Array",
+    "exhaustive2Packing(graph, collectLimit): enumerate every (n-1)-subset, count spanning trees, test complement connectivity, collect canonical decompositions, return elapsed ms",
+    "exhaustiveCuts(graph, k): enumerate all 2^(n-1)-1 bipartitions, return min cut and how many violate k(2-1)",
+    "crossEdges(graph, partArray) and partCount(partArray): cross-edge index list and r for an arbitrary vertex->part map",
+    "greedyPack(graph, k, tries): randomized first-fit forest-growing heuristic returning a coloring plus its score, explicitly labelled non-proof",
+    "makeBoard(host, graph, opts): SVG graph widget with layered groups (blobs / edges / cycle-marks / fat transparent hit-lines / vertices), per-edge click cycling, optional per-vertex click, readonly mode, and API {setK, cycle, clear, set, setFromTrees, setPartition, render}",
+    "graph descriptor object {id, name, n, edges:[[u,v]], pos:[[x,y]], labels, view:[minx,miny,w,h], r} with hand-authored layouts for K4 (planar triangle+center), Petersen (pentagon + pentagram + spokes via polar()), and 3xK5 (three pentagon blobs joined by nearest-vertex cross edges)",
+    "renderLedger(hostId, bannerId, graph, coloring, k): live per-color card with swatch, status chip, n-1 pip slots (filled / cycle-red), edges/components/forest stats, plus a global banner covering win, dead-on-arrival and in-progress states",
+    "updateBudget(graph, coloring, k): stacked edge-budget bar with a k(n-1) threshold marker and a slack readout",
+    "convexHull(points): Andrew monotone chain, with singleton and 2-point degeneracies rendered as dot/capsule via a fat round-joined stroke on the hull path",
+    "partColor(i): hue-ramp cluster palette",
+    "drawQuotient(graph, part, coloring, r, cross): contracted multigraph on r circle-placed nodes with parallel cross edges fanned out as quadratic arcs, each arc colored by its tree",
+    "thumbSVG(graph, trees): tiny inline-SVG preview of a decomposition, used as a clickable chip that loads the coloring onto the board",
+    "tex(nodeOrId, texString, displayMode): KaTeX render helper with throwOnError:false",
+    "fold-down page skeleton: hero + numbered .beat sections, each with .beat-head (number/title/thesis) and an optional .split left/right grid that collapses at 880px"
+  ],
+  "computations": [
+    "union-find per color class: edge count, component count, forest test, spanning-tree test, and identification of the exact edge that closed a cycle",
+    "exhaustive enumeration of all C(6,3)=20 edge-subsets of K4: finds 16 spanning trees (matching Cayley 4^2) and 6 distinct decompositions K4 = T1 + T2",
+    "exhaustive enumeration of all C(15,9)=5005 edge-subsets of the Petersen graph: 2000 spanning trees, 0 with a disjoint second spanning tree",
+    "exhaustive enumeration of all 2^(n-1)-1 bipartitions: edge-connectivity 3 for Petersen (511 cuts) and 2 for 3xK5 (16383 cuts), confirming every r=2 partition passes k(2-1)=k",
+    "partition condition e_G(P) >= k(r-1) evaluated live for any user-built clustering, with slack and verdict",
+    "per-color cross-edge counts for the loaded K4 packing, verifying each individual tree crosses any partition at least r-1 times",
+    "edge budget m vs k(n-1) with slack, recomputed on every k change and every paint",
+    "randomized greedy packing (400 / 3000 / 2000 restarts) reported as a heuristic best-effort score, never as a proof",
+    "the 3xK5 certificate: r=n gives 33 >= 28 (pass), r=2 gives min cut 2 >= 2 (pass), r=3 gives 3 < 4 (fail)"
+  ],
+  "interactions": [
+    "click any K4 edge to cycle unpainted -> color 1 -> ... -> unpainted; updates the ledger, the cycle-closing dashed markers, the win banner and the section-02 budget bar",
+    "switch k in {1,2,3} on K4; colors beyond k are dropped and the budget bar shows k=3 as dead on arrival (9 > 6)",
+    "Clear / Show a solution on the K4 board (the solution is drawn at random from the 6 exhaustively verified decompositions)",
+    "Enumerate all decompositions button: prints the search log and renders 6 clickable thumbnails, each of which loads that packing onto the K4 board and scrolls to it",
+    "click any Petersen edge to paint; Greedy attempt and Best of 3000 greedy attempts fill the board with a real heuristic result (spanning tree + 6-edge, 4-piece forest)",
+    "Run exhaustive search on Petersen: prints subsets enumerated, spanning trees found, packings found (0) and elapsed ms",
+    "partition explorer: click a VERTEX to move it to the next cluster (parts are renormalized), or use the presets every-vertex-alone / all-in-one / split-in-two; switch between K4 (carrying a verified 2-packing) and Petersen",
+    "every partition change redraws the cluster blobs, ghosts the intra-cluster edges, rebuilds the quotient multigraph, and recomputes r, e_G(P), k(r-1), slack, verdict and the per-tree crossing counts",
+    "Check every partition I can afford to check on 3xK5: runs the exhaustive r=n, r=2 and r=3 report plus a labelled greedy sanity check"
+  ],
+  "assets": [
+    "lib/katex.min.js (UMD)",
+    "lib/katex.min.css",
+    "lib/fonts/KaTeX_*.woff2 (all 20 faces: AMS, Caligraphic, Fraktur, Main, Math, SansSerif, Script, Size1-4, Typewriter)"
+  ],
+  "gotchas": [
+    "ESM-only packages fail from file:// (origin null triggers CORS); KaTeX's dist/katex.min.js is UMD so a classic <script> tag loads offline — verified by opening the page with file:// in headless Chrome",
+    "katex.min.css references fonts/KaTeX_*.woff2 by relative path; without vendoring the .woff2 files math silently falls back to a system font with wrong metrics, so all 20 faces are included",
+    "KaTeX refuses to lay out correctly in quirks mode, so the document starts with <!DOCTYPE html> and a real <head>/<body>",
+    "forEachSubset reuses one Int32Array for speed, so any subset that is retained (the 6 K4 decompositions) must be copied with Array.from before it is stored",
+    "a singleton cluster's convex hull is a single point and 'M x y' alone paints nothing even with stroke-linecap:round, so the path is emitted as 'M x y L x y' to force a dot; 2-point hulls become capsules from the same fat round stroke",
+    "SVG lines are ~6px wide and hard to hit, so every edge has a duplicate transparent stroke-width:20 'hit' line in a layer above the visible edges but below the vertices",
+    "performance.now() does not advance under headless Chrome's --virtual-time-budget, so timing readouts show 0.0 ms in a screenshot harness while being real in a normal browser",
+    "graph drawing needed no network library: the three layouts are hand-authored (K4 planar, Petersen polar pentagon+pentagram, 3xK5 pentagon blobs with nearest-vertex joins), which keeps every edge a plain SVG element that can be recolored, re-weighted and hit-tested directly"
+  ]
+}

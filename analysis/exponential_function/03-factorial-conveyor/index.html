@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Factorial Conveyor — a series built to survive differentiation</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css" />
+<style>
+:root{
+  --bg:#0b0e13; --panel:#12171f; --panel2:#171d27; --panel3:#1c232f;
+  --line:#242c39; --line2:#313b4c;
+  --ink:#e8eef7; --ink2:#a6b3c6; --ink3:#71809a;
+  --amber:#f0a03c; --teal:#3fd0c9; --green:#57d38c; --red:#ff6f6f;
+  --violet:#ab8cf7; --blue:#6ea8fe; --pink:#f77fb4; --lime:#bcd94a;
+  --font-prose:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font-ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0; background:
+    radial-gradient(1100px 620px at 12% -8%, #17202c 0%, transparent 62%),
+    radial-gradient(900px 520px at 92% 4%, #1a1622 0%, transparent 58%),
+    var(--bg);
+  color:var(--ink); font-family:var(--font-ui); line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.katex{font-size:1.02em}
+/* uppercase/small-caps UI labels must never re-case rendered mathematics */
+.katex, .katex *{text-transform:none !important; letter-spacing:normal !important}
+.nocase{text-transform:none !important}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+/* ---------- sticky law bar ---------- */
+.lawbar{
+  position:sticky; top:0; z-index:60; backdrop-filter:blur(10px);
+  background:rgba(11,14,19,.82); border-bottom:1px solid var(--line);
+}
+.lawbar .wrap{display:flex; align-items:center; gap:16px; padding:9px 22px; flex-wrap:wrap}
+.lawbar .tag{font:600 11px/1 var(--font-ui); letter-spacing:.16em; text-transform:uppercase; color:var(--ink3)}
+.lawbar .law{color:var(--teal)}
+.lawbar .prog{margin-left:auto; font:500 11.5px/1 var(--font-mono); color:var(--ink3)}
+
+/* ---------- section scaffolding ---------- */
+section{padding:74px 0 10px; border-top:1px solid transparent}
+section+section{border-top:1px solid var(--line)}
+.eyebrow{
+  font:700 11px/1 var(--font-ui); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--amber); margin-bottom:12px; display:flex; align-items:center; gap:10px;
+}
+.eyebrow .num{
+  display:inline-grid; place-items:center; width:22px; height:22px; border-radius:6px;
+  background:rgba(240,160,60,.13); border:1px solid rgba(240,160,60,.32); color:var(--amber);
+  font:700 11px/1 var(--font-mono); letter-spacing:0;
+}
+h1{font-family:var(--font-prose); font-size:clamp(34px,5.4vw,58px); line-height:1.06; margin:0 0 10px; letter-spacing:-.02em}
+h2{font-family:var(--font-prose); font-size:clamp(25px,3.3vw,35px); line-height:1.16; margin:0 0 12px; letter-spacing:-.015em}
+h3{font:600 14px/1.35 var(--font-ui); letter-spacing:.02em; margin:0 0 10px; color:var(--ink)}
+p{margin:0 0 14px; color:var(--ink2); max-width:74ch}
+p.lead{font-family:var(--font-prose); font-size:19.5px; color:var(--ink); max-width:70ch}
+strong{color:var(--ink); font-weight:600}
+em.hi{color:var(--amber); font-style:normal; font-weight:600}
+em.hi2{color:var(--teal); font-style:normal; font-weight:600}
+a{color:var(--teal)}
+
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:26px; align-items:start}
+.grid-5-7{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:28px; align-items:start}
+.grid-7-5{display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:28px; align-items:start}
+/* minmax(0,...) not 1fr: an auto min-track lets a wide table/formula stretch the page */
+@media(max-width:900px){.grid2,.grid-5-7,.grid-7-5{grid-template-columns:minmax(0,1fr)}}
+.panel,.beltcard{min-width:0}
+.ctrls>*{min-width:0}
+input[type=range]{max-width:100%}
+
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px}
+.panel.tight{padding:15px}
+.panel h3{color:var(--ink3); font:600 11px/1 var(--font-ui); letter-spacing:.16em; text-transform:uppercase; margin-bottom:14px}
+
+.note{
+  border-left:3px solid var(--line2); padding:11px 0 11px 15px; margin:16px 0;
+  color:var(--ink2); font-size:14.5px; max-width:74ch;
+}
+.note.link{border-left-color:var(--violet)}
+.note.warn{border-left-color:var(--red)}
+.note b{color:var(--ink)}
+
+details.caveat{margin:12px 0; border:1px dashed var(--line2); border-radius:10px; background:rgba(255,111,111,.045)}
+details.caveat summary{
+  cursor:pointer; padding:9px 14px; font:600 12px/1.4 var(--font-ui); color:var(--red);
+  letter-spacing:.04em; list-style:none;
+}
+details.caveat summary::-webkit-details-marker{display:none}
+details.caveat summary::before{content:"⚠ "; opacity:.85}
+details.caveat[open] summary{border-bottom:1px dashed var(--line2)}
+details.caveat .body{padding:12px 14px; font-size:14px; color:var(--ink2)}
+details.caveat .body p{font-size:14px; margin-bottom:9px}
+details.caveat .body p:last-child{margin-bottom:0}
+
+/* ---------- controls ---------- */
+.ctrls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:14px 0}
+button{
+  font:600 13px/1 var(--font-ui); color:var(--ink); background:var(--panel3);
+  border:1px solid var(--line2); border-radius:9px; padding:10px 15px; cursor:pointer;
+  transition:background .15s, border-color .15s, transform .08s;
+}
+button:hover{background:#26303f; border-color:#3f4c61}
+button:active{transform:translateY(1px)}
+button.primary{background:linear-gradient(180deg,#f0a03c,#d9862a); border-color:#f0a03c; color:#1a1206}
+button.primary:hover{background:linear-gradient(180deg,#ffb355,#e79331)}
+button.ghost{background:transparent}
+button:disabled{opacity:.38; cursor:not-allowed}
+.slider{display:flex; align-items:center; gap:11px; font:500 12.5px/1 var(--font-ui); color:var(--ink2)}
+.slider .lbl{min-width:auto; color:var(--ink3); letter-spacing:.06em; text-transform:uppercase; font-size:11px; font-weight:700}
+.slider output{font:600 13px/1 var(--font-mono); color:var(--amber); min-width:62px}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; height:4px; border-radius:2px;
+  background:linear-gradient(90deg,var(--line2),var(--line2)); outline:none; width:190px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+  background:var(--amber); border:2px solid #0b0e13; cursor:pointer; box-shadow:0 0 0 1px var(--amber);
+}
+input[type=range]::-moz-range-thumb{
+  width:14px; height:14px; border-radius:50%; background:var(--amber);
+  border:2px solid #0b0e13; cursor:pointer; box-shadow:0 0 0 1px var(--amber);
+}
+.seg{display:inline-flex; border:1px solid var(--line2); border-radius:9px; overflow:hidden}
+.seg button{border:0; border-radius:0; background:transparent; padding:9px 13px; font-size:12.5px}
+.seg button.on{background:rgba(63,208,201,.16); color:var(--teal)}
+
+/* ---------- readouts ---------- */
+.readouts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:14px}
+.ro{background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:11px 13px}
+.ro .k{font:700 10px/1.3 var(--font-ui); letter-spacing:.13em; text-transform:uppercase; color:var(--ink3); margin-bottom:6px}
+.ro .v{font:600 16px/1.25 var(--font-mono); color:var(--ink); word-break:break-all}
+.ro.good .v{color:var(--green)} .ro.bad .v{color:var(--red)} .ro.acc .v{color:var(--amber)} .ro.tl .v{color:var(--teal)}
+.ro .sub{font:500 11px/1.3 var(--font-mono); color:var(--ink3); margin-top:4px}
+
+/* ---------- KaTeX step list ---------- */
+ol.steps{list-style:none; counter-reset:s; margin:0; padding:0}
+ol.steps li{
+  counter-increment:s; position:relative; padding:13px 0 13px 42px; border-bottom:1px solid var(--line);
+  opacity:.34; transition:opacity .3s;
+}
+ol.steps li:last-child{border-bottom:0}
+ol.steps li::before{
+  content:counter(s); position:absolute; left:0; top:14px; width:26px; height:26px; border-radius:7px;
+  display:grid; place-items:center; font:700 11px/1 var(--font-mono);
+  background:var(--panel3); color:var(--ink3); border:1px solid var(--line2);
+}
+ol.steps li.on{opacity:1}
+ol.steps li.on::before{background:rgba(240,160,60,.16); border-color:var(--amber); color:var(--amber)}
+ol.steps li.done{opacity:.72}
+ol.steps li .say{font-size:13.5px; color:var(--ink2); margin-bottom:7px}
+ol.steps li .mth{overflow-x:auto; padding:2px 0}
+
+/* ---------- coefficient lab ---------- */
+.coefrow{display:flex; gap:8px; flex-wrap:wrap}
+.coef{
+  flex:1 1 96px; min-width:92px; background:var(--panel2); border:1px solid var(--line);
+  border-radius:10px; padding:9px 9px 8px; text-align:center; transition:border-color .25s, background .25s;
+}
+.coef.active{border-color:var(--amber); background:rgba(240,160,60,.08)}
+.coef.locked{border-color:rgba(87,211,140,.5)}
+.coef .nm{font:600 12px/1 var(--font-mono); color:var(--ink3); margin-bottom:6px}
+.coef input{
+  width:100%; background:#0c1017; border:1px solid var(--line2); color:var(--ink);
+  font:600 13px/1 var(--font-mono); border-radius:7px; padding:7px 4px; text-align:center;
+}
+.coef input:focus{outline:none; border-color:var(--amber)}
+.coef .exact{font:500 11px/1.4 var(--font-mono); color:var(--green); margin-top:6px; min-height:19px}
+.coef .exact .katex{font-size:1.15em}
+/* the residual r_n = a_n − (n+1)a_{n+1} lives inside the cell it belongs to */
+.coef .rwrap{margin-top:8px; border-top:1px dashed var(--line2); padding-top:7px; min-height:26px}
+.coef .bar{height:6px; background:var(--panel3); border-radius:4px; overflow:hidden}
+.coef .bar i{display:block; height:100%; background:var(--red); width:0%; transition:width .25s, background .25s}
+.coef .bar i.zero{background:var(--green)}
+.coef .lb{font:500 9.5px/1.4 var(--font-mono); color:var(--ink3); margin-top:4px}
+.coef .rwrap:empty{border-top-color:transparent}
+.coefrow{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px}
+@media(max-width:560px){.coefrow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- the belt ---------- */
+.beltcard{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 18px 14px; position:relative; overflow:hidden}
+.beltcard.inf{border-color:rgba(63,208,201,.34)}
+.beltcard.fin{border-color:rgba(255,111,111,.30)}
+.belthead{display:flex; align-items:baseline; gap:10px; margin-bottom:6px; flex-wrap:wrap}
+.belthead .ttl{font:700 12px/1 var(--font-ui); letter-spacing:.15em; text-transform:uppercase}
+.beltcard.inf .belthead .ttl{color:var(--teal)}
+.beltcard.fin .belthead .ttl{color:var(--red)}
+.belthead .sub{font:500 12px/1 var(--font-mono); color:var(--ink3)}
+.beltsum{padding:8px 0 12px; overflow-x:auto; min-height:40px}
+
+.track{position:relative; height:200px; margin:0 -4px}
+.rail{
+  position:absolute; left:0; right:0; top:96px; height:16px;
+  background:repeating-linear-gradient(90deg,#1d2531 0 9px,#151b25 9px 18px);
+  border-top:1px solid var(--line2); border-bottom:1px solid #0a0d12; border-radius:3px;
+}
+.rail::after{
+  content:""; position:absolute; left:0; right:0; bottom:-7px; height:6px;
+  background:linear-gradient(180deg,rgba(0,0,0,.45),transparent);
+}
+.slot{position:absolute; top:118px; text-align:center; color:var(--ink3); transition:color .3s}
+.slot .sl{font:600 9.5px/1 var(--font-mono); letter-spacing:.1em; color:#54617a; margin-bottom:5px}
+.slot .val{opacity:.6; transition:opacity .3s, transform .3s}
+.slot.match .val{opacity:1; color:var(--green)}
+.slot.empty .val{opacity:.28}
+.slot.empty::after{
+  content:"∅"; position:absolute; left:0; right:0; top:-64px; font-size:20px; color:var(--red);
+  opacity:.85; animation:blink 1.1s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.9}50%{opacity:.3}}
+
+.block{
+  position:absolute; top:22px; height:70px; border-radius:10px; display:grid; place-items:center;
+  background:var(--bc,#2a3242); border:1px solid var(--bl,#3a4457);
+  box-shadow:0 6px 14px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.07);
+  will-change:transform; padding:0 4px;
+}
+.block .lab{color:#0d1117; font-size:13px; line-height:1}
+.block .lab .katex{color:#10151d}
+.block.ghosted{opacity:.28}
+.bin{
+  position:absolute; left:-2px; top:172px; font:600 11px/1.3 var(--font-mono); color:var(--ink3);
+}
+.bin b{color:var(--red)}
+.supply{
+  position:absolute; right:-4px; top:38px; width:30px; text-align:center; color:var(--teal); opacity:.8;
+}
+.supply .dots{font:700 20px/1 var(--font-mono); letter-spacing:1px}
+.supply .cap{font:700 8px/1.3 var(--font-ui); letter-spacing:.1em; color:var(--ink3); margin-top:4px}
+.wall{
+  position:absolute; top:14px; bottom:56px; width:6px; border-radius:3px;
+  background:repeating-linear-gradient(135deg,rgba(255,111,111,.5) 0 5px,transparent 5px 10px);
+  border:1px solid rgba(255,111,111,.4);
+}
+.verdict{
+  margin-top:6px; padding:10px 13px; border-radius:10px; font:600 13px/1.45 var(--font-ui);
+  background:var(--panel2); border:1px solid var(--line); color:var(--ink2); min-height:44px;
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+}
+.verdict.ok{border-color:rgba(87,211,140,.42); background:rgba(87,211,140,.08); color:var(--green)}
+.verdict.no{border-color:rgba(255,111,111,.42); background:rgba(255,111,111,.08); color:var(--red)}
+.verdict .m{color:inherit}
+
+/* ---------- charts ---------- */
+.chart{width:100%; height:330px}
+.chart.sm{height:260px}
+.caption{font:500 12px/1.5 var(--font-ui); color:var(--ink3); margin-top:8px; max-width:70ch}
+
+/* ---------- digits table ---------- */
+.dtab{width:100%; border-collapse:collapse; font:500 12.5px/1.5 var(--font-mono)}
+.dtab th{
+  text-align:left; font:700 10px/1 var(--font-ui); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink3); padding:0 10px 9px 0; border-bottom:1px solid var(--line); white-space:nowrap;
+}
+.dtab td{padding:6px 10px 6px 0; border-bottom:1px solid rgba(36,44,57,.55); color:var(--ink2); white-space:nowrap}
+.dtab td.frac{color:var(--violet)}
+.dtab tr:last-child td{border-bottom:0}
+.dg{color:var(--ink3)} .dg.ok{color:var(--green); font-weight:700}
+.scrollx{overflow-x:auto}
+
+/* ---------- misc ---------- */
+.kbox{
+  background:var(--panel2); border:1px solid var(--line); border-radius:11px;
+  padding:16px 14px; overflow-x:auto; margin:14px 0;
+}
+.kbox.accent{border-color:rgba(240,160,60,.36); background:rgba(240,160,60,.06)}
+.kbox.teal{border-color:rgba(63,208,201,.34); background:rgba(63,208,201,.06)}
+.tagrow{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0}
+.chip{
+  font:600 10.5px/1 var(--font-ui); letter-spacing:.1em; text-transform:uppercase;
+  padding:6px 10px; border-radius:99px; border:1px solid var(--line2); color:var(--ink3);
+}
+.chip.tl{color:var(--teal); border-color:rgba(63,208,201,.4)}
+.chip.rd{color:var(--red); border-color:rgba(255,111,111,.4)}
+.chip.am{color:var(--amber); border-color:rgba(240,160,60,.4)}
+footer{padding:60px 0 90px; color:var(--ink3); font-size:13px; border-top:1px solid var(--line); margin-top:60px}
+.numin{
+  background:#0c1017; border:1px solid var(--line2); color:var(--ink); font:600 13px/1 var(--font-mono);
+  border-radius:7px; padding:8px 9px; width:78px; text-align:center;
+}
+.numin:focus{outline:none; border-color:var(--teal)}
+</style>
+</head>
+<body>
+
+<div class="lawbar">
+  <div class="wrap">
+    <span class="tag">The law</span>
+    <span class="law" data-tex="f'(x)=f(x),\qquad f(0)=1"></span>
+    <span class="prog" id="progress">03 · factorial conveyor</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============================= 0. HERO ============================= -->
+<section id="s0">
+  <div class="eyebrow"><span class="num">0</span> the existence problem</div>
+  <h1>The Factorial Conveyor</h1>
+  <p class="lead">A function that is its own derivative is a machine whose output is unchanged by the act of
+  differentiating it. Here we <em class="hi">build one out of parts</em> — a row of blocks on a belt — and discover
+  that the parts were never ours to choose. The factorials are <em class="hi">forced</em>.</p>
+
+  <div class="grid-7-5">
+    <div>
+      <div class="kbox accent" data-tex="\exp(x)\;=\;\sum_{n=0}^{\infty}\frac{x^{n}}{n!}\;=\;1+x+\frac{x^{2}}{2!}+\frac{x^{3}}{3!}+\frac{x^{4}}{4!}+\cdots" data-display="1"></div>
+      <p>Every term here differentiates into the term to its <strong>left</strong>, exactly and without residue:
+      <span class="k" data-tex="\frac{d}{dx}\frac{x^{n}}{n!}=\frac{n\,x^{n-1}}{n!}=\frac{x^{n-1}}{(n-1)!}"></span>.
+      The <span class="k" data-tex="n"></span> that falls out of the power cancels the <span class="k" data-tex="n"></span>
+      in the factorial. That cancellation is the <em class="hi">gear ratio</em> of the whole machine — and it is the
+      only ratio that works.</p>
+      <p>Differentiating the whole series therefore <strong>shifts the belt one slot left</strong>. The constant at the
+      front falls off into nothing; an identical block arrives from the infinite tail behind. The belt is unchanged.
+      That is what <span class="k" data-tex="f'=f"></span> looks like as a mechanism.</p>
+    </div>
+    <div class="panel">
+      <h3>Where this sits</h3>
+      <div class="note link"><b>Artifact 02 proved uniqueness.</b> It showed that <em>at most one</em> function can satisfy
+      <span class="k" data-tex="f'=f,\ f(0)=1"></span>: if <span class="k" data-tex="f"></span> and
+      <span class="k" data-tex="g"></span> both did, then <span class="k" data-tex="(f e^{-x})'=0"></span> flatlines and
+      they coincide. What it explicitly did <em>not</em> do is exhibit one.</div>
+      <div class="note"><b>This page supplies existence.</b> We construct the function from scratch as a convergent
+      power series, verify it satisfies the law, and prove convergence for every real
+      <span class="k" data-tex="x"></span>. Uniqueness + existence = the exponential function.</div>
+      <div class="tagrow">
+        <span class="chip rd">02 · uniqueness</span>
+        <span class="chip tl">03 · existence</span>
+      </div>
+      <p style="margin-top:14px; font-size:13.5px">And the number <span class="k" data-tex="e"></span>?
+      It is not an input. It is what this belt happens to sum to at
+      <span class="k" data-tex="x=1"></span>. The function comes first.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 1. FORCED ============================= -->
+<section id="s1">
+  <div class="eyebrow"><span class="num">1</span> the coefficients are forced</div>
+  <h2>You do not get to choose the numbers</h2>
+  <p class="lead">Suppose a solution has a power series, <span class="k" data-tex="f(x)=\sum_{n\ge 0}a_n x^n"></span>,
+  with coefficients you may pick freely. Impose <span class="k" data-tex="f'=f"></span>. Watch how little freedom
+  survives: one recurrence links every coefficient to the one before it, and
+  <span class="k" data-tex="f(0)=1"></span> pins the last free number.</p>
+
+  <div class="grid-5-7">
+    <div class="panel">
+      <h3>The derivation</h3>
+      <ol class="steps" id="derivSteps"></ol>
+      <div class="ctrls" style="margin-bottom:0">
+        <button id="derivPrev" class="ghost">← back</button>
+        <button id="derivNext" class="primary">next step →</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Your coefficients · the recurrence drags them home</h3>
+      <p style="font-size:13.5px">Type anything into the slots. The residual bars below measure how badly the demand
+      <span class="k" data-tex="(k+1)a_{k+1}=a_k"></span> is violated. Then let the recurrence run.</p>
+      <div class="coefrow" id="coefRow"></div>
+      <div class="resid" id="residRow"></div>
+      <div class="ctrls">
+        <button id="coefStep" class="primary">apply recurrence at k = <span id="coefK">0</span></button>
+        <button id="coefAll">run all</button>
+        <button id="coefScramble" class="ghost">scramble</button>
+        <button id="coefReset" class="ghost">reset</button>
+      </div>
+      <div class="readouts">
+        <div class="ro" id="roResid"><div class="k">total residual <span class="k" data-tex="\sum_k|a_k-(k+1)a_{k+1}|"></span></div><div class="v">—</div></div>
+        <div class="ro tl" id="roShape"><div class="k">what you have built</div><div class="v">—</div><div class="sub">the ODE fixes the shape; f(0) fixes the scale</div></div>
+      </div>
+      <div class="kbox teal" id="forcedBox" data-tex="a_0=1\ \Longrightarrow\ a_n=\frac{1}{n!}" data-display="1"></div>
+      <details class="caveat">
+    <summary>Two moves above are licensed, not free — read what we assumed</summary>
+    <div class="body">
+      <p><b>1. Term-by-term differentiation is a theorem.</b> Writing
+      <span class="k" data-tex="\big(\sum a_n x^n\big)' = \sum (a_n x^n)'"></span> is not a definition and not
+      bookkeeping — it is a genuine result: a power series may be differentiated term by term at every point strictly
+      inside its radius of convergence, because it converges <em>uniformly on compact subsets</em> there. We use this
+      move and do not prove it. Note the mild circularity risk we avoid by ordering things correctly: in §5 we prove the
+      radius of convergence is <span class="k" data-tex="\infty"></span> <em>first</em>, from the ratio test alone, so
+      the licence is in hand before we differentiate.</p>
+      <p><b>2. Matching coefficients assumes uniqueness of power series.</b> From
+      <span class="k" data-tex="\sum b_k x^k=\sum a_k x^k"></span> we concluded
+      <span class="k" data-tex="b_k=a_k"></span> for each <span class="k" data-tex="k"></span>. That needs the identity
+      theorem: a power series that vanishes on a neighbourhood of 0 has all coefficients zero (differentiate
+      <span class="k" data-tex="k"></span> times at 0 and read off
+      <span class="k" data-tex="a_k=f^{(k)}(0)/k!"></span>). True, standard, and assumed here.</p>
+      <p><b>3. And we assumed a power series exists at all.</b> Strictly, §1 shows: <em>if</em> a solution is analytic at
+      0, its coefficients must be <span class="k" data-tex="1/n!"></span>. The converse direction — that the resulting
+      series really does converge and really does solve <span class="k" data-tex="f'=f"></span> — is what §5 establishes.
+      Together they close the loop.</p>
+    </div>
+  </details>
+    </div>
+  </div>
+
+  
+</section>
+
+<!-- ============================= 2. THE BELT ============================= -->
+<section id="s2">
+  <div class="eyebrow"><span class="num">2</span> the conveyor</div>
+  <h2>Press <span class="k" data-tex="d/dx"></span> and watch the belt shift</h2>
+  <p class="lead">Each coloured block carries one term. Beneath the belt, the fixed grey <em class="hi2">slot labels</em>
+  never move — they mark what value <em>belongs</em> at each position. Differentiate, and every block slides one slot
+  left and lands showing <em class="hi2">exactly the label already printed there</em>. The identities move; the belt
+  stands still. That is a fixed point.</p>
+
+  <div class="ctrls">
+    <button id="beltStep" class="primary">apply d/dx</button>
+    <button id="beltReset" class="ghost">reset both belts</button>
+    <div class="slider">
+      <span class="lbl">polynomial degree N</span>
+      <input type="range" id="degN" min="2" max="6" step="1" value="4" />
+      <output id="degNOut">4</output>
+    </div>
+    <div class="slider">
+      <span class="lbl">test point x</span>
+      <input type="range" id="beltX" min="-2" max="3" step="0.05" value="1" />
+      <output id="beltXOut">1.00</output>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="beltcard inf" id="beltInfCard">
+      <div class="belthead"><span class="ttl">infinite belt</span><span class="sub" id="infSteps">0 derivatives taken</span></div>
+      <div class="beltsum" id="infSum"></div>
+      <div class="track" id="infTrack"></div>
+      <div class="verdict ok" id="infVerdict"></div>
+      <div class="readouts">
+        <div class="ro tl" id="roInfVal"><div class="k">series at x (40 terms)</div><div class="v">—</div></div>
+        <div class="ro" id="roInfDiff"><div class="k">deficit S − S′</div><div class="v">—</div><div class="sub">→ 0 as the tail extends</div></div>
+      </div>
+    </div>
+
+    <div class="beltcard fin" id="beltFinCard">
+      <div class="belthead"><span class="ttl">finite belt · polynomial</span><span class="sub" id="finSteps">0 derivatives taken</span></div>
+      <div class="beltsum" id="finSum"></div>
+      <div class="track" id="finTrack"></div>
+      <div class="verdict" id="finVerdict"></div>
+      <div class="readouts">
+        <div class="ro" id="roFinP"><div class="k nocase">p(x)</div><div class="v">—</div></div>
+        <div class="ro bad" id="roFinDiff"><div class="k nocase">p(x) − p′(x)</div><div class="v">—</div><div class="sub" id="roFinSub">the term with no successor</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>Read the difference.</b> Both belts drop their constant block into the
+  <span style="color:var(--red)">→ 0</span> bin on the left — differentiation always kills a constant. The infinite belt
+  refills from the tail on the right, so nothing is lost overall. The finite belt hits a wall: slot
+  <span class="k" data-tex="N"></span> has no successor to receive, so it empties. Keep pressing and the polynomial is
+  eaten from the top down until nothing remains — which is the honest punchline that
+  <span class="k" data-tex="p\equiv 0"></span> is the <em>only</em> polynomial solving
+  <span class="k" data-tex="p'=p"></span>.</div>
+</section>
+
+<!-- ============================= 3. WHY FINITE FAILS ============================= -->
+<section id="s3">
+  <div class="eyebrow"><span class="num">3</span> the top block always dies</div>
+  <h2>No polynomial can be its own derivative</h2>
+
+  <div class="grid-5-7">
+    <div>
+      <p>The belt animation is a picture of a two-line proof. Let
+      <span class="k" data-tex="p"></span> be a polynomial of degree <span class="k" data-tex="d\ge 0"></span> with
+      leading coefficient <span class="k" data-tex="c\neq 0"></span>.</p>
+      <div class="kbox" data-tex="\deg p' \;\le\; d-1 \;<\; d \;=\;\deg p" data-display="1"></div>
+      <p>Differentiation <strong>strictly lowers degree</strong>. Two polynomials of different degree cannot be equal.
+      So <span class="k" data-tex="p'=p"></span> forces <span class="k" data-tex="p"></span> to have no degree at all —
+      i.e. <span class="k" data-tex="p\equiv 0"></span>. The top block dies with nothing to replace it.</p>
+      <p>Quantitatively, for the truncated exponential
+      <span class="k" data-tex="S_N(x)=\sum_{n=0}^{N}\frac{x^n}{n!}"></span> the failure is not vague — it is
+      <em class="hi">exactly one term</em>, the top one:</p>
+      <div class="kbox accent" data-tex="S_N'(x)=\sum_{n=1}^{N}\frac{x^{n-1}}{(n-1)!}=S_{N-1}(x)\quad\Longrightarrow\quad S_N(x)-S_N'(x)=\frac{x^{N}}{N!}" data-display="1"></div>
+      <p>Only an <strong>infinite</strong> belt has a successor for every block. The chart checks this claim against a
+      derivative computed independently, by central finite differences on
+      <span class="k" data-tex="S_N"></span> — so the agreement is evidence, not a tautology.</p>
+      <div class="readouts">
+        <div class="ro acc" id="roDefN"><div class="k nocase">deficit at x = 1</div><div class="v">—</div></div>
+        <div class="ro good" id="roFD"><div class="k">max |identity gap| on plot</div><div class="v">—</div><div class="sub">pure finite-difference noise</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Deficit of the truncated belt</h3>
+      <div class="ctrls" style="margin-top:0">
+        <div class="slider"><span class="lbl">terms N</span>
+          <input type="range" id="defN" min="1" max="9" step="1" value="4" /><output id="defNOut">4</output></div>
+      </div>
+      <div id="chartDeficit" class="chart"></div>
+      <div class="caption">Solid line: <span class="k" data-tex="S_N(x)-S_N'(x)"></span> where
+      <span class="k" data-tex="S_N'"></span> is estimated by the central difference
+      <span class="k" data-tex="[S_N(x+h)-S_N(x-h)]/2h"></span>, <span class="k" data-tex="h=10^{-5}"></span>.
+      Circles: the predicted <span class="k" data-tex="x^N/N!"></span>. They coincide to finite-difference precision.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 4. PARTIAL SUMS ============================= -->
+<section id="s4">
+  <div class="eyebrow"><span class="num">4</span> the belt closes in</div>
+  <h2>Every added block buys another slice of the curve</h2>
+  <p class="lead">Each partial sum <span class="k" data-tex="S_N"></span> is a polynomial, and by §3 none of them is
+  self-derivative. But they hug <span class="k" data-tex="e^x"></span> ever more tightly, and the miss is precisely the
+  tail they threw away.</p>
+
+  <div class="grid-7-5">
+    <div class="panel">
+      <h3>Partial sums against <span class="k" data-tex="e^x"></span></h3>
+      <div class="ctrls" style="margin-top:0">
+        <div class="slider"><span class="lbl">terms N</span>
+          <input type="range" id="psN" min="1" max="14" step="1" value="4" /><output id="psNOut">4</output></div>
+        <div class="slider"><span class="lbl">probe x</span>
+          <input type="range" id="psX" min="-4" max="4" step="0.05" value="2.4" /><output id="psXOut">2.40</output></div>
+      </div>
+      <div id="chartPartial" class="chart"></div>
+      <div class="caption">Faint lines: <span class="k" data-tex="S_1,\dots,S_{N-1}"></span>. Bold amber:
+      <span class="k" data-tex="S_N"></span>. Teal: <span class="k" data-tex="e^x"></span> from the platform's
+      <code>Math.exp</code> — itself a numerical approximation, quoted as reference only.</div>
+    </div>
+    <div class="panel">
+      <h3>Truncation error at the probe</h3>
+      <div class="readouts" style="grid-template-columns:1fr">
+        <div class="ro acc" id="roSN"><div class="k nocase">S<sub>N</sub>(x)</div><div class="v">—</div></div>
+        <div class="ro tl" id="roExp"><div class="k nocase">Math.exp(x)</div><div class="v">—</div></div>
+        <div class="ro bad" id="roErr"><div class="k">absolute error</div><div class="v">—</div><div class="sub" id="roErrSub"></div></div>
+        <div class="ro" id="roNeed"><div class="k">terms for 1e−12 relative</div><div class="v">—</div><div class="sub">summed with the stable recurrence t<sub>n</sub> = t<sub>n−1</sub>·x/n</div></div>
+      </div>
+      <div class="note" style="margin-bottom:0"><b>Nothing on this page is an infinite sum.</b> Every number displayed
+      is a finite partial sum in IEEE-754 double precision. The count of terms and the resulting error are always shown,
+      never hidden.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 5. CONVERGENCE ============================= -->
+<section id="s5">
+  <div class="eyebrow"><span class="num">5</span> convergence, everywhere</div>
+  <h2>Factorials outrun powers — eventually, but always</h2>
+  <p class="lead">The infinite belt is only legitimate if it converges. Compare a term to its predecessor:
+  the ratio is <span class="k" data-tex="|x|/(n+1)"></span>, which tends to
+  <span class="k" data-tex="0"></span> for <em class="hi">any fixed</em> <span class="k" data-tex="x"></span>. Radius of
+  convergence <span class="k" data-tex="\infty"></span>. But watch the honest part: for large
+  <span class="k" data-tex="x"></span> the terms <em class="hi">grow first</em>.</p>
+
+  <div class="kbox teal" data-tex="\left|\frac{x^{n+1}/(n+1)!}{x^{n}/n!}\right|=\frac{|x|}{n+1}\;\xrightarrow[n\to\infty]{}\;0\quad\text{for every }x\in\mathbb{R}\ (\text{indeed }\mathbb{C})" data-display="1"></div>
+
+  <div class="ctrls">
+    <div class="slider"><span class="lbl">x</span>
+      <input type="range" id="cvX" min="-30" max="30" step="0.5" value="20" /><output id="cvXOut">20.0</output></div>
+    <div class="seg" id="cvPresets">
+      <button data-x="1">x = 1</button><button data-x="5">5</button>
+      <button data-x="20" class="on">20</button><button data-x="-20">−20</button><button data-x="30">30</button>
+    </div>
+  </div>
+
+  <div class="grid-7-5">
+    <div class="panel">
+      <h3>Magnitude of term n · logarithmic scale</h3>
+      <div id="chartTerms" class="chart"></div>
+      <div class="caption">The hump is real: convergence is <em>not</em> monotone. Terms climb while
+      <span class="k" data-tex="|x|/(n+1)>1"></span>, i.e. while <span class="k" data-tex="n<|x|-1"></span>, then
+      collapse superexponentially.</div>
+    </div>
+    <div class="panel">
+      <h3>The ratio test, live</h3>
+      <div id="chartRatio" class="chart sm"></div>
+      <div class="readouts" style="grid-template-columns:1fr 1fr">
+        <div class="ro acc" id="roPeakN"><div class="k nocase">peak at n =</div><div class="v">—</div></div>
+        <div class="ro acc" id="roPeakV"><div class="k nocase">peak |term|</div><div class="v">—</div></div>
+        <div class="ro tl" id="roCross"><div class="k nocase">ratio &lt; 1 from n =</div><div class="v">—</div></div>
+        <div class="ro" id="roTermsNeed"><div class="k">terms to converge</div><div class="v">—</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 6. e ============================= -->
+<section id="s6">
+  <div class="eyebrow"><span class="num">6</span> the byproduct</div>
+  <h2>Now — and only now — the number <span class="k" data-tex="e"></span></h2>
+  <p class="lead">We never assumed a base. We demanded a law, the law forced the factorials, and the factorials
+  converge. Feed the machine <span class="k" data-tex="x=1"></span> and read what falls out. The number
+  <span class="k" data-tex="e"></span> is a <em class="hi">consequence</em>, defined as
+  <span class="k" data-tex="e:=\exp(1)"></span>.</p>
+
+  <div class="grid-7-5">
+    <div class="panel">
+      <h3>Exact rational partial sums <span class="k" data-tex="S_n=\sum_{k=0}^{n}1/k!"></span></h3>
+      <p style="font-size:13.5px">Computed with native <code>BigInt</code>: with
+      <span class="k" data-tex="A_n=nA_{n-1}+1,\ A_0=1"></span> we have exactly
+      <span class="k" data-tex="S_n=A_n/n!"></span>, then long-divided to 24 decimal places. Green digits already
+      agree with <span class="k" data-tex="e"></span>.</p>
+      <div class="scrollx"><table class="dtab" id="eTable">
+        <thead><tr><th>n</th><th>exact <span style="text-transform:none">A<sub>n</sub>/n!</span></th><th>decimal (24 dp, exact)</th><th>digits</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>Error bound</h3>
+        <div class="kbox" data-tex="0<e-S_n=\sum_{k>n}\frac{1}{k!}<\frac{1}{n!\,n}" data-display="1"></div>
+        <p style="font-size:13.5px">Because <span class="k" data-tex="\frac{1}{(n+j)!}\le\frac{1}{n!\,(n+1)^{j}}"></span>,
+        the tail is dominated by a geometric series. Factorially fast: ten terms already give eight correct digits.</p>
+        <div id="chartE" class="chart sm"></div>
+        <div class="caption">Actual error <span class="k" data-tex="|e-S_n|"></span> against the bound
+        <span class="k" data-tex="1/(n!\,n)"></span>, log scale. The bound is tight to within a factor of ~n.</div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h3>The definition, in the right order</h3>
+        <div class="kbox teal" data-tex="e\;:=\;\exp(1)\;=\;\sum_{n=0}^{\infty}\frac{1}{n!}\;=\;2.718281828459045\ldots" data-display="1"></div>
+        <p style="font-size:13.5px; margin-bottom:0">Read backwards this is the usual story: <em>here is a magic number
+        <span class="k" data-tex="e"></span>, now raise it to a power</em>. Read forwards it is the honest one: here is a
+        self-referential law, and here is the only machine that satisfies it.
+        <span class="k" data-tex="e"></span> is its reading at 1.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 7. HONESTY ============================= -->
+<section id="s7">
+  <div class="eyebrow"><span class="num">7</span> where the picture lies</div>
+  <h2>The series is exact. Your computer is not.</h2>
+  <p class="lead">Section 5's hump has a nasty consequence. Sum
+  <span class="k" data-tex="\sum x^n/n!"></span> naively at <span class="k" data-tex="x=-20"></span> and the terms swing
+  up to <span class="k" data-tex="\approx 4.3\times 10^{7}"></span> in alternating signs, while the answer is
+  <span class="k" data-tex="\approx 2\times 10^{-9}"></span>. Rounding error in the giant terms swamps the tiny result:
+  <em class="hi">catastrophic cancellation</em>. Computed live below, no numbers rehearsed.</p>
+
+  <div class="grid-7-5">
+    <div class="panel">
+      <h3>Direct summation vs. reciprocal — computed now</h3>
+      <div class="ctrls" style="margin-top:0">
+        <span class="slider"><span class="lbl">evaluate at x = −</span></span>
+        <input type="number" class="numin" id="ccX" value="20" min="1" max="40" step="1" />
+        <button id="ccRun">recompute</button>
+      </div>
+      <div class="scrollx"><table class="dtab" id="ccTable">
+        <thead><tr><th>method</th><th>result</th><th>relative error</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="readouts">
+        <div class="ro bad" id="roMaxTerm"><div class="k">largest |term| encountered</div><div class="v">—</div></div>
+        <div class="ro acc" id="roPredict"><div class="k">predicted noise floor <span class="k" data-tex="\varepsilon\cdot\max|t_n|"></span></div><div class="v">—</div><div class="sub">ε = 2⁻⁵² ≈ 2.22e−16</div></div>
+      </div>
+      <div class="caption">The predicted noise floor is of the same order as the true answer — so the direct sum has no
+      correct digits left. The fix is not more terms; it is <span class="k" data-tex="e^{-x}=1/e^{x}"></span>, summing
+      only positive terms. The mathematics was never wrong; the arithmetic was.</div>
+    </div>
+    <div>
+      <details class="caveat" open>
+        <summary>Full list of what this page assumes or approximates</summary>
+        <div class="body">
+          <p><b>Term-by-term differentiation</b> (§1, §3) is a theorem requiring uniform convergence on compact sets;
+          used, named, not proved.</p>
+          <p><b>Uniqueness of power series coefficients</b> (§1) — the identity theorem; assumed.</p>
+          <p><b>Every displayed value is a finite partial sum</b> in double precision. Term counts are always labelled.</p>
+          <p><b>The reference curve</b> in §4 is <code>Math.exp</code>, a platform routine accurate to about one unit in
+          the last place — a very good approximation, not ground truth.</p>
+          <p><b>Exact arithmetic</b> is used only in §6, via <code>BigInt</code> rationals
+          <span class="k" data-tex="A_n/n!"></span> long-divided to 24 places. Those digits are exact.</p>
+          <p><b>The belt animation truncates</b> the visible infinite series at seven slots plus an ellipsis. The
+          ellipsis is doing real work: it is the entire reason the shift is lossless.</p>
+        </div>
+      </details>
+      <div class="panel">
+        <h3>Bonus · why <span class="k" data-tex="\exp(x{+}y)=\exp x\exp y"></span></h3>
+        <p style="font-size:13.5px">Multiply the two series (Cauchy product, legal because both converge absolutely) and
+        the binomial theorem appears unbidden:</p>
+        <div class="kbox" data-tex="\begin{aligned}\exp x\,\exp y&=\sum_{n\ge0}\;\sum_{k=0}^{n}\frac{x^{k}}{k!}\cdot\frac{y^{n-k}}{(n-k)!}\\[2pt]&=\sum_{n\ge0}\frac{1}{n!}\sum_{k=0}^{n}\binom{n}{k}x^{k}y^{n-k}\\[2pt]&=\sum_{n\ge0}\frac{(x+y)^{n}}{n!}=\exp(x+y)\end{aligned}" data-display="1"></div>
+        <p style="font-size:13.5px">The factorials that made differentiation lossless are the same factorials that turn
+        the double sum into <span class="k" data-tex="\binom{n}{k}"></span>. The exponential law is not an extra axiom —
+        it falls out of the same gear ratio.</p>
+        <div class="ctrls" style="margin-bottom:6px">
+          <span class="slider"><span class="lbl">x</span></span><input class="numin" id="lawX" type="number" value="1.3" step="0.1" />
+          <span class="slider"><span class="lbl">y</span></span><input class="numin" id="lawY" type="number" value="2.1" step="0.1" />
+        </div>
+        <div class="readouts" style="grid-template-columns:1fr">
+          <div class="ro good" id="roLaw"><div class="k nocase">|S₃₀(x)·S₃₀(y) − S₃₀(x+y)|</div><div class="v">—</div><div class="sub">30-term partial sums, so a small residue is expected</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= 8. CLOSE ============================= -->
+<section id="s8">
+  <div class="eyebrow"><span class="num">8</span> the essence</div>
+  <h2>Rate equals current amount — everything else is a consequence</h2>
+  <div class="grid2">
+    <div>
+      <p>We asked for a single self-referential property: <em class="hi2">the speed at every instant equals the position
+      at that instant</em>. We did not choose a base, a number, or a growth rate. From that one demand:</p>
+      <p>— the coefficients had to be <span class="k" data-tex="1/n!"></span>, because
+      <span class="k" data-tex="a_{k+1}=a_k/(k+1)"></span> leaves no alternative;<br>
+      — the sum had to be infinite, because differentiation always eats the top term;<br>
+      — the series had to converge everywhere, because factorials eventually beat any power;<br>
+      — the number <span class="k" data-tex="e=2.718\ldots"></span> is simply the reading at
+      <span class="k" data-tex="x=1"></span>.</p>
+      <p>The factorial is not decoration and not a mnemonic. It is the <strong>gear ratio</strong> that makes a shift
+      lossless — the only weighting under which each term differentiates exactly onto its neighbour.</p>
+    </div>
+    <div class="panel">
+      <h3>The one-line summary</h3>
+      <div class="kbox accent" data-tex="\frac{d}{dx}\sum_{n\ge0}\frac{x^{n}}{n!}=\sum_{n\ge1}\frac{x^{n-1}}{(n-1)!}=\sum_{m\ge0}\frac{x^{m}}{m!}" data-display="1"></div>
+      <p style="font-size:14px">Left end and right end are the same series. Re-indexing is the whole proof, and the
+      belt is the picture of the re-indexing.</p>
+      <div class="tagrow">
+        <span class="chip am">function first</span>
+        <span class="chip tl">number second</span>
+        <span class="chip">01 · the slope dial found e</span>
+        <span class="chip">02 · uniqueness</span>
+        <span class="chip tl">03 · existence ✓</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>Built offline: KaTeX 0.16.11 (notation) · GSAP 3.12.5 (belt choreography) · Apache ECharts 5.5.1 (plots) ·
+  native <code>BigInt</code> (exact rationals in §6). No network access at view time.</div>
+</footer>
+
+</div><!-- /wrap -->
+
+<script src="lib/katex/katex.min.js"></script>
+<script src="lib/gsap.min.js"></script>
+<script src="lib/echarts.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   0. KaTeX helpers
+   ===================================================================== */
+const TEXCACHE = new Map();
+function tex(str, display){
+  const key = (display?"D:":"I:") + str;
+  if(!TEXCACHE.has(key)){
+    TEXCACHE.set(key, katex.renderToString(str, {throwOnError:false, displayMode:!!display}));
+  }
+  return TEXCACHE.get(key);
+}
+function renderAll(root){
+  (root||document).querySelectorAll("[data-tex]").forEach(el=>{
+    if(el.dataset.texDone === "1") return;
+    el.innerHTML = tex(el.dataset.tex, el.dataset.display === "1");
+    el.dataset.texDone = "1";
+  });
+}
+function setTex(el, str, display){ el.innerHTML = tex(str, display); }
+
+/* =====================================================================
+   1. Numerics — every value on this page comes from these
+   ===================================================================== */
+// stable term recurrence: t_0 = 1, t_n = t_{n-1} * x / n   (avoids x^n and n! overflow)
+function terms(x, N){
+  const t = new Array(N+1); t[0] = 1;
+  for(let n=1; n<=N; n++) t[n] = t[n-1] * x / n;
+  return t;
+}
+function partialSums(x, N){
+  const S = new Array(N+1); let t = 1, s = 1; S[0] = 1;
+  for(let n=1; n<=N; n++){ t = t * x / n; s += t; S[n] = s; }
+  return S;
+}
+function SN(x, N){                       // value of the N-term partial sum
+  let t = 1, s = 1;
+  for(let n=1; n<=N; n++){ t = t * x / n; s += t; }
+  return s;
+}
+function termN(x, N){                    // x^N / N! without overflowing
+  let t = 1;
+  for(let n=1; n<=N; n++) t = t * x / n;
+  return t;
+}
+// how many terms until the tail is below `rel` relative to the running sum
+function termsNeeded(x, rel){
+  let t = 1, s = 1, n = 0;
+  const ax = Math.abs(x);
+  while(n < 2000){
+    n++; t = t * x / n; s += t;
+    if(n > ax && Math.abs(t) < rel * Math.max(Math.abs(s), 1e-300)) break;
+  }
+  return n;
+}
+const fmt = (v, p) => {
+  if(!isFinite(v)) return String(v);
+  const a = Math.abs(v);
+  if(v === 0) return "0";
+  if(a >= 1e6 || a < 1e-4) return v.toExponential(p===undefined?3:p);
+  return v.toPrecision(p===undefined?7:p).replace(/\.?0+$/,"");
+};
+const fmtE = (v, p) => (v===0 ? "0" : v.toExponential(p===undefined?3:p));
+
+/* exact BigInt rationals for section 6 */
+function bigFact(n){ let r = 1n; for(let i = 2n; i <= BigInt(n); i++) r *= i; return r; }
+// long division num/den to `d` decimal places, truncated (all shown digits are exact)
+function bigDecimal(num, den, d){
+  const ip = num / den;
+  let rem = num % den;
+  let out = ip.toString() + ".";
+  for(let i=0;i<d;i++){ rem *= 10n; out += (rem/den).toString(); rem %= den; }
+  return out;
+}
+const E_DIGITS = "2.718281828459045235360287471352662497757247093699959574966";
+
+/* =====================================================================
+   2. Section 1 — the forced-coefficients derivation
+   ===================================================================== */
+const DERIV_STEPS = [
+  { say:"Assume the solution has a power series at 0, with coefficients free to choose.",
+    m:"f(x)=\\sum_{n\\ge 0}a_n x^{n}" },
+  { say:"Differentiate term by term (a licensed move — see the caveat). The n = 0 term dies.",
+    m:"f'(x)=\\sum_{n\\ge 1} n\\,a_n x^{\\,n-1}" },
+  { say:"Re-index with k = n − 1 so both series are written in powers of x^k. This is the belt shifting left.",
+    m:"f'(x)=\\sum_{k\\ge 0}(k+1)\\,a_{k+1}\\,x^{k}" },
+  { say:"Impose the law f′ = f and match coefficients of x^k (uniqueness of power series — see the caveat).",
+    m:"(k+1)\\,a_{k+1}=a_k\\qquad\\text{for every }k\\ge 0" },
+  { say:"Solve for the next coefficient. Each one is completely determined by its predecessor — no freedom left.",
+    m:"a_{k+1}=\\frac{a_k}{k+1}" },
+  { say:"Unroll from a_0. The ODE alone fixes the SHAPE of every coefficient in terms of the first.",
+    m:"a_n=\\frac{a_0}{n!}" },
+  { say:"Finally the initial condition f(0) = a_0 = 1 fixes the scale. Nothing was ever chosen.",
+    m:"a_n=\\frac{1}{n!}\\qquad\\Longrightarrow\\qquad f(x)=\\sum_{n\\ge0}\\frac{x^{n}}{n!}" }
+];
+let derivIdx = 0;
+const stepsEl = document.getElementById("derivSteps");
+DERIV_STEPS.forEach((s,i)=>{
+  const li = document.createElement("li");
+  li.innerHTML = '<div class="say">'+s.say+'</div><div class="mth">'+tex(s.m, true)+'</div>';
+  stepsEl.appendChild(li);
+});
+function paintSteps(){
+  [...stepsEl.children].forEach((li,i)=>{
+    li.classList.toggle("on", i === derivIdx);
+    li.classList.toggle("done", i < derivIdx);
+  });
+  document.getElementById("derivPrev").disabled = derivIdx === 0;
+  document.getElementById("derivNext").disabled = derivIdx === DERIV_STEPS.length-1;
+  const li = stepsEl.children[derivIdx];
+  if(li && derivIdx>0) li.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+document.getElementById("derivNext").onclick = ()=>{ derivIdx = Math.min(DERIV_STEPS.length-1, derivIdx+1); paintSteps(); };
+document.getElementById("derivPrev").onclick = ()=>{ derivIdx = Math.max(0, derivIdx-1); paintSteps(); };
+paintSteps();
+
+/* ---- coefficient lab ---- */
+const NCOEF = 8;
+let coefs = Array.from({length:NCOEF}, (_,n)=> 1/bigFactNum(n));
+let coefK = 0;
+function bigFactNum(n){ let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
+const coefRow = document.getElementById("coefRow");
+const residRow = document.getElementById("residRow");
+const coefInputs = [];
+const residCells = [];
+for(let n=0;n<NCOEF;n++){
+  const d = document.createElement("div");
+  d.className = "coef";
+  d.innerHTML = '<div class="nm">a<sub>'+n+'</sub></div>'+
+                '<input type="text" inputmode="decimal" value="'+coefs[n]+'">'+
+                '<div class="exact"></div>'+
+                '<div class="rwrap">' + (n < NCOEF-1
+                  ? '<div class="bar"><i></i></div><div class="lb">r<sub>'+n+'</sub> = a<sub>'+n+'</sub> − '+(n+1)+'a<sub>'+(n+1)+'</sub></div>'
+                  : '') + '</div>';
+  coefRow.appendChild(d);
+  const inp = d.querySelector("input");
+  coefInputs.push(inp);
+  if(n < NCOEF-1) residCells.push(d.querySelector(".bar i"));
+  inp.addEventListener("input", ()=>{
+    const v = parseFloat(inp.value);
+    if(isFinite(v)){ coefs[n] = v; paintCoefs(false); }
+  });
+}
+residRow.remove();
+function residuals(){
+  const r = [];
+  for(let k=0;k<NCOEF-1;k++) r.push(coefs[k] - (k+1)*coefs[k+1]);
+  return r;
+}
+function paintCoefs(writeInputs){
+  const r = residuals();
+  const maxr = Math.max(1e-12, ...r.map(Math.abs));
+  r.forEach((v,k)=>{
+    const bar = residCells[k];
+    const z = Math.abs(v) < 1e-12;
+    bar.style.width = (z ? 6 : Math.max(6, 100*Math.abs(v)/maxr)) + "%";
+    bar.classList.toggle("zero", z);
+  });
+  const total = r.reduce((a,b)=>a+Math.abs(b),0);
+  const roR = document.getElementById("roResid");
+  roR.querySelector(".v").textContent = total < 1e-12 ? "0  ✓ law satisfied" : fmt(total,5);
+  roR.classList.toggle("good", total < 1e-12);
+  roR.classList.toggle("bad", total >= 1e-12);
+
+  coefInputs.forEach((inp,n)=>{
+    if(writeInputs) inp.value = shortNum(coefs[n]);
+    const cell = inp.parentElement;
+    cell.classList.toggle("active", n === coefK+1 && total >= 1e-12);
+    const target = coefs[0]/bigFactNum(n);
+    const ok = Math.abs(coefs[n]-target) < 1e-12*Math.max(1,Math.abs(target));
+    cell.classList.toggle("locked", ok);
+    const ex = cell.querySelector(".exact");
+    ex.innerHTML = ok ? tex(n===0 ? "a_0" : "a_0/"+n+"!") : "";
+  });
+
+  const roS = document.getElementById("roShape");
+  if(total < 1e-12){
+    const c = coefs[0];
+    roS.querySelector(".v").innerHTML = tex(
+      Math.abs(c-1) < 1e-12 ? "f(x)=e^{x}" : "f(x)="+texNum(c)+"\\,e^{x}");
+  } else {
+    roS.querySelector(".v").textContent = "not a solution yet";
+  }
+  document.getElementById("coefK").textContent = coefK;
+  document.getElementById("coefStep").disabled = coefK >= NCOEF-1;
+}
+function shortNum(v){
+  if(v === 0) return "0";
+  const a = Math.abs(v);
+  if(a >= 1e5 || a < 1e-5) return v.toExponential(4);
+  return parseFloat(v.toPrecision(8)).toString();
+}
+// LaTeX-safe number (turns 1.2e-7 into 1.2\times10^{-7} so KaTeX never sees a stray "e")
+function texNum(v){
+  const s = shortNum(v);
+  const m = /^(-?[\d.]+)e([+-]\d+)$/.exec(s);
+  return m ? m[1]+"\\times 10^{"+parseInt(m[2],10)+"}" : s;
+}
+// animate a single coefficient to its forced value; `done` fires after it lands
+function tweenCoef(idx, to, dur, done){
+  const proxy = {v: coefs[idx]};
+  return gsap.to(proxy, {v: to, duration: dur===undefined?0.45:dur, ease:"power2.out",
+    onUpdate(){ coefs[idx] = proxy.v; paintCoefs(true); },
+    onComplete(){ coefs[idx] = to; paintCoefs(true); if(done) done(); }});
+}
+document.getElementById("coefStep").onclick = ()=>{
+  if(coefK >= NCOEF-1) return;
+  const k = coefK;
+  const target = coefs[k]/(k+1);       // read BEFORE advancing
+  coefK = k+1;
+  tweenCoef(k+1, target, 0.45, ()=>paintCoefs(false));
+  paintCoefs(false);
+};
+document.getElementById("coefAll").onclick = ()=>{
+  let k = 0;
+  const run = ()=>{
+    if(k >= NCOEF-1){ coefK = NCOEF-1; paintCoefs(false); return; }
+    coefK = k;
+    paintCoefs(false);
+    const target = coefs[k]/(k+1);     // computed at run time, not build time
+    const kk = k;
+    tweenCoef(kk+1, target, 0.26, ()=>{ k++; run(); });
+  };
+  run();
+};
+document.getElementById("coefScramble").onclick = ()=>{
+  coefK = 0;
+  coefs = coefs.map(()=> Math.round((Math.random()*4-2)*100)/100);
+  coefs[0] = Math.round((0.5+Math.random()*2)*10)/10;
+  paintCoefs(true);
+};
+document.getElementById("coefReset").onclick = ()=>{
+  coefK = 0;
+  coefs = Array.from({length:NCOEF}, (_,n)=> 1/bigFactNum(n));
+  paintCoefs(true);
+};
+paintCoefs(true);
+
+/* =====================================================================
+   3. Section 2 — the conveyor belts
+   ===================================================================== */
+const PALETTE = [
+  {bg:"#f0a03c", br:"#ffc477"}, {bg:"#3fd0c9", br:"#7ff0ea"}, {bg:"#ab8cf7", br:"#c9b4ff"},
+  {bg:"#6ea8fe", br:"#a3c9ff"}, {bg:"#57d38c", br:"#8ff0b6"}, {bg:"#f77fb4", br:"#ffb0d3"},
+  {bg:"#bcd94a", br:"#d9ef88"}, {bg:"#ff9f6e", br:"#ffc2a3"}
+];
+function termTex(e){                       // the value living in slot e
+  if(e === 0) return "1";
+  if(e === 1) return "x";
+  return "\\dfrac{x^{"+e+"}}{"+e+"!}";
+}
+function derivTex(e){                      // mid-flight, before cancelling
+  if(e === 0) return "0";
+  if(e === 1) return "1";
+  if(e === 2) return "\\dfrac{2x}{2!}";
+  return "\\dfrac{"+e+"x^{"+(e-1)+"}}{"+e+"!}";
+}
+
+class Belt{
+  constructor(rootId, opts){
+    this.root = document.getElementById(rootId);
+    this.finite = !!opts.finite;
+    this.N = opts.N || 4;
+    this.visible = opts.visible || 6;
+    this.shift = 0;
+    this.busy = false;
+    this.blocks = [];
+    this.build();
+  }
+  slotCount(){ return this.finite ? Math.min(this.N+1, 7) : this.visible; }
+  build(){
+    this.root.innerHTML = "";
+    const rail = document.createElement("div"); rail.className = "rail"; this.root.appendChild(rail);
+    this.rail = rail;
+    this.slotEls = [];
+    const S = this.slotCount();
+    for(let j=0;j<S;j++){
+      const s = document.createElement("div");
+      s.className = "slot";
+      s.innerHTML = '<div class="sl">SLOT '+j+'</div><div class="val">'+tex(termTex(j))+'</div>';
+      this.root.appendChild(s);
+      this.slotEls.push(s);
+    }
+    this.bin = document.createElement("div");
+    this.bin.className = "bin";
+    this.root.appendChild(this.bin);
+    if(this.finite){
+      this.wall = document.createElement("div"); this.wall.className = "wall";
+      this.root.appendChild(this.wall);
+    } else {
+      this.supply = document.createElement("div"); this.supply.className = "supply";
+      this.supply.innerHTML = '<div class="dots">⋯</div><div class="cap">TAIL</div>';
+      this.root.appendChild(this.supply);
+    }
+    this.spawnAll();
+    this.layout();
+  }
+  makeBlock(origin){
+    const el = document.createElement("div");
+    el.className = "block";
+    const c = PALETTE[origin % PALETTE.length];
+    el.style.setProperty("--bc", c.bg);
+    el.style.setProperty("--bl", c.br);
+    el.innerHTML = '<div class="lab">'+tex(termTex(origin - this.shift))+'</div>';
+    this.root.appendChild(el);
+    return {origin, el, lab: el.querySelector(".lab")};
+  }
+  spawnAll(){
+    this.blocks.forEach(b=>b.el.remove());
+    this.blocks = [];
+    const S = this.slotCount();
+    const top = this.finite ? this.N : this.shift + S - 1;
+    for(let o = this.shift; o <= top; o++){
+      if(o - this.shift >= S) break;
+      this.blocks.push(this.makeBlock(o));
+    }
+  }
+  geom(){
+    const w = this.root.clientWidth || 480;
+    const S = this.slotCount();
+    const pad = this.finite ? 26 : 34;
+    const slotW = (w - pad) / S;
+    const blockW = Math.max(38, slotW - 10);
+    // label scales with the slot so long terms stay inside their block
+    const font = Math.max(9.5, Math.min(14, blockW * 0.19));
+    return {slotW, blockW, font, left: 2};
+  }
+  posX(slot){ const g = this.geom(); return g.left + slot*g.slotW + (g.slotW - g.blockW)/2; }
+  layout(){
+    const g = this.geom();
+    this.slotEls.forEach((s,j)=>{
+      s.style.left = (g.left + j*g.slotW) + "px";
+      s.style.width = g.slotW + "px";
+    });
+    this.blocks.forEach(b=>{
+      b.el.style.width = g.blockW + "px";
+      b.lab.style.fontSize = g.font + "px";
+      gsap.set(b.el, {x: this.posX(b.origin - this.shift), y:0, opacity:1, scale:1, rotation:0});
+    });
+    if(this.wall) this.wall.style.left = (g.left + this.slotCount()*g.slotW - 4) + "px";
+    this.paintStatic();
+  }
+  paintStatic(){
+    const S = this.slotCount();
+    const occupied = new Set(this.blocks.map(b=>b.origin - this.shift));
+    this.slotEls.forEach((s,j)=>{
+      s.classList.toggle("empty", !occupied.has(j));
+      s.classList.remove("match");
+    });
+    this.bin.innerHTML = this.shift === 0 ? "→ 0 bin: <b>empty</b>" : "→ 0 bin: <b>"+this.shift+"</b> constant"+(this.shift>1?"s":"");
+  }
+  sumTex(){
+    const S = this.slotCount();
+    const parts = [];
+    const occ = this.blocks.map(b=>b.origin - this.shift).sort((a,b)=>a-b);
+    if(occ.length === 0) return this.finite ? "p_{"+this.shift+"}(x)=0" : "0";
+    for(const j of occ) parts.push(termTex(j));
+    const body = parts.join("+");
+    if(this.finite) return "p^{("+this.shift+")}(x)="+body;
+    return "\\exp^{("+this.shift+")}(x)="+body+"+\\cdots";
+  }
+  async step(){
+    if(this.busy) return;
+    const S = this.slotCount();
+    if(this.blocks.length === 0) return;
+    this.busy = true;
+    const g = this.geom();
+    const tl = gsap.timeline();
+
+    // phase A — show the raw derivative on every block
+    this.blocks.forEach(b=>{
+      const e = b.origin - this.shift;
+      setTex(b.lab, derivTex(e));
+    });
+    tl.fromTo(this.blocks.map(b=>b.el), {filter:"brightness(1)"},
+      {filter:"brightness(1.45)", duration:0.22, yoyo:true, repeat:1, stagger:0.02});
+    tl.to({}, {duration:0.34});
+
+    // phase B — slide one slot left; the constant falls into the bin
+    const dying = this.blocks.find(b => b.origin - this.shift === 0);
+    const movers = this.blocks.filter(b => b !== dying);
+    if(dying){
+      tl.to(dying.el, {x: this.posX(-1), y: 78, opacity:0, scale:0.55, rotation:-14,
+        duration:0.62, ease:"power2.in"}, "slide");
+    }
+    movers.forEach((b,i)=>{
+      tl.to(b.el, {x: this.posX(b.origin - this.shift - 1), duration:0.62, ease:"power2.inOut"},
+        "slide+="+(i*0.025));
+    });
+
+    await tl.then();
+
+    // commit the shift
+    this.shift++;
+    if(dying){ dying.el.remove(); this.blocks = this.blocks.filter(b=>b!==dying); }
+
+    // phase C — labels simplify to exactly the slot label they landed on
+    this.blocks.forEach(b=>{
+      const e = b.origin - this.shift;
+      setTex(b.lab, termTex(e));
+      const s = this.slotEls[e];
+      if(s) s.classList.add("match");
+    });
+    gsap.fromTo(this.blocks.map(b=>b.el), {scale:1}, {scale:1.07, duration:0.16, yoyo:true, repeat:1});
+
+    // phase D — the infinite belt refills from the tail; the finite belt cannot
+    if(!this.finite){
+      const newOrigin = this.shift + S - 1;
+      const nb = this.makeBlock(newOrigin);
+      nb.el.style.width = g.blockW + "px";
+      nb.lab.style.fontSize = g.font + "px";
+      gsap.set(nb.el, {x: this.posX(S), opacity:0});
+      this.blocks.push(nb);
+      await gsap.to(nb.el, {x: this.posX(S-1), opacity:1, duration:0.5, ease:"power2.out"}).then();
+    }
+    this.paintStatic();
+    this.busy = false;
+    onBeltChanged();
+  }
+  reset(){
+    gsap.killTweensOf(this.blocks.map(b=>b.el));
+    this.shift = 0;
+    this.busy = false;
+    this.build();
+  }
+  setN(N){ if(!this.finite) return; this.N = N; this.reset(); }
+  liveDegree(){ return this.finite ? this.N - this.shift : Infinity; }
+}
+
+const beltInf = new Belt("infTrack", {finite:false, visible:6});
+const beltFin = new Belt("finTrack", {finite:true, N:4});
+const infSumEl = document.getElementById("infSum");
+const finSumEl = document.getElementById("finSum");
+const infVerdict = document.getElementById("infVerdict");
+const finVerdict = document.getElementById("finVerdict");
+const beltXEl = document.getElementById("beltX");
+
+function onBeltChanged(){
+  const x = parseFloat(beltXEl.value);
+  document.getElementById("beltXOut").textContent = x.toFixed(2);
+
+  setTex(infSumEl, beltInf.sumTex(), true);
+  setTex(finSumEl, beltFin.sumTex(), true);
+  document.getElementById("infSteps").textContent = beltInf.shift + " derivative" + (beltInf.shift===1?"":"s") + " taken";
+  document.getElementById("finSteps").textContent = beltFin.shift + " derivative" + (beltFin.shift===1?"":"s") + " taken";
+
+  // infinite belt: identical before and after
+  infVerdict.className = "verdict ok";
+  infVerdict.innerHTML = '<span>✓ every slot refilled — the belt after the shift is the belt before it: </span>'+
+    '<span class="m">'+tex("\\exp'=\\exp")+'</span>';
+
+  const d = beltFin.liveDegree();
+  if(d < 0){
+    finVerdict.className = "verdict no";
+    finVerdict.innerHTML = '<span>the belt is empty. '+tex("p\\equiv 0")+
+      ' — the only polynomial that is its own derivative.</span>';
+  } else if(beltFin.shift === 0){
+    finVerdict.className = "verdict";
+    finVerdict.innerHTML = '<span>degree '+d+'. Press d/dx and watch slot '+d+' lose its supplier.</span>';
+  } else {
+    finVerdict.className = "verdict no";
+    finVerdict.innerHTML = '<span>✗ slot '+(d+1)+' emptied — no block arrived from behind. What is left has degree '+
+      d+', and it still fails: </span>'+
+      '<span class="m">'+tex("p-p'=\\dfrac{x^{"+d+"}}{"+d+"!}\\neq 0")+'</span>';
+  }
+
+  // numbers
+  const infVal = SN(x, 40);
+  document.querySelector("#roInfVal .v").textContent = fmt(infVal, 9);
+  const infDef = termN(x, 40);
+  document.querySelector("#roInfDiff .v").textContent = fmtE(infDef, 2);
+  document.querySelector("#roInfDiff .sub").textContent = "= x⁴⁰/40! — the visible truncation, ≈0";
+
+  const dd = Math.max(d, -1);
+  if(dd < 0){
+    document.querySelector("#roFinP .v").textContent = "0";
+    document.querySelector("#roFinDiff .v").textContent = "0";
+    document.querySelector("#roFinSub").textContent = "p ≡ 0 is the trivial solution";
+  } else {
+    const pv = SN(x, dd);
+    const dv = termN(x, dd);
+    document.querySelector("#roFinP .v").textContent = fmt(pv, 8);
+    document.querySelector("#roFinDiff .v").textContent = fmt(dv, 8);
+    document.querySelector("#roFinSub").textContent = "= x^"+dd+"/"+dd+"!  (exactly the top term)";
+  }
+}
+document.getElementById("beltStep").onclick = ()=>{ beltInf.step(); beltFin.step(); };
+document.getElementById("beltReset").onclick = ()=>{ beltInf.reset(); beltFin.reset(); onBeltChanged(); };
+document.getElementById("degN").addEventListener("input", e=>{
+  const N = +e.target.value;
+  document.getElementById("degNOut").textContent = N;
+  beltFin.setN(N);
+  onBeltChanged();
+});
+beltXEl.addEventListener("input", onBeltChanged);
+
+/* =====================================================================
+   4. ECharts — shared dark styling
+   ===================================================================== */
+const AX = {
+  axisLine:{lineStyle:{color:"#313b4c"}},
+  axisTick:{lineStyle:{color:"#313b4c"}},
+  axisLabel:{color:"#71809a", fontSize:11, fontFamily:"ui-monospace, monospace"},
+  splitLine:{lineStyle:{color:"rgba(36,44,57,.7)"}},
+  nameTextStyle:{color:"#71809a", fontSize:11}
+};
+// merge helper: AX supplies defaults, the caller's keys WIN (order matters — a bare
+// Object.assign(o, AX) would let AX.axisLabel clobber a custom log-axis formatter)
+function axis(o){ return Object.assign({}, AX, o); }
+function baseOpt(){
+  return {
+    backgroundColor:"transparent",
+    animationDuration:280,
+    grid:{left:56, right:18, top:26, bottom:40},
+    tooltip:{
+      trigger:"axis",
+      backgroundColor:"rgba(18,23,31,.96)", borderColor:"#313b4c",
+      textStyle:{color:"#e8eef7", fontSize:12, fontFamily:"ui-monospace, monospace"}
+    },
+    legend:{textStyle:{color:"#a6b3c6", fontSize:11}, top:0, icon:"roundRect", itemHeight:8, itemWidth:16}
+  };
+}
+const charts = [];
+function mkChart(id){ const c = echarts.init(document.getElementById(id), null, {renderer:"canvas"}); charts.push(c); return c; }
+window.addEventListener("resize", ()=>{
+  charts.forEach(c=>c.resize());
+  beltInf.layout(); beltFin.layout();
+});
+
+/* ---- 4a. deficit chart (section 3) ---- */
+const chDef = mkChart("chartDeficit");
+function drawDeficit(){
+  const N = +document.getElementById("defN").value;
+  document.getElementById("defNOut").textContent = N;
+  const h = 1e-5, xs = [], numeric = [], predicted = [];
+  let maxgap = 0;
+  for(let i=0;i<=140;i++){
+    const x = -3 + 6*i/140;
+    const fd = (SN(x+h, N) - SN(x-h, N)) / (2*h);     // independent derivative estimate
+    const dnum = SN(x, N) - fd;
+    const dpre = termN(x, N);
+    xs.push(x); numeric.push([x, dnum]);
+    if(i % 7 === 0) predicted.push([x, dpre]);
+    maxgap = Math.max(maxgap, Math.abs(dnum - dpre));
+  }
+  document.querySelector("#roDefN .v").innerHTML = tex("\\tfrac{1}{"+N+"!}=") + " " + fmt(termN(1,N),6);
+  document.querySelector("#roFD .v").textContent = fmtE(maxgap, 2);
+  chDef.setOption(Object.assign(baseOpt(), {
+    legend:{textStyle:{color:"#a6b3c6", fontSize:11}, top:0, data:["S_N − S_N′ (numerical)","x^N/N! (predicted)"]},
+    xAxis:axis({type:"value", min:-3, max:3, name:"x", nameLocation:"middle", nameGap:24}),
+    yAxis:axis({type:"value", name:"deficit", nameGap:38, nameLocation:"middle"}),
+    series:[
+      {name:"S_N − S_N′ (numerical)", type:"line", data:numeric, showSymbol:false,
+       lineStyle:{width:2.6, color:"#f0a03c"}, z:3},
+      {name:"x^N/N! (predicted)", type:"scatter", data:predicted, symbolSize:9,
+       itemStyle:{color:"transparent", borderColor:"#3fd0c9", borderWidth:2}, z:4}
+    ]
+  }), true);
+}
+document.getElementById("defN").addEventListener("input", drawDeficit);
+
+/* ---- 4b. partial sums (section 4) ---- */
+const chPart = mkChart("chartPartial");
+function drawPartial(){
+  const N = +document.getElementById("psN").value;
+  const x0 = parseFloat(document.getElementById("psX").value);
+  document.getElementById("psNOut").textContent = N;
+  document.getElementById("psXOut").textContent = x0.toFixed(2);
+  const XS = [];
+  for(let i=0;i<=220;i++) XS.push(-4 + 8*i/220);
+  const series = [];
+  for(let n=1;n<N;n++){
+    series.push({name:"S"+n, type:"line", showSymbol:false, silent:true,
+      data: XS.map(x=>[x, SN(x,n)]),
+      lineStyle:{width:1, color:"#f0a03c", opacity:0.10 + 0.30*n/N}, z:2});
+  }
+  series.push({name:"e^x", type:"line", showSymbol:false, data: XS.map(x=>[x, Math.exp(x)]),
+    lineStyle:{width:3, color:"#3fd0c9"}, z:3});
+  series.push({name:"S"+N, type:"line", showSymbol:false, data: XS.map(x=>[x, SN(x,N)]),
+    lineStyle:{width:2.6, color:"#f0a03c"}, z:4,
+    markLine:{silent:true, symbol:"none", data:[{xAxis:x0}],
+      lineStyle:{color:"#ab8cf7", type:"dashed", width:1.4},
+      label:{formatter:"probe", color:"#ab8cf7", fontSize:10}}});
+  chPart.setOption(Object.assign(baseOpt(), {
+    legend:{show:true, top:0, textStyle:{color:"#a6b3c6", fontSize:11}, data:["e^x","S"+N]},
+    xAxis:axis({type:"value", min:-4, max:4, name:"x", nameLocation:"middle", nameGap:24}),
+    yAxis:axis({type:"value", min:-4, max:24}),
+    series
+  }), true);
+
+  const sv = SN(x0, N), ev = Math.exp(x0), err = Math.abs(sv-ev);
+  document.querySelector("#roSN .v").textContent = fmt(sv, 10);
+  document.querySelector("#roExp .v").textContent = fmt(ev, 10);
+  document.querySelector("#roErr .v").textContent = fmtE(err, 3);
+  document.querySelector("#roErrSub").textContent = "relative " + fmtE(err/Math.abs(ev), 2) +
+    " · first dropped term x^"+(N+1)+"/"+(N+1)+"! = " + fmtE(termN(x0,N+1),2);
+  document.querySelector("#roNeed .v").textContent = termsNeeded(x0, 1e-12) + " terms";
+}
+document.getElementById("psN").addEventListener("input", drawPartial);
+document.getElementById("psX").addEventListener("input", drawPartial);
+
+/* ---- 4c. term magnitudes + ratio (section 5) ---- */
+const chTerms = mkChart("chartTerms");
+const chRatio = mkChart("chartRatio");
+function drawConvergence(){
+  const x = parseFloat(document.getElementById("cvX").value);
+  document.getElementById("cvXOut").textContent = x.toFixed(1);
+  const ax = Math.abs(x);
+  const NMAX = Math.max(24, Math.ceil(ax*2.6) + 12);
+  const t = terms(x, NMAX);
+  const mags = t.map(v => Math.abs(v));
+  let peakN = 0;
+  for(let n=1;n<=NMAX;n++) if(mags[n] > mags[peakN]) peakN = n;
+
+  const barData = [];
+  for(let n=0;n<=NMAX;n++){
+    const v = mags[n];
+    barData.push({
+      value: v > 0 ? v : null,
+      itemStyle:{ color: n===peakN ? "#ff6f6f" : (n < ax ? "#f0a03c" : "#3fd0c9"),
+                  opacity: n===peakN ? 1 : 0.82 }
+    });
+  }
+  const lo = Math.max(1e-18, Math.min(...mags.filter(v=>v>0)));
+  chTerms.setOption(Object.assign(baseOpt(), {
+    grid:{left:70, right:18, top:16, bottom:40},
+    tooltip:{trigger:"axis", backgroundColor:"rgba(18,23,31,.96)", borderColor:"#313b4c",
+      textStyle:{color:"#e8eef7", fontSize:12, fontFamily:"ui-monospace, monospace"},
+      formatter: p => "n = " + p[0].axisValue + "<br>|term| = " + (p[0].data.value===null?"0":p[0].data.value.toExponential(4))},
+    legend:{show:false},
+    xAxis:axis({type:"category", data:Array.from({length:NMAX+1},(_,i)=>i),
+      name:"n", nameLocation:"middle", nameGap:24}),
+    yAxis:axis({type:"log", min:lo, name:"|xⁿ/n!|", nameGap:52, nameLocation:"middle",
+      axisLabel:{color:"#71809a", fontSize:10, fontFamily:"ui-monospace, monospace",
+                 formatter: v => v.toExponential(0).replace("e+","e")}}),
+    series:[{type:"bar", data:barData, barCategoryGap:"22%"}]
+  }), true);
+
+  const rd = [], rx = [];
+  for(let n=0;n<=NMAX;n++){ rx.push(n); rd.push(ax > 0 ? ax/(n+1) : null); }
+  // smallest n with |x|/(n+1) < 1, i.e. the first strictly shrinking step
+  const crossing = Math.max(0, Math.floor(ax - 1) + 1);
+  // log scale once the range is wide, so the crossing at 1 is legible for every x
+  const useLog = ax >= 3;
+  const yAx = useLog
+    ? {type:"log", name:"|x|/(n+1)", nameGap:40, nameLocation:"middle",
+       axisLabel:{color:"#71809a", fontSize:10, fontFamily:"ui-monospace, monospace"}}
+    : {type:"value", min:0, max:Math.max(1.6, ax*1.1), name:"|x|/(n+1)", nameGap:36, nameLocation:"middle"};
+  chRatio.setOption(Object.assign(baseOpt(), {
+    grid:{left:56, right:18, top:16, bottom:40},
+    legend:{show:false},
+    tooltip:{trigger:"axis", backgroundColor:"rgba(18,23,31,.96)", borderColor:"#313b4c",
+      textStyle:{color:"#e8eef7", fontSize:12, fontFamily:"ui-monospace, monospace"}},
+    xAxis:axis({type:"category", data:rx, name:"n", nameLocation:"middle", nameGap:24}),
+    yAxis:axis(yAx),
+    series:[{type:"line", data:rd, showSymbol:false, lineStyle:{width:2.4, color:"#ab8cf7"},
+      areaStyle: useLog ? undefined : {color:"rgba(171,140,247,.13)"},
+      markLine:{silent:true, symbol:"none", data:[{yAxis:1}],
+        lineStyle:{color:"#57d38c", type:"dashed", width:1.6},
+        label:{formatter:"ratio = 1  ⇒  terms start shrinking", color:"#57d38c", fontSize:10, position:"insideEndTop"}}}]
+  }), true);
+
+  document.querySelector("#roPeakN .v").textContent = peakN;
+  document.querySelector("#roPeakV .v").textContent = fmtE(mags[peakN], 3);
+  document.querySelector("#roCross .v").textContent = crossing;
+  document.querySelector("#roTermsNeed .v").textContent = termsNeeded(x, 1e-14);
+}
+document.getElementById("cvX").addEventListener("input", ()=>{
+  document.querySelectorAll("#cvPresets button").forEach(b=>b.classList.remove("on"));
+  drawConvergence();
+});
+document.querySelectorAll("#cvPresets button").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll("#cvPresets button").forEach(o=>o.classList.remove("on"));
+    b.classList.add("on");
+    document.getElementById("cvX").value = b.dataset.x;
+    drawConvergence();
+  };
+});
+
+/* ---- 4d. e, exactly (section 6) ---- */
+const chE = mkChart("chartE");
+function buildETable(){
+  const tb = document.querySelector("#eTable tbody");
+  tb.innerHTML = "";
+  let A = 1n;                                   // A_n = n*A_{n-1} + 1
+  const errN = [], errBound = [];
+  for(let n=0;n<=11;n++){
+    if(n>0) A = BigInt(n)*A + 1n;
+    const den = bigFact(n);
+    const dec = bigDecimal(A, den, 24);
+    // count leading digits agreeing with e
+    let agree = 0;
+    for(let i=0;i<Math.min(dec.length, E_DIGITS.length); i++){
+      if(dec[i] === E_DIGITS[i]) agree++; else break;
+    }
+    const digitsShown = agree >= 2 ? agree - 1 : 0;   // discount the "2." prefix
+    let html = "";
+    for(let i=0;i<dec.length && i<20;i++){
+      html += '<span class="dg'+(i<agree?" ok":"")+'">'+dec[i]+'</span>';
+    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>"+n+"</td>"+
+      '<td class="frac">'+A.toString()+"/"+den.toString()+"</td>"+
+      "<td>"+html+"…</td>"+
+      "<td>"+digitsShown+"</td>";
+    tb.appendChild(tr);
+
+    const Sn = Number(A)/Number(den);
+    const err = Math.abs(Math.E - Sn);
+    if(n>=1){
+      errN.push([n, Math.max(err, 1e-17)]);
+      errBound.push([n, 1/(Number(bigFact(n))*n)]);
+    }
+  }
+  chE.setOption(Object.assign(baseOpt(), {
+    grid:{left:64, right:18, top:24, bottom:38},
+    legend:{top:0, textStyle:{color:"#a6b3c6", fontSize:11}, data:["|e − S_n|","bound 1/(n!·n)"]},
+    xAxis:axis({type:"value", min:1, max:11, name:"n", nameLocation:"middle", nameGap:22}),
+    yAxis:axis({type:"log", name:"error", nameGap:48, nameLocation:"middle",
+      axisLabel:{color:"#71809a", fontSize:10, fontFamily:"ui-monospace, monospace",
+                 formatter:v=>v.toExponential(0).replace("e-","e−")}}),
+    series:[
+      {name:"|e − S_n|", type:"line", data:errN, symbolSize:6,
+       lineStyle:{width:2.4, color:"#f0a03c"}, itemStyle:{color:"#f0a03c"}},
+      {name:"bound 1/(n!·n)", type:"line", data:errBound, symbolSize:5,
+       lineStyle:{width:2, color:"#3fd0c9", type:"dashed"}, itemStyle:{color:"#3fd0c9"}}
+    ]
+  }), true);
+}
+
+/* ---- 4e. catastrophic cancellation (section 7) ---- */
+function runCancellation(){
+  const X = Math.abs(parseFloat(document.getElementById("ccX").value) || 20);
+  const x = -X;
+  // direct summation, tracking the largest term seen
+  let t = 1, s = 1, maxT = 1;
+  const NT = termsNeeded(x, 1e-17);
+  for(let n=1;n<=NT;n++){ t = t*x/n; s += t; maxT = Math.max(maxT, Math.abs(t)); }
+  const direct = s;
+  // reciprocal of the all-positive sum
+  let tp = 1, sp = 1;
+  const NP = termsNeeded(X, 1e-17);
+  for(let n=1;n<=NP;n++){ tp = tp*X/n; sp += tp; }
+  const recip = 1/sp;
+  const ref = Math.exp(x);
+  const rows = [
+    ["direct sum &nbsp;<span style='color:#71809a'>Σ (−"+X+")ⁿ/n!, "+NT+" terms</span>", direct, Math.abs(direct-ref)/Math.abs(ref), "bad"],
+    ["reciprocal &nbsp;<span style='color:#71809a'>1 / Σ "+X+"ⁿ/n!, "+NP+" terms</span>", recip, Math.abs(recip-ref)/Math.abs(ref), "good"],
+    ["Math.exp(−"+X+") &nbsp;<span style='color:#71809a'>reference</span>", ref, 0, "ref"]
+  ];
+  const tb = document.querySelector("#ccTable tbody");
+  tb.innerHTML = "";
+  rows.forEach(([name, val, rel, kind])=>{
+    const col = kind==="bad" ? "#ff6f6f" : kind==="good" ? "#57d38c" : "#a6b3c6";
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>"+name+"</td>"+
+      "<td style='color:"+col+"'>"+val.toExponential(9)+"</td>"+
+      "<td style='color:"+col+"'>"+(kind==="ref" ? "—" : (rel>=1 ? (rel*100).toFixed(0)+"%  (no correct digits)" : rel.toExponential(2)))+"</td>";
+    tb.appendChild(tr);
+  });
+  document.querySelector("#roMaxTerm .v").textContent = maxT.toExponential(3);
+  document.querySelector("#roPredict .v").textContent = (maxT*Math.pow(2,-52)).toExponential(3);
+  document.querySelector("#roPredict .sub").innerHTML = "true value ≈ " + ref.toExponential(3) +
+    " — same order ⇒ signal buried";
+}
+document.getElementById("ccRun").onclick = runCancellation;
+document.getElementById("ccX").addEventListener("change", runCancellation);
+
+/* ---- 4f. exponential law check ---- */
+function checkLaw(){
+  const x = parseFloat(document.getElementById("lawX").value) || 0;
+  const y = parseFloat(document.getElementById("lawY").value) || 0;
+  const lhs = SN(x,30)*SN(y,30), rhs = SN(x+y,30);
+  const el = document.querySelector("#roLaw .v");
+  el.textContent = fmtE(Math.abs(lhs-rhs), 3);
+  document.querySelector("#roLaw .sub").textContent =
+    "S₃₀(x)·S₃₀(y) = " + fmt(lhs,10) + " · S₃₀(x+y) = " + fmt(rhs,10);
+}
+document.getElementById("lawX").addEventListener("input", checkLaw);
+document.getElementById("lawY").addEventListener("input", checkLaw);
+
+/* =====================================================================
+   5. boot
+   ===================================================================== */
+renderAll();
+onBeltChanged();
+drawDeficit();
+drawPartial();
+drawConvergence();
+buildETable();
+runCancellation();
+checkLaw();
+setTimeout(()=>{ beltInf.layout(); beltFin.layout(); charts.forEach(c=>c.resize()); }, 60);
+
+/* scroll progress in the sticky bar */
+const SECT = [...document.querySelectorAll("section")];
+const TITLES = ["existence","forced coefficients","the conveyor","finite fails","partial sums","convergence","the number e","honesty","essence"];
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      const i = SECT.indexOf(en.target);
+      if(i>=0) document.getElementById("progress").textContent =
+        String(i).padStart(2,"0") + " · " + TITLES[i];
+    }
+  });
+}, {rootMargin:"-45% 0px -50% 0px"});
+SECT.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

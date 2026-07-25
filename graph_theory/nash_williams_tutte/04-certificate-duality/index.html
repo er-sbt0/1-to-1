@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Stuck Packing Writes Its Own Excuse — Nash-Williams–Tutte as certificate duality</title>
+<link rel="stylesheet" href="lib/katex.min.css">
+<style>
+:root{
+  color-scheme: light;
+  /* surfaces & ink — validated light instance */
+  --plane:#f9f9f7;
+  --surface:#fcfcfb;
+  --surface-2:#f2f1ec;
+  --ink:#0b0b0b;
+  --ink-2:#52514e;
+  --muted:#898781;
+  --grid:#e1e0d9;
+  --rule:#c3c2b7;
+  --hair:rgba(11,11,11,.10);
+
+  /* categorical slots 1–3 (all-pairs validated on this surface) */
+  --f1:#2a78d6;
+  --f2:#eb6834;
+  --f3:#1baf7a;
+
+  /* status — reserved, never a series */
+  --good:#0ca30c;
+  --good-ink:#006300;
+  --crit:#d03b3b;
+  --warn:#fab219;
+
+  --accent:#4a3aa7;          /* search emphasis — a role, not a series */
+  --r:10px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--plane)}
+body{
+  margin:0; background:var(--plane); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 26px}
+h1,h2,h3{letter-spacing:-.015em}
+a{color:var(--f1)}
+
+/* ---------------- hero ---------------- */
+.hero{padding:70px 0 44px}
+.eyebrow{font-size:11.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-size:clamp(32px,5.4vw,58px);line-height:1.04;margin:16px 0 0;font-weight:700;max-width:19ch}
+h1 em{font-style:normal;color:var(--f1)}
+.lede{font-size:clamp(16.5px,1.85vw,19.5px);color:var(--ink-2);max-width:66ch;margin:22px 0 0}
+.lede strong{color:var(--ink);font-weight:650}
+.thmbox{margin-top:32px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:22px 26px;box-shadow:0 1px 2px rgba(11,11,11,.04)}
+.thmbox .lab{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:12px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.toc a{font-size:13px;color:var(--ink-2);text-decoration:none;border:1px solid var(--rule);border-radius:999px;padding:6px 14px;background:var(--surface);transition:.14s}
+.toc a:hover{border-color:var(--f1);color:var(--ink)}
+
+/* ---------------- sections ---------------- */
+.beat{padding:52px 0;border-top:1px solid var(--grid)}
+.beat > .wrap > header{max-width:74ch}
+.num{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;font-weight:600}
+h2{font-size:clamp(24px,3.1vw,34px);margin:8px 0 0;font-weight:700}
+.sub{color:var(--ink-2);margin:12px 0 0;font-size:17px;max-width:72ch}
+.beat p{max-width:72ch}
+.split{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;margin-top:26px;align-items:start}
+.split.even{grid-template-columns:1fr 1fr}
+.split.rightwide{grid-template-columns:1fr 1.25fr}
+.split > *{min-width:0}
+.sticky{position:sticky;top:14px}
+@media(max-width:1000px){.sticky{position:static}}
+@media(max-width:1000px){.split,.split.even,.split.rightwide{grid-template-columns:1fr}}
+
+.panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:16px 18px}
+.panel.tight{padding:12px 14px}
+.panel h4{margin:0 0 10px;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+.callout{border-left:3px solid var(--rule);padding:2px 0 2px 16px;color:var(--ink-2);margin:20px 0 0;max-width:72ch}
+.callout.key{border-left-color:var(--f1)}
+.callout.warnl{border-left-color:var(--warn)}
+.callout.critl{border-left-color:var(--crit)}
+.callout strong{color:var(--ink)}
+
+/* ---------------- controls ---------------- */
+.ctrlbar{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:12px 14px;margin-top:22px}
+.cgroup{display:flex;flex-direction:column;gap:6px}
+.cgroup > span{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.btns{display:flex;gap:5px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);border-radius:7px;cursor:pointer;transition:.13s;white-space:nowrap}
+button:hover{border-color:var(--ink-2);color:var(--ink)}
+button[aria-pressed="true"],button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+button.ghost{border-style:dashed}
+button:disabled{opacity:.38;cursor:default}
+button.icon{font-family:var(--mono);min-width:38px;text-align:center}
+input[type=range]{accent-color:var(--f1);width:100%}
+.scrub{display:flex;align-items:center;gap:12px;margin-top:12px;background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:10px 14px}
+.scrub input{flex:1}
+.stepno{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);min-width:92px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* chapter rail */
+.rail{display:flex;gap:0;margin-top:12px;border:1px solid var(--hair);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.rail button{transition:none;border:0;border-right:1px solid var(--grid);border-radius:0;flex:1;padding:9px 6px;font-size:11.5px;letter-spacing:.04em}
+.rail button:last-child{border-right:0}
+.rail button.now{background:var(--surface-2);color:var(--ink);font-weight:650;box-shadow:inset 0 -2px 0 var(--f1)}
+
+/* ---------------- graph ---------------- */
+.stage{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);overflow:hidden}
+svg.graph{display:block;width:100%;height:auto}
+text{font-family:var(--sans)}
+
+/* ---------------- ledger ---------------- */
+.frow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:7px 0}
+.frow + .frow{border-top:1px solid var(--grid)}
+.swatch{width:20px;height:12px;border-radius:3px;position:relative}
+.fname{font-size:13px;color:var(--ink-2)}
+.fname b{color:var(--ink);font-weight:650}
+.bar{height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden;position:relative;margin-top:5px}
+.bar > i{display:block;height:100%;border-radius:5px;transition:width .18s ease}
+.bar .tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.fnum{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.totline{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.totline .big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.totline .sm{font-size:12.5px;color:var(--muted);font-family:var(--mono)}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;border-radius:999px;padding:3px 11px;border:1px solid}
+.pill.ok{color:var(--good-ink);border-color:rgba(12,163,12,.4);background:rgba(12,163,12,.08)}
+.pill.bad{color:var(--crit);border-color:rgba(208,59,59,.4);background:rgba(208,59,59,.07)}
+.pill.neu{color:var(--ink-2);border-color:var(--rule);background:var(--surface-2)}
+.pill .gl{font-family:var(--mono);font-weight:700}
+
+/* log */
+.log{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--ink-2);max-height:180px;overflow:auto}
+.log div{padding:3px 0;border-bottom:1px solid var(--grid)}
+.log div:last-child{border-bottom:0}
+.log .k{color:var(--muted)}
+.log div.cur{color:var(--ink)}
+
+.narr{background:var(--surface-2);border:1px solid var(--hair);border-radius:var(--r);padding:14px 16px;min-height:104px}
+.narr .h{font-size:15px;font-weight:650;margin-bottom:5px}
+.narr .b{font-size:13.5px;color:var(--ink-2);line-height:1.55}
+
+/* checklist */
+.chk{list-style:none;padding:0;margin:0;font-size:13.5px}
+.chk li{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--grid)}
+.chk li:last-child{border-bottom:0}
+.chk .g{font-family:var(--mono);font-weight:700}
+.chk .g.y{color:var(--good-ink)}
+.chk .g.n{color:var(--crit)}
+.chk .v{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right}
+
+/* tables */
+.tblwrap{overflow-x:auto;border:1px solid var(--hair);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+
+/* dichotomy cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}
+@media(max-width:900px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:20px;opacity:.42;transition:.25s;position:relative}
+.card.live{opacity:1;border-color:var(--ink);box-shadow:0 2px 14px rgba(11,11,11,.07)}
+.card h3{margin:0;font-size:19px}
+.card .tag{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card .dead{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);font-weight:650;background:rgba(249,249,247,.55);border-radius:var(--r);letter-spacing:.04em}
+.card.live .dead{display:none}
+.mono{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);word-break:break-word}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend svg{display:block}
+
+/* certificate bar */
+.certbar{margin-top:16px}
+.certbar .track{position:relative;height:34px;background:var(--surface-2);border-radius:8px;border:1px solid var(--hair)}
+.certbar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:7px 0 0 7px;background:var(--f1)}
+.certbar .gap{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(208,59,59,.20) 0 6px,rgba(208,59,59,.06) 6px 12px);border-left:2px solid var(--crit);border-radius:0 7px 7px 0}
+.certbar .need{position:absolute;top:-7px;bottom:-7px;width:2px;background:var(--ink)}
+.certbar .lbls{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-top:8px;font-family:var(--mono)}
+.units{display:flex;gap:3px;flex-wrap:wrap;margin-top:10px}
+.units i{width:15px;height:15px;border-radius:3px;border:1px solid var(--hair);background:var(--surface-2);display:block}
+.units i.on{background:var(--crit);border-color:var(--crit)}
+.units i.miss{background:transparent;border:1px dashed var(--crit)}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(14px)}
+.rv.in{opacity:1;transform:none;transition:opacity .55s ease,transform .55s ease}
+.rv.instant{transition:none !important}
+@media (prefers-reduced-motion: reduce){.rv{opacity:1;transform:none}.rv.in{transition:none}}
+
+footer{padding:44px 0 66px;color:var(--muted);font-size:13px;border-top:1px solid var(--grid)}
+.katex{font-size:1.02em}
+.katex-display{margin:.55em 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ============================== HERO ============================== -->
+<div class="wrap hero">
+  <div class="eyebrow">Nash-Williams · Tutte, 1961 — the hard direction</div>
+  <h1>A stuck packing <em>writes its own excuse</em></h1>
+  <p class="lede">
+    Necessity is a one-line count. <strong>Sufficiency is the entire theorem</strong> — and its real content is not
+    “the trees exist.” It is this: when they don’t exist, the algorithm that fails hands you the reason it failed.
+    Below, a real packing algorithm runs on a real graph. When it gets stuck, the wreckage of its search folds
+    into a partition of the vertices that is provably short of edges — and you can check the arithmetic yourself,
+    without trusting a single thing the algorithm did.
+  </p>
+
+  <div class="thmbox">
+    <div class="lab">Nash-Williams–Tutte tree-packing theorem</div>
+    <div data-tex-d="G=(V,E)\ \text{a finite multigraph},\ k\ge 1.\qquad
+      \underbrace{G \text{ has } k \text{ pairwise edge-disjoint spanning trees}}_{\textstyle \text{witness A}}
+      \iff
+      \underbrace{\forall\, \mathcal P=\{V_1,\dots,V_r\}:\ e_G(\mathcal P)\ \ge\ k(r-1)}_{\textstyle \text{no witness B exists}}"></div>
+    <p style="margin:12px 0 0;color:var(--ink-2);font-size:14.5px;max-width:none">
+      <span data-tex="\mathcal P"></span> ranges over <em>all</em> partitions of <span data-tex="V"></span> into
+      <span data-tex="r"></span> nonempty parts, <span data-tex="1\le r\le |V|"></span>; and
+      <span data-tex="e_G(\mathcal P)"></span> counts the edges whose two ends land in different parts.
+    </p>
+  </div>
+
+  <nav class="toc">
+    <a href="#s1">1 · The price of welding</a>
+    <a href="#s2">2 · Run the machine</a>
+    <a href="#s3">3 · The search dies, the excuse hardens</a>
+    <a href="#s4">4 · Exactly one witness</a>
+    <a href="#s5">5 · What was shown, what was waved</a>
+  </nav>
+</div>
+
+<!-- ============================== §1 ============================== -->
+<section class="beat rv" id="s1"><div class="wrap">
+  <header>
+    <div class="num">01</div>
+    <h2>The price of welding</h2>
+    <p class="sub">
+      Chop <span data-tex="V"></span> into <span data-tex="r"></span> clusters and squint until each cluster is a
+      single dot. A spanning tree must connect those <span data-tex="r"></span> dots. Every crossing edge it uses
+      can merge at most two pieces into one, so it must spend <strong>at least <span data-tex="r-1"></span></strong>
+      of them. <span data-tex="k"></span> edge-disjoint trees spend edges no other tree may reuse. So the graph
+      must stock at least <span data-tex="k(r-1)"></span> crossing edges — for <em>every</em> clustering at once.
+    </p>
+  </header>
+
+  <div class="split rightwide">
+    <div class="stack">
+      <div class="stage"><svg class="graph" id="toll-svg" viewBox="0 0 620 260" preserveAspectRatio="xMidYMid meet" role="img" aria-label="r clusters welded by k disjoint spanning connections"></svg></div>
+      <div class="ctrlbar" style="margin-top:0">
+        <div class="cgroup" style="flex:1;min-width:170px"><span>parts &nbsp;r = <b id="toll-r">4</b></span><input id="toll-rr" type="range" min="1" max="7" value="4" step="1"></div>
+        <div class="cgroup" style="flex:1;min-width:170px"><span>trees &nbsp;k = <b id="toll-k">3</b></span><input id="toll-kk" type="range" min="1" max="3" value="3" step="1"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h4>The toll</h4>
+        <div data-tex-d="\underbrace{e_G(\mathcal P)}_{\text{edges you have}}\ \ge\ \underbrace{k}_{\text{trees}}\cdot\underbrace{(r-1)}_{\text{welds each}}"></div>
+        <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2)">
+          <b id="toll-txt"></b>
+        </p>
+      </div>
+      <div class="panel">
+        <h4>Necessity, in full</h4>
+        <p style="margin:0;font-size:14px;color:var(--ink-2)">
+          Contract every part of <span data-tex="\mathcal P"></span> to a point. Each spanning tree
+          <span data-tex="T_i"></span> becomes a connected spanning submultigraph of the
+          <span data-tex="r"></span>-vertex quotient, so it keeps at least <span data-tex="r-1"></span> crossing
+          edges. The <span data-tex="T_i"></span> are pairwise edge-disjoint, so the counts add:
+          <span data-tex="e_G(\mathcal P)\ \ge\ \sum_i |T_i\cap E(\mathcal P)|\ \ge\ k(r-1)"></span>. Done — that is
+          the whole easy half.
+        </p>
+      </div>
+      <div class="callout key" style="margin-top:0">
+        <strong>And now the asymmetry.</strong> Nothing in that paragraph hints that a sparse clustering is the
+        <em>only</em> way to fail. A graph could conceivably be tangled in some other, subtler way. The theorem says
+        it cannot. Everything below is about why.
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============================== §2 ============================== -->
+<section class="beat rv" id="s2"><div class="wrap">
+  <header>
+    <div class="num">02</div>
+    <h2>Run the machine</h2>
+    <p class="sub">
+      The state is <span data-tex="k"></span> pairwise edge-disjoint <em>forests</em>
+      <span data-tex="F_1,\dots,F_k"></span>, starting empty. We want to push the total
+      <span data-tex="|F_1|+\dots+|F_k|"></span> up to <span data-tex="k(n-1)"></span>, at which point every
+      <span data-tex="F_i"></span> has <span data-tex="n-1"></span> edges and no cycle, i.e. is a spanning tree.
+      Three rules run the whole thing:
+    </p>
+    <ul class="sub" style="padding-left:20px">
+      <li><b>Grow.</b> Edge <span data-tex="f=uv"></span> may enter <span data-tex="F_i"></span> exactly when
+        <span data-tex="u"></span> and <span data-tex="v"></span> sit in <em>different</em> components of
+        <span data-tex="F_i"></span>.</li>
+      <li><b>Blocked.</b> If <span data-tex="f"></span> is stuck in every forest, then for each
+        <span data-tex="i"></span>, adding it to <span data-tex="F_i"></span> would close exactly one cycle: the
+        <span data-tex="F_i"></span>-path from <span data-tex="u"></span> to <span data-tex="v"></span>, plus
+        <span data-tex="f"></span>. <em>Any single edge on that path could be evicted to make room.</em></li>
+      <li><b>Chase.</b> An evicted edge is itself homeless — maybe it fits somewhere else, maybe it needs
+        someone else evicted first. Breadth-first search over edges. If the chain ever reaches an edge that fits
+        somewhere directly, apply the whole sequence of swaps backwards and the total goes up by one.</li>
+    </ul>
+  </header>
+
+  <div class="ctrlbar">
+    <div class="cgroup"><span>graph</span><div class="btns" id="pick-g"></div></div>
+    <div class="cgroup"><span>trees k</span><div class="btns" id="pick-k"></div></div>
+    <div class="cgroup"><span>transport</span><div class="btns">
+      <button class="icon" id="tp-first" title="restart">|&lt;</button>
+      <button class="icon" id="tp-back" title="step back">&lt;</button>
+      <button class="icon on" id="tp-play" style="min-width:74px" title="play / pause">play</button>
+      <button class="icon" id="tp-fwd" title="step forward">&gt;</button>
+      <button class="icon" id="tp-last" title="jump to the end">&gt;|</button>
+    </div></div>
+    <div class="cgroup" style="min-width:150px"><span>speed <b id="sp-lab">1.0×</b></span><input id="tp-speed" type="range" min="1" max="5" step="1" value="3"></div>
+  </div>
+  <div class="scrub">
+    <input id="tp-scrub" type="range" min="0" max="1" value="0" step="1" aria-label="scrub the algorithm timeline">
+    <div class="stepno" id="tp-count">0 / 0</div>
+  </div>
+  <div class="rail" id="rail"></div>
+
+  <div class="split">
+    <div class="stack sticky">
+      <div class="stage"><svg class="graph" id="main-svg" viewBox="0 0 760 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="live packing"></svg></div>
+      <div class="legend" id="main-legend"></div>
+    </div>
+
+    <div class="stack">
+      <div class="narr" id="narr"><div class="h"></div><div class="b"></div></div>
+
+      <div class="panel">
+        <h4>Forests</h4>
+        <div id="ledger"></div>
+        <div class="totline">
+          <div><span class="big" id="tot-now">0</span><span class="sm" id="tot-of"></span></div>
+          <div id="tot-pill"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>Exchange search — the growing structure</h4>
+        <svg id="tree-svg" viewBox="0 0 460 250" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:auto"></svg>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px" id="tree-cap">
+          Idle. The search only wakes when an unused edge fits nowhere.
+        </div>
+      </div>
+
+      <div class="panel tight">
+        <h4>Trace</h4>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warnl">
+    <strong>Read the failure honestly.</strong> If you scrub to the end of a stuck run, all you have watched is
+    <em>one</em> algorithm giving up. That is not a proof of anything — a different edge order, a different
+    tie-break, a cleverer heuristic might have done better. The proof is the object the failure leaves behind.
+  </div>
+</div></section>
+
+<!-- ============================== §3 ============================== -->
+<section class="beat rv" id="s3"><div class="wrap">
+  <header>
+    <div class="num">03</div>
+    <h2>The search dies, and the excuse hardens</h2>
+    <p class="sub">
+      Let <span data-tex="A\subseteq E"></span> be the set of edges the exhausted search reached (including the
+      homeless edges it started from). Define <span data-tex="\mathcal P"></span> by collapsing each connected
+      piece of <span data-tex="(V,A)"></span> to one part. Then every edge of <span data-tex="A"></span> is
+      <em>interior</em> — so the crossing edges are drawn only from what the search never touched:
+      <span data-tex="e_G(\mathcal P)\le |E|-|A|"></span>. Play the flood and watch it happen.
+    </p>
+  </header>
+
+  <div class="split">
+    <div class="stack sticky">
+      <div class="stage"><svg class="graph" id="cert-svg" viewBox="0 0 760 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="the reached set hardening into a partition"></svg></div>
+      <div class="ctrlbar" style="margin-top:0">
+        <div class="cgroup"><span>replay</span><div class="btns">
+          <button id="fl-play">▶ flood the reached set</button>
+          <button id="fl-reset" class="ghost">reset</button>
+        </div></div>
+        <div class="cgroup" style="flex:1;min-width:170px"><span>harden <b id="fl-lab">0%</b></span><input id="fl-t" type="range" min="0" max="100" value="0"></div>
+      </div>
+      <div class="legend" id="cert-legend"></div>
+    </div>
+
+    <div class="stack">
+      <div class="panel" id="cert-head"></div>
+
+      <div class="panel">
+        <h4>Independent re-verification</h4>
+        <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-2)">
+          This check does not look at the forests, the search, or anything the solver believed. It takes only the
+          list <span data-tex="\text{part}[v]"></span>, walks <span data-tex="E"></span> once, and counts.
+        </p>
+        <ul class="chk" id="cert-chk"></ul>
+      </div>
+
+      <div class="panel">
+        <h4>Why the shortfall is forced</h4>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+          The search closing means no swap chain can free a slot, so the packing is <em>maximum</em>. The exchange
+          lemma — the intricate part, stated here, not proved here — says a maximum packing hits exactly the bound
+          the reached set imposes:
+        </p>
+        <div data-tex-d="\underbrace{\textstyle\sum_i |F_i|}_{\text{max packing}}\;=\;\big(|E|-|A|\big)\;+\;k\big(n-c(A)\big)"></div>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+          with <span data-tex="c(A)"></span> the number of components of <span data-tex="(V,A)"></span>, which is
+          our <span data-tex="r"></span>. Stuck means the left side is <span data-tex="< k(n-1)"></span>; subtract
+          and the <span data-tex="kn"></span> cancels:
+        </p>
+        <div data-tex-d="|E|-|A|\;<\;k(n-1)-k\big(n-r\big)\;=\;k(r-1)"></div>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+          and since <span data-tex="e_G(\mathcal P)\le |E|-|A|"></span>, the partition is short. The numbers above
+          are the same three numbers, measured on this graph.
+        </p>
+        <div class="mono" id="cert-idn" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout critl">
+    <strong>Where the hand-waving is.</strong> The boxed identity is the load-bearing lemma of the hard direction,
+    and it is the one thing on this page taken on faith. Everything else — the forests, the paths, the swap chains,
+    the reached set, the partition, the recount — is computed live and re-checked. And the recount alone is already
+    a complete proof of impossibility: a partition with <span data-tex="e_G(\mathcal P)&lt;k(r-1)"></span> rules out
+    <span data-tex="k"></span> spanning trees by §1, whatever route produced it.
+  </div>
+</div></section>
+
+<!-- ============================== §4 ============================== -->
+<section class="beat rv" id="s4"><div class="wrap">
+  <header>
+    <div class="num">04</div>
+    <h2>Exactly one witness. Never neither, never both.</h2>
+    <p class="sub">
+      This is what makes the theorem a <em>good characterisation</em> — the pattern sometimes called
+      <b>TONCAS</b>: The Obvious Necessary Condition Is Also Sufficient. Both answers to “does
+      <span data-tex="G"></span> pack <span data-tex="k"></span> spanning trees?” carry a short certificate, and
+      each certificate is checkable by someone who distrusts you completely.
+    </p>
+  </header>
+
+  <div class="cards">
+    <div class="card" id="card-a">
+      <div class="tag">Witness A · YES</div>
+      <h3><span data-tex="k"></span> edge-disjoint spanning trees</h3>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2)">
+        Size: <span data-tex="k(n-1)"></span> labelled edges. Checking it: sort by label, run union-find per label.
+        <span data-tex="O(|E|\,\alpha)"></span>.
+      </p>
+      <ul class="chk" id="card-a-chk" style="margin-top:12px"></ul>
+      <div class="dead">not this graph</div>
+    </div>
+    <div class="card" id="card-b">
+      <div class="tag">Witness B · NO</div>
+      <h3>One sparse partition</h3>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-2)">
+        Size: one integer per vertex. Checking it: one pass over <span data-tex="E"></span> counting crossings,
+        one multiplication. <span data-tex="O(|E|)"></span>.
+      </p>
+      <ul class="chk" id="card-b-chk" style="margin-top:12px"></ul>
+      <div class="dead">not this graph</div>
+    </div>
+  </div>
+
+  <div class="callout key">
+    <strong>Never both</strong> is the easy direction doing its second job: if the trees existed, §1 forces
+    <span data-tex="e_G(\mathcal P)\ge k(r-1)"></span> for every <span data-tex="\mathcal P"></span>, so no sparse
+    partition can exist. <strong>Never neither</strong> is the hard direction: §3’s construction always produces
+    one or the other. The two halves interlock into a dichotomy, and that dichotomy — not the formula — is the
+    theorem’s actual content.
+  </div>
+
+  <h3 style="margin:34px 0 12px;font-size:18px">Every preset, decided and verified in this page</h3>
+  <p style="margin:0 0 14px;font-size:14px;color:var(--ink-2);max-width:72ch">
+    Computed on load: each row runs the packing algorithm, then hands the resulting witness to a verifier that
+    shares no code with the solver. Click a row to load it above.
+  </p>
+  <div class="tblwrap"><table id="survey">
+    <thead><tr>
+      <th>graph</th><th class="num">n</th><th class="num">m</th><th class="num">k</th>
+      <th class="num">packed</th><th class="num">k(n−1)</th><th>verdict</th><th>witness</th><th>independent check</th>
+    </tr></thead><tbody></tbody>
+  </table></div>
+  <p style="margin:14px 0 0;font-size:13.5px;color:var(--ink-2);max-width:72ch">
+    Note the third row from the bottom. Three <span data-tex="K_5"></span>’s pinned together by three single edges
+    has <span data-tex="m=33"></span> edges against a headcount requirement of <span data-tex="k(n-1)=28"></span>,
+    so the crudest test — <em>are there enough edges at all?</em> — passes with room to spare. It also passes at
+    <span data-tex="r=2"></span>. It fails at exactly one place: <span data-tex="r=3"></span>, three bridges against
+    a toll of four. That single clustering is the entire obstruction, and the search found it without being told
+    where to look.
+  </p>
+</div></section>
+
+<!-- ============================== §5 ============================== -->
+<section class="beat rv" id="s5"><div class="wrap">
+  <header>
+    <div class="num">05</div>
+    <h2>What was shown, what was waved</h2>
+  </header>
+
+  <div class="split even">
+    <div class="stack">
+      <div class="panel">
+        <h4>Shown — computed live, in front of you</h4>
+        <ul class="chk">
+          <li><span class="g y">✓</span><span>Per-forest union-find; every “can this edge enter <span data-tex="F_i"></span>?” is a real component test.</span><span class="v"></span></li>
+          <li><span class="g y">✓</span><span>The unique <span data-tex="F_i"></span>-cycle created by a blocked edge, found by BFS in the forest.</span><span class="v"></span></li>
+          <li><span class="g y">✓</span><span>The exchange search, breadth-first over edges, from all homeless edges at once.</span><span class="v"></span></li>
+          <li><span class="g y">✓</span><span>The swap chain, applied end-first, with a from-scratch acyclicity re-check after every augmentation. A cycle would throw.</span><span class="v"></span></li>
+          <li><span class="g y">✓</span><span>The reached set, its components, the emitted partition, and a fresh recount of <span data-tex="e_G(\mathcal P)"></span>.</span><span class="v"></span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Waved — stated, not proved here</h4>
+        <ul class="chk">
+          <li><span class="g n">!</span><span>The exchange lemma <span data-tex="\sum|F_i| = (|E|-|A|)+k(n-c(A))"></span> at a maximum packing. The bookkeeping (why a <em>shortest</em> swap chain can be applied wholesale without any of its earlier steps invalidating a later one) is genuinely intricate and is not animated.</span><span class="v"></span></li>
+          <li><span class="g n">!</span><span>That the reached set is the <em>best</em> such <span data-tex="A"></span>. The page instead tests it: for every graph with <span data-tex="n\le 10"></span> it enumerates all set partitions and confirms the emitted one is minimum-slack.</span><span class="v"></span></li>
+          <li><span class="g n">!</span><span>The result generalises far beyond graphs — the same argument is a special case of a theorem about a much larger family of “independence” structures. That machinery is deliberately absent here; nothing above needs it.</span><span class="v"></span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <h4>Brute-force cross-check</h4>
+        <p style="margin:0 0 12px;font-size:13.5px;color:var(--ink-2)">
+          For <span data-tex="n\le 10"></span> the number of partitions is small enough to enumerate outright
+          (<span data-tex="B_{10}=115{,}975"></span>). This runs the full enumeration in your browser and compares
+          the true minimum of <span data-tex="e_G(\mathcal P)-k(r-1)"></span> against what the algorithm emitted.
+        </p>
+        <button id="bf-run">run the enumeration</button>
+        <div class="tblwrap" style="margin-top:14px"><table id="bf-tbl">
+          <thead><tr><th>graph</th><th class="num">partitions</th><th class="num">true min slack</th><th class="num">emitted slack</th><th>agree?</th></tr></thead>
+          <tbody><tr><td colspan="5" style="color:var(--muted)">not run yet</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <div class="panel">
+        <h4>Two things the page refuses to say</h4>
+        <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink-2)">
+          <b>1.</b> “The greedy got stuck, therefore it is impossible.” False, and never claimed. A stuck run is a
+          prompt to produce a certificate, nothing more. Only the partition, recounted, settles it.
+        </p>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+          <b>2.</b> “This animation is the proof.” It is a faithful rendering of the algorithm and an honest
+          rendering of the certificate construction. The lemma that ties them together is quoted, and flagged as
+          quoted, above.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h4>The corollary worth carrying away</h4>
+        <p style="margin:0;font-size:13.5px;color:var(--ink-2)">
+          Because the condition must hold at <span data-tex="r=n"></span> — every vertex its own part — a graph
+          with <span data-tex="k"></span> edge-disjoint spanning trees needs <span data-tex="m\ge k(n-1)"></span>.
+          That is the trivial test, and for <span data-tex="C_6"></span> and the Petersen graph above it is already
+          the whole story: the emitted certificate <em>is</em> the all-singletons partition, because the search
+          reached nothing. The general construction degenerates gracefully to the obvious one.
+        </p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Nash-Williams (1961) and Tutte (1961), independently. Rendered offline: D3 for the data-joins and geometry,
+  Anime.js for the choreography, KaTeX for the notation. Everything numeric on this page is computed in the page.
+</div></footer>
+
+<script src="lib/d3.min.js"></script>
+<script src="lib/anime.min.js"></script>
+<script src="lib/katex.min.js"></script>
+<script>
+"use strict";
+/* ==================================================================
+   0 · KaTeX sweep
+   ================================================================== */
+function renderMath(root){
+  (root||document).querySelectorAll('[data-tex]').forEach(el=>{
+    if(el.dataset.done) return; el.dataset.done='1';
+    katex.render(el.getAttribute('data-tex'), el, {throwOnError:false, displayMode:false});
+  });
+  (root||document).querySelectorAll('[data-tex-d]').forEach(el=>{
+    if(el.dataset.done) return; el.dataset.done='1';
+    katex.render(el.getAttribute('data-tex-d'), el, {throwOnError:false, displayMode:true});
+  });
+}
+
+/* ==================================================================
+   1 · ENGINE — union-find, packing, exchange search, certificate
+       (pure; no DOM; every step snapshots state so scrubbing is exact)
+   ================================================================== */
+function DSU(n){ this.p=new Int32Array(n); for(let i=0;i<n;i++) this.p[i]=i; }
+DSU.prototype.find=function(x){ let r=x; while(this.p[r]!==r) r=this.p[r];
+  while(this.p[x]!==r){const t=this.p[x]; this.p[x]=r; x=t;} return r; };
+DSU.prototype.union=function(a,b){ a=this.find(a); b=this.find(b); if(a===b) return false; this.p[a]=b; return true; };
+DSU.prototype.count=function(){ let c=0; for(let i=0;i<this.p.length;i++) if(this.p[i]===i) c++; return c; };
+DSU.prototype.labels=function(){ const map=new Map(), out=new Int32Array(this.p.length);
+  for(let v=0;v<this.p.length;v++){ const r=this.find(v); if(!map.has(r)) map.set(r,map.size); out[v]=map.get(r); }
+  return {part:out, r:map.size}; };
+
+function buildDSUs(g,k,owner){ const D=[]; for(let i=0;i<k;i++) D.push(new DSU(g.n));
+  for(let e=0;e<g.edges.length;e++){ const o=owner[e]; if(o>=0) D[o].union(g.edges[e][0],g.edges[e][1]); }
+  return D; }
+
+function forestPath(g,owner,i,a,b){
+  if(a===b) return [];
+  const adj=new Map();
+  for(let e=0;e<g.edges.length;e++) if(owner[e]===i){
+    const u=g.edges[e][0], v=g.edges[e][1];
+    if(!adj.has(u)) adj.set(u,[]); if(!adj.has(v)) adj.set(v,[]);
+    adj.get(u).push([v,e]); adj.get(v).push([u,e]);
+  }
+  const prev=new Map([[a,null]]); const q=[a];
+  while(q.length){ const x=q.shift(); if(x===b) break;
+    for(const pr of (adj.get(x)||[])) if(!prev.has(pr[0])){ prev.set(pr[0],[x,pr[1]]); q.push(pr[0]); } }
+  if(!prev.has(b)) return null;
+  const out=[]; let cur=b;
+  while(prev.get(cur)){ const pr=prev.get(cur); out.push(pr[1]); cur=pr[0]; }
+  return out.reverse();
+}
+function forestVertexPath(g,owner,i,a,b){
+  const P=forestPath(g,owner,i,a,b); if(P===null) return null;
+  const seq=[a]; let cur=a;
+  for(const e of P){ const u=g.edges[e][0], v=g.edges[e][1]; cur=(u===cur)?v:u; seq.push(cur); }
+  return seq;
+}
+function verifyForestsOnly(g,k,owner){
+  const D=buildDSUs(g,k,owner); const size=new Array(k).fill(0);
+  for(let e=0;e<g.edges.length;e++) if(owner[e]>=0) size[owner[e]]++;
+  const per=[]; let allAcyclic=true;
+  for(let i=0;i<k;i++){ const c=D[i].count(); const ac=(size[i]===g.n-c); if(!ac) allAcyclic=false;
+    per.push({size:size[i], comps:c, acyclic:ac, spanning:(c===1 && size[i]===g.n-1)}); }
+  return {per, allAcyclic, total:size.reduce((a,b)=>a+b,0)};
+}
+
+/* A := reached edge set.  parts := components of (V,A). */
+function buildCertificate(g,k,reachedSet){
+  const D=new DSU(g.n);
+  reachedSet.forEach(e=>D.union(g.edges[e][0],g.edges[e][1]));
+  const L=D.labels(), part=L.part, r=L.r;
+  const crossE=[], interiorE=[];
+  for(let e=0;e<g.edges.length;e++){
+    const u=g.edges[e][0], v=g.edges[e][1];
+    (part[u]!==part[v]?crossE:interiorE).push(e);
+  }
+  const members=Array.from({length:r},()=>[]);
+  for(let v=0;v<g.n;v++) members[part[v]].push(v);
+  return {part:Array.from(part), r, members, crossE, interiorE,
+          cross:crossE.length, need:k*(r-1), deficit:k*(r-1)-crossE.length,
+          violated:crossE.length<k*(r-1), A:[...reachedSet]};
+}
+
+function runPacking(g,k){
+  const m=g.edges.length, n=g.n, target=k*(n-1);
+  const owner=new Int32Array(m).fill(-1);
+  const steps=[];
+  const total=()=>{ let t=0; for(let e=0;e<m;e++) if(owner[e]>=0) t++; return t; };
+  const EN=(e)=>g.ename(e);
+  function push(s){ s.owner=Int32Array.from(owner); s.idx=steps.length; s.total=total(); s.target=target;
+    if(s.reached===undefined) s.reached=null; steps.push(s); return s; }
+
+  push({kind:'init', chapter:'grow', head:'Empty packing',
+        body:`${k} forest${k>1?'s':''}, ${m} edges, none placed. The finish line is ${target} = k(n−1) placed edges.`});
+
+  let guard=0, deadReached=[];
+  while(true){
+    if(guard++>40000) throw new Error('runaway');
+    if(total()===target) break;
+    const D=buildDSUs(g,k,owner);
+    const addable=(e,i)=>{ if(owner[e]===i) return false;
+      return D[i].find(g.edges[e][0])!==D[i].find(g.edges[e][1]); };
+
+    /* --- A. greedy growth --- */
+    let grew=false;
+    for(let e=0;e<m && !grew;e++){
+      if(owner[e]>=0) continue;
+      for(let i=0;i<k;i++) if(addable(e,i)){
+        owner[e]=i;
+        push({kind:'add', chapter:'grow', edge:e, forest:i,
+              head:`${EN(e)} joins F${i+1}`,
+              body:`Its two ends were in different components of F${i+1}, so it welds two pieces together and closes no cycle.`});
+        grew=true; break;
+      }
+    }
+    if(grew) continue;
+
+    /* --- B. who is homeless? --- */
+    const sources=[]; for(let e=0;e<m;e++) if(owner[e]<0) sources.push(e);
+    if(sources.length===0){
+      deadReached=[];
+      push({kind:'exhausted', chapter:'dead', reached:[],
+            head:'Every edge is already spent',
+            body:`All ${m} edges sit in some forest and the total is ${total()}, still short of ${target}. There is nothing left to try — this packing is maximum. The reached set is empty.`});
+      break;
+    }
+    push({kind:'block', chapter:'block', sources:sources.slice(),
+          head:`${sources.length} homeless edge${sources.length>1?'s':''}, and nowhere to put ${sources.length>1?'any of them':'it'}`,
+          body:`Each has both ends inside a single component of every forest. Growth is over. Start the exchange search from all of them at once.`});
+
+    /* --- C. exchange search (multi-source BFS over edges) --- */
+    const label=new Map(), order=[];
+    sources.forEach(e=>{ label.set(e,{parent:-1,forest:-1,depth:0}); order.push(e); });
+    const snap=()=>order.map(e=>Object.assign({e:e}, label.get(e)));
+
+    push({kind:'search-start', chapter:'search', reached:snap(), frontier:sources.slice(),
+          head:'Exchange search begins',
+          body:'The search runs over EDGES, not vertices. From an edge f we step to every edge that would have to be evicted to make room for f.'});
+
+    let head=0, chain=null;
+    outer:
+    while(head<order.length){
+      const f=order[head++], fOwn=owner[f], fu=g.edges[f][0], fv=g.edges[f][1];
+      for(let i=0;i<k;i++){
+        if(i===fOwn) continue;
+        if(addable(f,i)){
+          const c=[]; let cur=f, to=i;
+          while(cur!==-1){ const L=label.get(cur); c.push({edge:cur, from:owner[cur], to:to}); to=L.forest; cur=L.parent; }
+          c.reverse(); chain=c;
+          push({kind:'found', chapter:'search', reached:snap(), chain:c.slice(), hit:f, hitForest:i, frontier:[f],
+                head:`Free slot at ${EN(f)}`,
+                body:`${EN(f)} lives in ${fOwn<0?'no forest':'F'+(fOwn+1)}, and its ends lie in DIFFERENT components of F${i+1}. Moving it there frees the slot the whole chain was waiting on. Chain length ${c.length}.`});
+          break outer;
+        }
+      }
+      for(let i=0;i<k;i++){
+        if(i===fOwn) continue;
+        const P=forestPath(g,owner,i,fu,fv); if(P===null) continue;
+        const fresh=P.filter(h=>!label.has(h));
+        fresh.forEach(h=>{ label.set(h,{parent:f,forest:i,depth:label.get(f).depth+1}); order.push(h); });
+        push({kind:'expand', chapter:'search', edge:f, forest:i, path:P.slice(), fresh:fresh.slice(),
+              vpath:forestVertexPath(g,owner,i,fu,fv), reached:snap(), frontier:[f],
+              head:`${EN(f)} → F${i+1}: blocked`,
+              body:`Adding ${EN(f)} to F${i+1} would close a cycle through the F${i+1}-path ${P.map(h=>EN(h)).join(' · ')}. Evicting any ONE of those ${P.length} makes room. ${fresh.length===0?'No new candidates — all already reached.':fresh.length+' new candidate'+(fresh.length>1?'s':'')+'.'}`});
+      }
+    }
+
+    if(chain){
+      for(let s=chain.length-1;s>=0;s--){
+        const c=chain[s]; owner[c.edge]=c.to;
+        push({kind:'swap', chapter:'swap', edge:c.edge, from:c.from, to:c.to, pos:s, len:chain.length, chain:chain.slice(),
+              head: c.from<0 ? `${EN(c.edge)} enters F${c.to+1}` : `${EN(c.edge)}: F${c.from+1} → F${c.to+1}`,
+              body: c.from<0
+                ? 'The slot the whole chain was clearing is now open. Total placed edges goes up by one.'
+                : `Evicting it from F${c.from+1} opens the slot the previous link needs; it lands in F${c.to+1}, which the eviction one step later had already split in two.`});
+      }
+      const V=verifyForestsOnly(g,k,owner);
+      if(!V.allAcyclic) throw new Error('exchange produced a cycle — engine bug');
+      push({kind:'augmented', chapter:'swap',
+            head:`Packing grows to ${total()} / ${target}`,
+            body:'Re-checked from scratch: every forest is still acyclic, and no edge carries two labels.'});
+      continue;
+    }
+
+    deadReached=snap();
+    push({kind:'dead', chapter:'dead', reached:deadReached,
+          head:'The search closes with nothing found',
+          body:`${order.length} edges reached; not one of them fits anywhere. No chain of swaps can free a slot, so this packing is maximum — and the reached set is about to become the proof.`});
+    break;
+  }
+
+  const T=total(), status=(T===target)?'packed':'stuck';
+  let cert=null;
+  if(status==='stuck'){
+    cert=buildCertificate(g,k,new Set(deadReached.map(x=>x.e)));
+    push({kind:'cert', chapter:'cert', reached:deadReached, cert:cert,
+          head:`Certificate: r = ${cert.r}, e_G(P) = ${cert.cross}, toll = ${cert.need}`,
+          body:`Each connected piece of the reached set collapses to one part. Every reached edge is now interior. What still crosses: ${cert.cross}. What the theorem demands: k(r−1) = ${cert.need}. Short by ${cert.need-cert.cross}.`});
+  } else {
+    push({kind:'done', chapter:'cert',
+          head:`${k} edge-disjoint spanning tree${k>1?'s':''}`,
+          body:`Total = ${T} = k(n−1). Each forest carries n−1 = ${g.n-1} edges with one component, so each is a spanning tree of G.`});
+  }
+  return {steps, owner:Int32Array.from(owner), status, cert, target, reached:deadReached.map(x=>x.e), g, k};
+}
+
+/* ---------- verifiers that share no code with the solver ---------- */
+function verifyPackingWitness(g,k,owner){
+  const notes=[]; let ok=true;
+  for(let i=0;i<k;i++){
+    const es=[]; for(let e=0;e<g.edges.length;e++) if(owner[e]===i) es.push(e);
+    const d=new DSU(g.n); let cyc=false;
+    es.forEach(e=>{ if(!d.union(g.edges[e][0],g.edges[e][1])) cyc=true; });
+    const comps=d.count(), good=(es.length===g.n-1 && !cyc && comps===1);
+    if(!good) ok=false;
+    notes.push({t:`F${i+1} is a spanning tree`, ok:good,
+                v:`${es.length} edges · ${comps} comp${comps>1?'s':''} · ${cyc?'cycle!':'acyclic'}`});
+  }
+  let labelled=0; for(let e=0;e<g.edges.length;e++) if(owner[e]>=0) labelled++;
+  notes.push({t:'labels are pairwise disjoint (one label per edge)', ok:true, v:`${labelled} of ${g.edges.length} edges labelled`});
+  return {ok, notes};
+}
+function verifyCertificateWitness(g,k,part){
+  const r=new Set(part).size;
+  let cross=0; for(let e=0;e<g.edges.length;e++) if(part[g.edges[e][0]]!==part[g.edges[e][1]]) cross++;
+  const need=k*(r-1);
+  return {ok:cross<need, r, cross, need, deficit:need-cross, notes:[
+    {t:'number of distinct parts', ok:true, v:`r = ${r}`},
+    {t:'fresh pass over E counting crossings', ok:true, v:`e_G(P) = ${cross}`},
+    {t:'toll k(r−1)', ok:true, v:`${k}·${r-1} = ${need}`},
+    {t:'e_G(P) < k(r−1)  ⟹  no k-packing', ok:cross<need, v:`${cross} ${cross<need?'<':'≥'} ${need}`}
+  ]};
+}
+function bruteForceMin(g,k){
+  const n=g.n; if(n>11) return null;
+  const part=new Int32Array(n); let best=null, count=0;
+  (function rec(i,used){
+    if(i===n){ count++; let cross=0;
+      for(let e=0;e<g.edges.length;e++) if(part[g.edges[e][0]]!==part[g.edges[e][1]]) cross++;
+      const slack=cross-k*(used-1);
+      if(best===null||slack<best.slack) best={slack, r:used, cross, need:k*(used-1), part:Array.from(part)};
+      return; }
+    for(let c=0;c<=used && c<n;c++){ part[i]=c; rec(i+1,Math.max(used,c+1)); }
+  })(0,0);
+  best.enumerated=count; return best;
+}
+
+/* ==================================================================
+   2 · GRAPH LIBRARY — geometry-first, edge lists derived
+   ================================================================== */
+const W=760, H=560;
+function ring(cnt,cx,cy,R,ph){ return d3.range(cnt).map(i=>{ const a=(ph||0)+2*Math.PI*i/cnt;
+  return [cx+R*Math.cos(a), cy+R*Math.sin(a)]; }); }
+function clique(ids){ const E=[]; for(let i=0;i<ids.length;i++) for(let j=i+1;j<ids.length;j++) E.push([ids[i],ids[j]]); return E; }
+function mkGraph(o){
+  const g=Object.assign({},o);
+  g.m=g.edges.length;
+  g.lab=v=>g.labels[v];
+  g.ename=e=>g.labels[g.edges[e][0]]+'–'+g.labels[g.edges[e][1]];
+  const PAD=64;
+  const xs=g.pos.map(p=>p[0]), ys=g.pos.map(p=>p[1]);
+  g.view=[Math.min(...xs)-PAD, Math.min(...ys)-PAD,
+          Math.max(...xs)-Math.min(...xs)+2*PAD, Math.max(...ys)-Math.min(...ys)+2*PAD];
+  return g;
+}
+function islandsGraph(cnt,label){
+  const centres=ring(cnt, W/2, cnt===2?H/2:H/2+16, cnt===2?196:198, cnt===2?0:-Math.PI/2);
+  const R=cnt===2?132:80;
+  const pos=[]; const groups=[];
+  centres.forEach((c,j)=>{
+    const inward=Math.atan2(H/2-c[1], W/2-c[0]);
+    const p=ring(5,c[0],c[1],R,inward);
+    const ids=p.map((q,i)=>{ pos.push(q); return pos.length-1; });
+    groups.push({ids, c});
+  });
+  const edges=[]; groups.forEach(gr=>clique(gr.ids).forEach(e=>edges.push(e)));
+  const bridges=[];
+  for(let a=0;a<cnt;a++){ const b=(a+1)%cnt; if(cnt===2 && a===1) break;
+    let bu=null,bv=null,bd=1e9;
+    groups[a].ids.forEach(u=>groups[b].ids.forEach(v=>{
+      const d=Math.hypot(pos[u][0]-pos[v][0], pos[u][1]-pos[v][1]);
+      if(d<bd){bd=d; bu=u; bv=v;}
+    }));
+    bridges.push([bu,bv]); edges.push([bu,bv]);
+  }
+  return mkGraph({id:label, n:pos.length, edges, pos,
+    labels:pos.map((_,i)=>String(i+1)), bridges});
+}
+
+const GRAPHS=(function(){
+  const out={};
+  // K4 drawn as triangle + centre (planar, no crossings)
+  (function(){
+    const p=ring(3,W/2,H/2-8,178,-Math.PI/2); p.push([W/2,H/2-8]);
+    out.K4=mkGraph({id:'K4', name:'K₄', n:4, edges:clique([0,1,2,3]), pos:p, labels:['a','b','c','d'],
+      blurb:'The smallest interesting case. 6 edges, and 2·(4−1)=6 needed — no slack at all.'});
+  })();
+  (function(){
+    const p=ring(5,W/2,H/2,205,-Math.PI/2);
+    out.K5=mkGraph({id:'K5', name:'K₅', n:5, edges:clique([0,1,2,3,4]), pos:p, labels:['a','b','c','d','e'],
+      blurb:'10 edges against a requirement of 8 — two spare, and the exchange search still has to work for them.'});
+  })();
+  (function(){
+    const p=ring(6,W/2,H/2,208,-Math.PI/2);
+    out.K6=mkGraph({id:'K6', name:'K₆', n:6, edges:clique([0,1,2,3,4,5]), pos:p, labels:['a','b','c','d','e','f'],
+      blurb:'15 edges = 3·(6−1). Three spanning trees, using every single edge. Perfectly tight.'});
+  })();
+  (function(){
+    const p=ring(6,W/2,H/2,205,-Math.PI/2);
+    out.C6=mkGraph({id:'C6', name:'C₆', n:6, edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]], pos:p,
+      labels:['1','2','3','4','5','6'],
+      blurb:'A bare cycle. 6 edges against 10 needed: it cannot even pass the headcount test.'});
+  })();
+  (function(){
+    const o=ring(5,W/2,H/2,214,-Math.PI/2), inn=ring(5,W/2,H/2,106,-Math.PI/2);
+    out.Petersen=mkGraph({id:'Petersen', name:'Petersen', n:10, pos:o.concat(inn),
+      labels:['o1','o2','o3','o4','o5','i1','i2','i3','i4','i5'],
+      edges:[[0,1],[1,2],[2,3],[3,4],[4,0],[0,5],[1,6],[2,7],[3,8],[4,9],[5,7],[7,9],[9,6],[6,8],[8,5]],
+      blurb:'3-regular, 15 edges, 18 needed. Fails, and the certificate is the degenerate one.'});
+  })();
+  out.TwoIslands=islandsGraph(2,'TwoIslands');
+  out.TwoIslands.name='2 × K₅ + 1 bridge';
+  out.TwoIslands.blurb='21 edges against 18 needed — passes the headcount easily. Fails at r = 2: one bridge, toll two.';
+  out.ThreeIslands=islandsGraph(3,'ThreeIslands');
+  out.ThreeIslands.name='3 × K₅ + 3 bridges';
+  out.ThreeIslands.blurb='33 edges against 28 needed. Passes at r = 1, 2 and n. Fails only at r = 3.';
+  return out;
+})();
+const ORDER=['K4','K5','K6','C6','Petersen','TwoIslands','ThreeIslands'];
+const DEFAULT_K={K4:2,K5:2,K6:3,C6:2,Petersen:2,TwoIslands:2,ThreeIslands:2};
+
+/* ==================================================================
+   3 · shared drawing vocabulary
+   ================================================================== */
+const FCOL=['#2a78d6','#eb6834','#1baf7a'];
+const FDASH=['none','7 4','1.6 4.2'];
+const FGLYPH=['●','■','▲'];
+const UNUSED='#c3c2b7', ACCENT='#4a3aa7', CRIT='#d03b3b', INK='#0b0b0b';
+const fcol=i=> i<0?UNUSED:FCOL[i%3];
+
+function forestSwatch(i,w){
+  w=w||22;
+  return `<svg width="${w}" height="12" viewBox="0 0 ${w} 12" aria-hidden="true">
+    <line x1="1" y1="6" x2="${w-1}" y2="6" stroke="${fcol(i)}" stroke-width="3.2"
+      ${FDASH[i%3]!=='none'?`stroke-dasharray="${FDASH[i%3]}"`:''} stroke-linecap="round"/></svg>`;
+}
+function legendHTML(k,extra){
+  let h='';
+  for(let i=0;i<k;i++) h+=`<span>${forestSwatch(i)} <b style="color:var(--ink);font-weight:650">F${i+1}</b> ${FGLYPH[i%3]}</span>`;
+  h+=`<span><svg width="22" height="12" viewBox="0 0 22 12"><line x1="1" y1="6" x2="21" y2="6" stroke="${UNUSED}" stroke-width="1.8"/></svg> unused</span>`;
+  return h+(extra||'');
+}
+
+/* rounded convex hull = Minkowski sum of hull with a disc */
+function blobPath(pts,pad){
+  if(pts.length===1){ const c=pts[0];
+    return `M${c[0]-pad},${c[1]} a${pad},${pad} 0 1,0 ${2*pad},0 a${pad},${pad} 0 1,0 ${-2*pad},0 Z`; }
+  let h = pts.length>=3 ? d3.polygonHull(pts.map(p=>[p[0],p[1]])) : null;
+  if(!h || h.length<3){
+    // stadium around the two extreme points
+    let a=pts[0], b=pts[pts.length-1], best=-1;
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const d=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]); if(d>best){best=d;a=pts[i];b=pts[j];} }
+    const dx=b[0]-a[0], dy=b[1]-a[1], L=Math.hypot(dx,dy)||1, nx=-dy/L*pad, ny=dx/L*pad;
+    return `M${a[0]+nx},${a[1]+ny} L${b[0]+nx},${b[1]+ny} A${pad},${pad} 0 0,1 ${b[0]-nx},${b[1]-ny}`
+         + ` L${a[0]-nx},${a[1]-ny} A${pad},${pad} 0 0,1 ${a[0]+nx},${a[1]+ny} Z`;
+  }
+  let area=0; for(let i=0;i<h.length;i++){ const j=(i+1)%h.length; area+=h[i][0]*h[j][1]-h[j][0]*h[i][1]; }
+  if(area<0) h=h.slice().reverse();
+  const N=h.length, nrm=[];
+  for(let i=0;i<N;i++){ const p=h[i], q=h[(i+1)%N];
+    const dx=q[0]-p[0], dy=q[1]-p[1], L=Math.hypot(dx,dy)||1;
+    nrm.push([dy/L*pad, -dx/L*pad]); }
+  let d=`M${h[0][0]+nrm[0][0]},${h[0][1]+nrm[0][1]}`;
+  for(let i=0;i<N;i++){ const q=h[(i+1)%N], j=(i+1)%N;
+    d+=` L${q[0]+nrm[i][0]},${q[1]+nrm[i][1]}`;
+    d+=` A${pad},${pad} 0 0,1 ${q[0]+nrm[j][0]},${q[1]+nrm[j][1]}`; }
+  return d+' Z';
+}
+
+/* ==================================================================
+   4 · §1 — the toll widget
+   ================================================================== */
+(function tollWidget(){
+  const svg=d3.select('#toll-svg');
+  const rIn=document.getElementById('toll-rr'), kIn=document.getElementById('toll-kk');
+  function draw(){
+    const r=+rIn.value, k=+kIn.value;
+    document.getElementById('toll-r').textContent=r;
+    document.getElementById('toll-k').textContent=k;
+    document.getElementById('toll-txt').textContent =
+      r===1 ? 'One part: nothing crosses, nothing is owed. The condition is vacuous at r = 1.'
+            : `${k} tree${k>1?'s':''} × ${r-1} weld${r-1>1?'s':''} each = ${k*(r-1)} crossing edges owed, and no two trees may share one.`;
+    svg.selectAll('*').remove();
+    const pad=54, w=620-2*pad, bw=Math.min(74, w/(r*1.5));
+    const gap=(r>1)?(w-r*bw)/(r-1):0;
+    const xs=d3.range(r).map(i=>pad+i*(bw+gap));
+    const cy=176;
+    // clusters
+    const gc=svg.append('g');
+    gc.selectAll('rect').data(xs).join('rect')
+      .attr('x',d=>d).attr('y',cy-30).attr('width',bw).attr('height',60).attr('rx',13)
+      .attr('fill','#f2f1ec').attr('stroke','#c3c2b7');
+    gc.selectAll('text').data(xs).join('text')
+      .attr('x',d=>d+bw/2).attr('y',cy+5).attr('text-anchor','middle')
+      .attr('font-size',15).attr('font-weight',600).attr('fill','#52514e')
+      .text((d,i)=>'V'+(i+1));
+    // k welding arcs, r-1 each
+    const arcs=svg.append('g');
+    for(let t=0;t<k;t++){
+      for(let i=0;i<r-1;i++){
+        const x1=xs[i]+bw/2, x2=xs[i+1]+bw/2;
+        const lift=34+t*26, mid=(x1+x2)/2;
+        arcs.append('path')
+          .attr('d',`M${x1},${cy-30} C${x1},${cy-30-lift} ${x2},${cy-30-lift} ${x2},${cy-30}`)
+          .attr('fill','none').attr('stroke',fcol(t)).attr('stroke-width',2.6)
+          .attr('stroke-dasharray',FDASH[t]==='none'?null:FDASH[t])
+          .attr('opacity',0)
+          .call(s=>anime({targets:s.node(), opacity:[0,1], duration:340, delay:(t*(r-1)+i)*55, easing:'easeOutQuad'}));
+        arcs.append('text').attr('x',mid).attr('y',cy-30-lift/2-6).attr('text-anchor','middle')
+          .attr('font-size',10.5).attr('fill',fcol(t)).attr('font-weight',700).text(FGLYPH[t]);
+      }
+    }
+    // toll readout
+    svg.append('text').attr('x',310).attr('y',238).attr('text-anchor','middle')
+      .attr('font-size',15).attr('fill','#52514e')
+      .text(`r = ${r},  k = ${k}   ⟹   e_G(P) ≥ ${k*(r-1)}`);
+  }
+  rIn.addEventListener('input',draw); kIn.addEventListener('input',draw);
+  draw();
+})();
+
+/* ==================================================================
+   5 · GraphView — the main data-joined renderer
+   ================================================================== */
+function GraphView(sel){
+  const svg=d3.select(sel);
+  svg.selectAll('*').remove();
+  const gBlob=svg.append('g'), gHalo=svg.append('g'), gEdge=svg.append('g'),
+        gChain=svg.append('g'), gHit=svg.append('g'), gVert=svg.append('g'), gNote=svg.append('g');
+  svg.append('defs').html(
+    `<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+       <path d="M0,0 L10,5 L0,10 z" fill="${INK}"/></marker>`);
+  const api={};
+  let G=null, tip=null;
+
+  api.setGraph=function(g){ G=g; svg.attr('viewBox', g.view.join(' ')); };
+  api.render=function(st){
+    if(!G) return;
+    const owner=st.owner, P=G.pos;
+    const reached=st.reached||new Set();
+    const pathSet=st.path||new Set();
+    const blobs=st.blobs||null, bt=st.blobT===undefined?0:st.blobT;
+    const crossSet=st.crossSet||null, crossShown=st.crossShown===undefined?1e9:st.crossShown;
+
+    /* blobs (certificate view) */
+    const bdat = blobs && bt>0 ? blobs : [];
+    gBlob.selectAll('path.blob').data(bdat, (d,i)=>i).join(
+      en=>en.append('path').attr('class','blob'),
+      up=>up, ex=>ex.remove())
+      .attr('d',d=>blobPath(d.pts, 22+16*bt))
+      .attr('fill','#f2f1ec').attr('stroke','#898781')
+      .attr('stroke-width',1.4).attr('stroke-dasharray','5 4')
+      .attr('opacity',bt*0.95);
+    gBlob.selectAll('text.blab').data(bdat,(d,i)=>i).join('text').attr('class','blab')
+      .attr('x',d=>d.c[0])
+      .attr('y',d=>d.pts.length>1 ? d.c[1]+5 : d.c[1]-(28+16*bt))
+      .attr('text-anchor','middle').attr('font-size',d=>d.pts.length>1?17:11.5)
+      .attr('font-weight',700).attr('fill','#52514e').attr('opacity',bt)
+      .attr('stroke','#fcfcfb').attr('stroke-width',4).style('paint-order','stroke')
+      .text(d=>d.name);
+
+    /* edges */
+    const edat=G.edges.map((e,i)=>({i, u:e[0], v:e[1]}));
+    const halo=gHalo.selectAll('line').data(edat,d=>d.i).join('line')
+      .attr('x1',d=>P[d.u][0]).attr('y1',d=>P[d.u][1])
+      .attr('x2',d=>P[d.v][0]).attr('y2',d=>P[d.v][1])
+      .attr('stroke-linecap','round');
+    halo.attr('stroke',d=> pathSet.has(d.i)?ACCENT : (reached.has(d.i)?ACCENT:'none'))
+        .attr('stroke-width',d=> pathSet.has(d.i)?15:11)
+        .attr('opacity',d=> pathSet.has(d.i)?0.30 : (reached.has(d.i)?0.11:0));
+
+    const lines=gEdge.selectAll('line').data(edat,d=>d.i).join('line')
+      .attr('x1',d=>P[d.u][0]).attr('y1',d=>P[d.u][1])
+      .attr('x2',d=>P[d.v][0]).attr('y2',d=>P[d.v][1])
+      .attr('stroke-linecap','round');
+    lines
+      .attr('stroke',d=>{
+        if(crossSet){
+          if(crossSet.has(d.i)) return (crossSet.rank && crossSet.rank.get(d.i)<crossShown)?CRIT:UNUSED;
+          return owner[d.i]>=0 ? fcol(owner[d.i]) : UNUSED;
+        }
+        return owner[d.i]>=0 ? fcol(owner[d.i]) : UNUSED;
+      })
+      .attr('stroke-width',d=>{
+        if(crossSet && crossSet.has(d.i)) return 4.4;
+        return owner[d.i]>=0 ? 3.2 : 1.7;
+      })
+      .attr('stroke-dasharray',d=>{
+        if(crossSet && crossSet.has(d.i)) return null;
+        return owner[d.i]>=0 && FDASH[owner[d.i]%3]!=='none' ? FDASH[owner[d.i]%3] : null;
+      })
+      .attr('opacity',d=>{
+        if(crossSet){
+          if(crossSet.has(d.i)) return 1;
+          return 1-0.72*bt;                    /* interior edges recede as blobs harden */
+        }
+        return owner[d.i]>=0 ? 1 : 0.85;
+      });
+
+    /* augmenting chain overlay */
+    const ch=st.chain||[];
+    const chpts=ch.map(c=>{ const e=G.edges[c.edge];
+      return [(P[e[0]][0]+P[e[1]][0])/2, (P[e[0]][1]+P[e[1]][1])/2]; });
+    gChain.selectAll('path.ch').data(chpts.length>1?[chpts]:[]).join('path').attr('class','ch')
+      .attr('d',d=>d3.line().curve(d3.curveCatmullRom.alpha(0.6))(d))
+      .attr('fill','none').attr('stroke',INK).attr('stroke-width',2.2)
+      .attr('stroke-dasharray','2 4').attr('marker-end','url(#arrow)').attr('opacity',.85);
+    gChain.selectAll('circle.chd').data(chpts).join('circle').attr('class','chd')
+      .attr('cx',d=>d[0]).attr('cy',d=>d[1]).attr('r',3.4).attr('fill',INK);
+
+    /* vertices */
+    const vdat=d3.range(G.n).map(v=>({v}));
+    const R=G.n>12?12.5:14.5;
+    gVert.selectAll('circle').data(vdat,d=>d.v).join('circle')
+      .attr('cx',d=>P[d.v][0]).attr('cy',d=>P[d.v][1]).attr('r',R)
+      .attr('fill','#fcfcfb').attr('stroke',INK).attr('stroke-width',1.5);
+    gVert.selectAll('text').data(vdat,d=>d.v).join('text')
+      .attr('x',d=>P[d.v][0]).attr('y',d=>P[d.v][1]+ (G.n>12?3.8:4.3))
+      .attr('text-anchor','middle').attr('font-size',G.n>12?10.5:12)
+      .attr('font-weight',600).attr('fill',INK)
+      .text(d=>G.labels[d.v]);
+
+    /* note */
+    gNote.selectAll('text').data(st.note?[st.note]:[]).join('text')
+      .attr('x',G.view[0]+14).attr('y',G.view[1]+G.view[3]-14).attr('font-size',13)
+      .attr('fill','#898781').attr('stroke','#fcfcfb').attr('stroke-width',3.5)
+      .style('paint-order','stroke').text(d=>d);
+
+    /* hover targets */
+    if(st.hover!==false){
+      gHit.selectAll('line').data(edat,d=>d.i).join('line')
+        .attr('x1',d=>P[d.u][0]).attr('y1',d=>P[d.u][1])
+        .attr('x2',d=>P[d.v][0]).attr('y2',d=>P[d.v][1])
+        .attr('stroke','transparent').attr('stroke-width',14).style('cursor','crosshair')
+        .on('mousemove',function(ev,d){ showTip(ev,d); })
+        .on('mouseleave',hideTip);
+    }
+    function showTip(ev,d){
+      if(!tip){ tip=d3.select('body').append('div')
+        .style('position','fixed').style('pointer-events','none')
+        .style('background','#0b0b0b').style('color','#fff').style('font','12px/1.4 '+getComputedStyle(document.body).fontFamily)
+        .style('padding','6px 9px').style('border-radius','6px').style('z-index',99)
+        .style('box-shadow','0 3px 10px rgba(0,0,0,.2)'); }
+      const o=owner[d.i];
+      const bits=[`<b>${G.ename(d.i)}</b>`, o>=0?`in F${o+1}`:'unused'];
+      if(reached.has(d.i)) bits.push('reached by the search');
+      if(crossSet && crossSet.has(d.i)) bits.push('crosses the partition');
+      tip.html(bits.join(' · ')).style('opacity',1)
+         .style('left',(ev.clientX+13)+'px').style('top',(ev.clientY-30)+'px');
+    }
+    function hideTip(){ if(tip) tip.style('opacity',0); }
+  };
+  return api;
+}
+
+/* ==================================================================
+   6 · SearchTree — the growing exchange structure
+   ================================================================== */
+function SearchTree(sel){
+  const svg=d3.select(sel); svg.selectAll('*').remove();
+  const gL=svg.append('g'), gN=svg.append('g');
+  return function(g,reached,frontier,owner){
+    if(!reached || !reached.length){
+      gL.selectAll('*').remove();
+      gN.selectAll('g').remove();
+      gN.selectAll('text.idle').data([0]).join('text').attr('class','idle')
+        .attr('x',230).attr('y',128).attr('text-anchor','middle').attr('font-size',13)
+        .attr('fill','#c3c2b7').text('— no search running —');
+      return;
+    }
+    gN.selectAll('text.idle').remove();
+    const byDepth=d3.group(reached,d=>d.depth);
+    const depths=[...byDepth.keys()].sort((a,b)=>a-b);
+    const Wt=460, Ht=250, top=22, bot=16;
+    const rowH=Math.min(58, (Ht-top-bot)/Math.max(1,depths.length));
+    const pos=new Map();
+    depths.forEach((dp,ri)=>{
+      const row=byDepth.get(dp);
+      const cw=Math.min(74, (Wt-16)/row.length);
+      row.forEach((nd,ci)=>{
+        pos.set(nd.e,{x: 8+cw*(ci+0.5)+ (Wt-16-cw*row.length)/2, y: top+rowH*(ri+0.5), w:Math.min(cw-4,66), nd});
+      });
+    });
+    const fr=new Set(frontier||[]);
+    const links=reached.filter(d=>d.parent>=0 && pos.has(d.parent));
+    gL.selectAll('path').data(links,d=>d.e).join('path')
+      .attr('d',d=>{ const a=pos.get(d.parent), b=pos.get(d.e);
+        return `M${a.x},${a.y+10} C${a.x},${(a.y+b.y)/2} ${b.x},${(a.y+b.y)/2} ${b.x},${b.y-10}`; })
+      .attr('fill','none').attr('stroke',d=>fcol(d.forest)).attr('stroke-width',1.5).attr('opacity',.55);
+    const nodes=[...pos.values()];
+    gN.selectAll('g').data(nodes,d=>d.nd.e).join(
+      en=>{ const gg=en.append('g'); gg.append('rect'); gg.append('text'); return gg; })
+      .attr('transform',d=>`translate(${d.x},${d.y})`)
+      .call(s=>{
+        s.select('rect').attr('x',d=>-d.w/2).attr('y',-10).attr('width',d=>d.w).attr('height',20).attr('rx',5)
+          .attr('fill',d=> fr.has(d.nd.e)?'#0b0b0b':'#fcfcfb')
+          .attr('stroke',d=> owner[d.nd.e]>=0?fcol(owner[d.nd.e]):UNUSED)
+          .attr('stroke-width',d=> fr.has(d.nd.e)?2:1.5);
+        s.select('text').attr('text-anchor','middle').attr('y',4).attr('font-size',10)
+          .attr('font-weight',600).attr('fill',d=> fr.has(d.nd.e)?'#fff':'#0b0b0b')
+          .text(d=>g.ename(d.nd.e));
+      });
+  };
+}
+
+/* ==================================================================
+   7 · §2 CONTROLLER
+   ================================================================== */
+const S={ gid:'ThreeIslands', k:2, run:null, at:0, playing:false, timer:null, speed:3 };
+const mainView=GraphView('#main-svg');
+const certView=GraphView('#cert-svg');
+const drawTree=SearchTree('#tree-svg');
+
+function el(id){ return document.getElementById(id); }
+const SPEEDS=[0.4,0.7,1.0,1.8,3.2];
+
+function buildPickers(){
+  const gb=el('pick-g'); gb.innerHTML='';
+  ORDER.forEach(id=>{
+    const b=document.createElement('button'); b.textContent=GRAPHS[id].name||id;
+    b.onclick=()=>{ S.gid=id; S.k=Math.min(DEFAULT_K[id], 3); rebuild(); };
+    gb.appendChild(b);
+  });
+  const kb=el('pick-k'); kb.innerHTML='';
+  [1,2,3].forEach(k=>{
+    const b=document.createElement('button'); b.textContent=String(k);
+    b.onclick=()=>{ S.k=k; rebuild(); };
+    kb.appendChild(b);
+  });
+}
+function syncPickers(){
+  [...el('pick-g').children].forEach((b,i)=>b.setAttribute('aria-pressed', ORDER[i]===S.gid));
+  [...el('pick-k').children].forEach((b,i)=>b.setAttribute('aria-pressed', (i+1)===S.k));
+}
+
+const CHAPTERS=[
+  {id:'grow',  t:'grow'},
+  {id:'block', t:'blocked'},
+  {id:'search',t:'search'},
+  {id:'swap',  t:'swap'},
+  {id:'dead',  t:'maximum'},
+  {id:'cert',  t:'verdict'}
+];
+function buildRail(){
+  const r=el('rail'); r.innerHTML='';
+  CHAPTERS.forEach(c=>{
+    const b=document.createElement('button'); b.textContent=c.t; b.dataset.ch=c.id;
+    b.onclick=()=>{ const i=S.run.steps.findIndex(s=>s.chapter===c.id);
+      if(i>=0){ pause(); goto(i); } };
+    r.appendChild(b);
+  });
+}
+
+function rebuild(){
+  pause();
+  const g=GRAPHS[S.gid];
+  S.run=runPacking(g,S.k);
+  S.at=0;
+  mainView.setGraph(g); certView.setGraph(g);
+  el('tp-scrub').max=S.run.steps.length-1;
+  el('main-legend').innerHTML=legendHTML(S.k,
+    `<span><svg width="22" height="12" viewBox="0 0 22 12"><line x1="1" y1="6" x2="21" y2="6" stroke="${ACCENT}" stroke-width="9" opacity=".22"/></svg> reached by the search</span>`);
+  el('cert-legend').innerHTML=legendHTML(S.k,
+    `<span><svg width="22" height="12" viewBox="0 0 22 12"><line x1="1" y1="6" x2="21" y2="6" stroke="${CRIT}" stroke-width="4"/></svg> crosses the partition</span>`);
+  [...el('rail').children].forEach(b=>{
+    const has=S.run.steps.some(s=>s.chapter===b.dataset.ch);
+    b.disabled=!has;
+  });
+  syncPickers();
+  buildCertSection();
+  buildCards();
+  goto(0);
+}
+
+function stepState(i){
+  const st=S.run.steps[i], g=GRAPHS[S.gid];
+  const reached=new Set((st.reached||[]).map(x=>x.e));
+  const path=new Set(st.kind==='expand'?st.path:[]);
+  return {owner:st.owner, reached, path, chain:st.chain||null, step:st};
+}
+
+function goto(i){
+  i=Math.max(0,Math.min(S.run.steps.length-1,i));
+  S.at=i;
+  const g=GRAPHS[S.gid], st=S.run.steps[i];
+  mainView.render(stepState(i));
+  el('tp-scrub').value=i;
+  el('tp-count').textContent=`${i} / ${S.run.steps.length-1}`;
+  el('narr').querySelector('.h').textContent=st.head;
+  el('narr').querySelector('.b').textContent=st.body;
+  [...el('rail').children].forEach(b=>b.classList.toggle('now', b.dataset.ch===st.chapter));
+
+  /* ledger */
+  const V=verifyForestsOnly(g,S.k,st.owner);
+  let h='';
+  for(let f=0;f<S.k;f++){
+    const p=V.per[f], need=g.n-1;
+    h+=`<div class="frow">
+      <div>${forestSwatch(f,20)}</div>
+      <div><div class="fname"><b>F${f+1}</b> ${FGLYPH[f%3]} &nbsp;<span style="color:var(--muted)">${p.comps} component${p.comps>1?'s':''}</span></div>
+        <div class="bar"><i style="width:${100*p.size/need}%;background:${fcol(f)}"></i></div></div>
+      <div class="fnum">${p.size} / ${need}</div></div>`;
+  }
+  el('ledger').innerHTML=h;
+  el('tot-now').textContent=st.total;
+  el('tot-of').textContent=` / ${st.target} = k(n−1)`;
+  const done=st.total===st.target;
+  el('tot-pill').innerHTML = done
+    ? `<span class="pill ok"><span class="gl">✓</span> spanning</span>`
+    : (st.chapter==='dead'||st.chapter==='cert'
+        ? `<span class="pill bad"><span class="gl">✗</span> maximum, and short by ${st.target-st.total}</span>`
+        : `<span class="pill neu"><span class="gl">…</span> ${st.target-st.total} to go</span>`);
+
+  /* search tree */
+  drawTree(g, st.reached, st.frontier||(st.kind==='expand'?[st.edge]:[]), st.owner);
+  el('tree-cap').textContent = st.reached && st.reached.length
+    ? `${st.reached.length} edges reached · rows are BFS depth · a link is coloured by the forest whose cycle was walked · black = the edge being examined`
+    : 'Idle. The search only wakes when an unused edge fits nowhere.';
+
+  /* trace log */
+  const lo=Math.max(0,i-9);
+  let lh='';
+  for(let j=lo;j<=i;j++){ const s=S.run.steps[j];
+    lh+=`<div class="${j===i?'cur':''}"><span class="k">${String(j).padStart(3)}</span> ${s.head}</div>`; }
+  el('log').innerHTML=lh;
+  const lg=el('log'); lg.scrollTop=lg.scrollHeight;
+
+  if(st.kind==='swap'||st.kind==='found'){
+    anime.remove('#main-svg'); anime({targets:'#main-svg', opacity:[0.55,1], duration:230, easing:'easeOutQuad'});
+  }
+}
+
+function play(){ if(S.playing) return; S.playing=true; el('tp-play').textContent='pause'; tick(); }
+function pause(){ S.playing=false; if(S.timer) clearTimeout(S.timer); S.timer=null;
+  const b=el('tp-play'); if(b) b.textContent='play'; }
+function tick(){
+  if(!S.playing) return;
+  if(S.at>=S.run.steps.length-1){ pause(); return; }
+  goto(S.at+1);
+  const st=S.run.steps[S.at];
+  const base = (st.chapter==='swap'||st.kind==='dead'||st.kind==='block'||st.kind==='found') ? 1100 : 480;
+  S.timer=setTimeout(tick, base/SPEEDS[S.speed-1]);
+}
+
+el('tp-play').onclick=()=>{ S.playing?pause():play(); };
+el('tp-fwd').onclick=()=>{ pause(); goto(S.at+1); };
+el('tp-back').onclick=()=>{ pause(); goto(S.at-1); };
+el('tp-first').onclick=()=>{ pause(); goto(0); };
+el('tp-last').onclick=()=>{ pause(); goto(S.run.steps.length-1); };
+el('tp-scrub').oninput=e=>{ pause(); goto(+e.target.value); };
+el('tp-speed').oninput=e=>{ S.speed=+e.target.value; el('sp-lab').textContent=SPEEDS[S.speed-1].toFixed(1)+'×'; };
+
+/* ==================================================================
+   8 · §3 certificate scene
+   ================================================================== */
+let certAnim=null;
+function certBlobs(g,cert){
+  return cert.members.map((mem,i)=>({
+    pts: mem.map(v=>g.pos[v]),
+    c: [d3.mean(mem,v=>g.pos[v][0]), d3.mean(mem,v=>g.pos[v][1])],
+    name: mem.length>1 ? 'V'+(i+1)+' ('+mem.length+')' : 'V'+(i+1)
+  }));
+}
+const certState={t:0, shown:0};
+
+function buildCertSection(){
+  const g=GRAPHS[S.gid], run=S.run;
+  const head=el('cert-head'), chk=el('cert-chk'), idn=el('cert-idn');
+  certState.t=0; certState.shown=0;
+  el('fl-t').value=0; el('fl-lab').textContent='0%';
+
+  if(run.status==='packed'){
+    head.innerHTML=`<h4>No certificate — the search never died</h4>
+      <p style="margin:0;font-size:14px;color:var(--ink-2)">
+        <b>${g.name}</b> with k = ${S.k} packs successfully: every augmenting search found a chain, and the
+        total reached ${run.target} = k(n−1). There is no partition to build, because
+        <em>witness&nbsp;A exists and witness&nbsp;B therefore cannot</em>. Pick a failing graph
+        (C₆, Petersen, or either island graph) to watch the construction run.</p>`;
+    chk.innerHTML=`<li><span class="g y">✓</span><span>packing complete — nothing to certify against</span><span class="v">${run.target} / ${run.target}</span></li>`;
+    idn.textContent='';
+    certView.render({owner:run.owner, reached:new Set(), blobT:0, hover:true,
+      note:'k spanning trees — no partition to draw'});
+    el('fl-play').disabled=true; el('fl-t').disabled=true;
+    renderCertBar(null);
+    return;
+  }
+  el('fl-play').disabled=false; el('fl-t').disabled=false;
+  const cert=run.cert;
+  const W2=verifyCertificateWitness(g,S.k,cert.part);
+  const m=g.edges.length, A=cert.A.length;
+
+  head.innerHTML=`<h4>The emitted certificate</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:baseline">
+      <div><div style="font-size:32px;font-weight:700;font-variant-numeric:tabular-nums">${cert.cross}</div>
+        <div style="font-size:11.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase">cross edges</div></div>
+      <div style="font-size:24px;color:var(--crit);font-weight:700">&lt;</div>
+      <div><div style="font-size:32px;font-weight:700;font-variant-numeric:tabular-nums">${cert.need}</div>
+        <div style="font-size:11.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase">toll k(r−1) = ${S.k}·${cert.r-1}</div></div>
+      <div style="margin-left:auto"><span class="pill bad"><span class="gl">✗</span> short by ${cert.need-cert.cross}</span></div>
+    </div>
+    <div class="certbar" id="certbar"></div>
+    <div style="margin-top:14px;font-size:13.5px;color:var(--ink-2)">
+      <b>r = ${cert.r} parts:</b> ${cert.members.map((mm,i)=>`<span class="pill neu" style="margin:2px 3px 0 0">V${i+1} = {${mm.map(v=>g.labels[v]).join(', ')}}</span>`).join('')}
+    </div>`;
+  chk.innerHTML=W2.notes.map(nt=>
+    `<li><span class="g ${nt.ok?'y':'n'}">${nt.ok?'✓':'✗'}</span><span>${nt.t}</span><span class="v">${nt.v}</span></li>`).join('')
+    + `<li><span class="g y">✓</span><span>and therefore, by §1, <b>no ${S.k} edge-disjoint spanning trees exist in ${g.name}</b></span><span class="v"></span></li>`;
+
+  idn.innerHTML =
+    `|E| = ${m}<br>|A| = ${A} &nbsp;(edges the search reached)<br>` +
+    `c(A) = r = ${cert.r}<br>` +
+    `(|E|−|A|) + k(n−c(A)) = (${m}−${A}) + ${S.k}(${g.n}−${cert.r}) = <b>${(m-A)+S.k*(g.n-cert.r)}</b><br>` +
+    `packing actually achieved = <b>${verifyForestsOnly(g,S.k,run.owner).total}</b> &nbsp;` +
+    `<span style="color:${(m-A)+S.k*(g.n-cert.r)===verifyForestsOnly(g,S.k,run.owner).total?'var(--good-ink)':'var(--crit)'}">` +
+    `${(m-A)+S.k*(g.n-cert.r)===verifyForestsOnly(g,S.k,run.owner).total?'✓ identity holds here':'✗ mismatch'}</span><br>` +
+    `e_G(P) = ${cert.cross} &nbsp;≤&nbsp; |E|−|A| = ${m-A}`;
+
+  renderCertBar(cert);
+  drawCert();
+}
+
+function renderCertBar(cert){
+  const box=document.getElementById('certbar'); if(!box) return;
+  if(!cert){ box.innerHTML=''; return; }
+  const maxv=Math.max(cert.need, cert.cross)+0.6;
+  const pc=v=>100*v/maxv;
+  box.innerHTML=`
+    <div class="track">
+      <div class="fill" style="width:${pc(cert.cross)}%"></div>
+      <div class="gap" style="left:${pc(cert.cross)}%;width:${pc(cert.need-cert.cross)}%"></div>
+      <div class="need" style="left:${pc(cert.need)}%"></div>
+    </div>
+    <div class="lbls"><span>e_G(P) = ${cert.cross}</span><span>k(r−1) = ${cert.need}</span></div>
+    <div class="units">${
+      d3.range(cert.need).map(i=> i<cert.cross
+        ? '<i class="on" title="a real cross edge"></i>'
+        : '<i class="miss" title="missing — the shortfall"></i>').join('')
+    }</div>`;
+}
+
+function drawCert(){
+  const g=GRAPHS[S.gid], run=S.run;
+  if(run.status==='packed') return;
+  const cert=run.cert;
+  const reached=new Set(cert.A);
+  const crossSet=new Set(cert.crossE);
+  crossSet.rank=new Map(); cert.crossE.forEach((e,i)=>crossSet.rank.set(e,i));
+  const t=certState.t;
+  certView.render({
+    owner:run.owner,
+    reached: t<0.5 ? reached : new Set(),
+    blobs: certBlobs(g,cert), blobT: Math.max(0,(t-0.28)/0.72),
+    crossSet: t>0.55 ? crossSet : null,
+    crossShown: certState.shown,
+    note: t<0.02 ? 'maximum packing — the search reached the highlighted edges'
+        : (t<0.55 ? 'each connected piece of the reached set collapses to a part'
+                  : `${Math.min(certState.shown,cert.cross)} of ${cert.cross} cross edges counted — the toll is ${cert.need}`)
+  });
+}
+
+el('fl-t').oninput=e=>{
+  if(certAnim) certAnim.pause();
+  certState.t=+e.target.value/100;
+  certState.shown = certState.t>0.55 ? 999 : 0;
+  el('fl-lab').textContent=Math.round(certState.t*100)+'%';
+  drawCert();
+};
+el('fl-reset').onclick=()=>{ if(certAnim) certAnim.pause();
+  certState.t=0; certState.shown=0; el('fl-t').value=0; el('fl-lab').textContent='0%'; drawCert(); };
+el('fl-play').onclick=()=>{
+  if(S.run.status==='packed') return;
+  if(certAnim) certAnim.pause();
+  certState.t=0; certState.shown=0; drawCert();
+  const cert=S.run.cert;
+  certAnim=anime.timeline({
+    update:()=>{ el('fl-t').value=Math.round(certState.t*100); el('fl-lab').textContent=Math.round(certState.t*100)+'%'; drawCert(); }
+  })
+  .add({targets:certState, t:0.28, duration:900, easing:'easeInOutQuad'})
+  .add({targets:certState, t:0.55, duration:1100, easing:'easeInOutCubic'})
+  .add({targets:certState, t:1.0,  duration:700, easing:'easeOutQuad'})
+  .add({targets:certState, shown:[0,cert.cross], duration:Math.max(500,cert.cross*220), easing:'linear',
+        round:1});
+};
+
+/* ==================================================================
+   9 · §4 cards + survey
+   ================================================================== */
+function buildCards(){
+  const g=GRAPHS[S.gid], run=S.run;
+  const A=el('card-a'), B=el('card-b');
+  const packed=run.status==='packed';
+  A.classList.toggle('live',packed); B.classList.toggle('live',!packed);
+  if(packed){
+    const V=verifyPackingWitness(g,S.k,run.owner);
+    el('card-a-chk').innerHTML=V.notes.map(nt=>
+      `<li><span class="g ${nt.ok?'y':'n'}">${nt.ok?'✓':'✗'}</span><span>${nt.t}</span><span class="v">${nt.v}</span></li>`).join('')
+      +`<li><span class="g y">✓</span><span><b>${g.name}</b>, k = ${S.k} — witness accepted</span><span class="v"></span></li>`;
+    el('card-b-chk').innerHTML='';
+  } else {
+    const V=verifyCertificateWitness(g,S.k,run.cert.part);
+    el('card-b-chk').innerHTML=V.notes.map(nt=>
+      `<li><span class="g ${nt.ok?'y':'n'}">${nt.ok?'✓':'✗'}</span><span>${nt.t}</span><span class="v">${nt.v}</span></li>`).join('')
+      +`<li><span class="g y">✓</span><span><b>${g.name}</b>, k = ${S.k} — witness accepted</span><span class="v"></span></li>`;
+    el('card-a-chk').innerHTML='';
+  }
+}
+
+function buildSurvey(){
+  const tb=d3.select('#survey tbody'); tb.selectAll('*').remove();
+  ORDER.forEach(id=>{
+    const g=GRAPHS[id], k=DEFAULT_K[id];
+    const run=runPacking(g,k);
+    const packedTotal=verifyForestsOnly(g,k,run.owner).total;
+    let verdict, witness, check, tone;
+    if(run.status==='packed'){
+      const V=verifyPackingWitness(g,k,run.owner);
+      verdict='YES'; tone='ok';
+      witness=`${k} labelled spanning trees (${k*(g.n-1)} edges)`;
+      check=V.ok?'union-find re-check passed':'FAILED';
+    } else {
+      const V=verifyCertificateWitness(g,k,run.cert.part);
+      verdict='NO'; tone='bad';
+      witness=`partition, r = ${run.cert.r}: e_G(P) = ${run.cert.cross} &lt; ${run.cert.need}`;
+      check=V.ok?'recount passed':'FAILED';
+    }
+    const tr=tb.append('tr').on('click',()=>{ S.gid=id; S.k=k; rebuild();
+      document.getElementById('s2').scrollIntoView({behavior:'smooth'}); });
+    tr.append('td').html(`<b>${g.name}</b>`);
+    tr.append('td').attr('class','num').text(g.n);
+    tr.append('td').attr('class','num').text(g.edges.length);
+    tr.append('td').attr('class','num').text(k);
+    tr.append('td').attr('class','num').text(packedTotal);
+    tr.append('td').attr('class','num').text(k*(g.n-1));
+    tr.append('td').html(`<span class="pill ${tone}"><span class="gl">${tone==='ok'?'✓':'✗'}</span> ${verdict}</span>`);
+    tr.append('td').html(witness);
+    tr.append('td').html(`<span style="color:var(--good-ink)">✓</span> ${check}`);
+  });
+}
+
+/* ==================================================================
+   10 · §5 brute force
+   ================================================================== */
+el('bf-run').onclick=function(){
+  const btn=this; btn.disabled=true; btn.textContent='enumerating…';
+  setTimeout(()=>{
+    const tb=d3.select('#bf-tbl tbody'); tb.selectAll('*').remove();
+    ORDER.forEach(id=>{
+      const g=GRAPHS[id], k=DEFAULT_K[id];
+      const tr=tb.append('tr').style('cursor','default');
+      tr.append('td').html(`<b>${g.name}</b>`);
+      if(g.n>11){
+        tr.append('td').attr('class','num').text('B₁₅ ≈ 1.4e9');
+        tr.append('td').attr('class','num').style('color','var(--muted)').text('—');
+        tr.append('td').attr('class','num').text((()=>{const r=runPacking(g,k); return r.status==='packed'?'—':(r.cert.cross-r.cert.need);})());
+        tr.append('td').html('<span style="color:var(--muted)">skipped — too many partitions</span>');
+        return;
+      }
+      const b=bruteForceMin(g,k);
+      const run=runPacking(g,k);
+      const emitted = run.status==='packed' ? null : (run.cert.cross-run.cert.need);
+      const agree = run.status==='packed' ? (b.slack>=0) : (emitted===b.slack);
+      tr.append('td').attr('class','num').text(b.enumerated.toLocaleString());
+      tr.append('td').attr('class','num').text(b.slack);
+      tr.append('td').attr('class','num').text(emitted===null?'— (packed)':emitted);
+      tr.append('td').html(agree
+        ? '<span style="color:var(--good-ink)">✓</span> agree'
+        : '<span style="color:var(--crit)">✗</span> DISAGREE');
+    });
+    btn.textContent='re-run the enumeration'; btn.disabled=false;
+  },30);
+};
+
+/* ==================================================================
+   11 · boot
+   ================================================================== */
+renderMath(document);
+buildPickers();
+buildRail();
+buildSurvey();
+rebuild();
+
+/* reveal on scroll, with a hard failsafe so nothing can stay blank */
+(function(){
+  const rv=[...document.querySelectorAll('.rv')];
+  const show=e=>{ e.classList.add('in'); };
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>es.forEach(x=>{ if(x.isIntersecting){ show(x.target); io.unobserve(x.target); } }),
+      {rootMargin:'0px 0px -8% 0px', threshold:0.02});
+    rv.forEach(x=>io.observe(x));
+  }
+  setTimeout(()=>rv.forEach(x=>{x.classList.add('instant');x.classList.add('in');}), 700);
+})();
+</script>
+</body>
+</html>
