@@ -28,9 +28,14 @@ the whole arc:
 1. **The theorem** — what it actually says, precisely and in plain words.
 2. **The meaning** — what the statement *means* once the notation is gone.
 3. **The proof idea** — why it is true, as an argument the viewer can follow.
-4. **Visuals that carry 1–3** — the visual *is* the explanation, not an ornament beside it. It
+4. **Why it isn't obvious** — why the naive expectation fails, so the result reads as earned
+   rather than announced.
+5. **The boundary** — what breaks when a hypothesis is dropped, computed and on screen.
+6. **An honest ledger** — every claim tagged *proved here* / *computed here* / *cited*, so
+   "we showed this" never blurs into "we mentioned this".
+7. **Visuals that carry 1–6** — the visual *is* the explanation, not an ornament beside it. It
    must correspond to the math it explains, never be a visual for the sake of a visual.
-5. **No bloat** — focused writing that serves the math. Quality over volume.
+8. **No bloat** — focused writing that serves the math. Quality over volume.
 
 The N artifacts differ in **which deep angle they take** and **how they use visuals** to convey
 that meaning — not in whether they cover the arc. All of them cover it.
@@ -143,7 +148,13 @@ WHAT THE PAGE MUST DELIVER — this artifact is opened on its own, so it carries
   1. THE THEOREM — what it says, precisely and in plain words.
   2. THE MEANING — what it means once the notation is gone.
   3. THE PROOF IDEA — why it is true, as an argument the viewer can follow.
-  4. VISUALS THAT CARRY 1–3.
+  4. WHY IT ISN'T OBVIOUS — what a reader would naively expect, and why that fails. A theorem
+     with no visible obstacle reads as a definition.
+  5. THE BOUNDARY — drop a hypothesis and show, computed and on screen, what breaks. Knowing
+     where a theorem stops IS knowing the theorem.
+  6. AN HONEST LEDGER — tag every claim on the page: argued here / computed live in-page /
+     taken on faith with a pointer. Never let the third masquerade as the first.
+  7. VISUALS THAT CARRY 1–6.
   Your angle is HOW you get through these, not a substitute for any of them.
 
 YOUR JOB — think from first principles, then implement. The bar is not "a pretty picture of
@@ -170,10 +181,33 @@ FOCUS — write for a reader who wants the math. Say the thing and move on: no i
 no recaps, no restating the formula in prose. Text earns its place by saying what the visual
 cannot. A short page that lands the meaning beats a long one that circles it.
 
-PAGE LAYOUT — fold DOWN, not just out. Lay the explanation out as a vertical scroll of
-separated sections, each one clean beat of the argument, so the viewer descends at their own
-pace rather than facing one overloaded canvas. Within a section, split LEFT/RIGHT to spotlight
-the object next to its explanation (or formula, or the contrasting case).
+PAGE FORMAT — two axes. The page is a vertical stack of SECTIONS. Each section owns ONE
+sticky visual and a sequence of BEATS over it, and is split LEFT/RIGHT: the beat's prose on
+one side, the sticky visual on the other.
+
+  ↓ SCROLL moves between sections. Never gated, never hijacked — the reader may leave a
+    section at any beat, and returning restores the beat they were on.
+  ← → move between beats INSIDE the current section. → stops at the last beat; it does not
+    carry into the next section. Arrow keys are the only beat control for now — no dot rail,
+    no prev/next buttons, no swipe.
+
+A BEAT is one state of the section's visual plus the one paragraph explaining that state.
+Advancing cross-fades caption and visual together as a single move: only the current beat's
+text is on screen and the section does not reflow. Because the prose does NOT accumulate,
+anything the reader must hold in view — a chain of inequalities, a partial construction, a
+running count — has to live in the VISUAL, not in text above it. A section may have one beat.
+
+The visual stays LIVE at every beat. Beats set its configuration; the reader may grab, drag
+and probe at any moment. When they move it off the beat's configuration, mark that quietly and
+offer a one-click restore — and keep every readout honest for the configuration actually on
+screen, not the one the prose assumed.
+
+HIGHLIGHTING — optional, and earned. Where a beat's sentence refers to a specific object, the
+visual may spotlight exactly that object as the beat becomes active. Same rule as visuals: a
+highlight is legitimate only when it points at a real mathematical object the sentence is
+talking about. Granularity follows the math — a whole subgraph, one node, or a single symbol
+inside a KaTeX line (`\htmlClass` with `trust: true`) — never a fixed level applied uniformly
+because the mechanism exists. Highlighting nothing beats highlighting for the sake of it.
 
 LIBRARY PALETTE — a MENU, not a mandate. Reason from the scene to the tool; pick the fewest
 libraries that do the job and never two that do the same job. Rows overlap by design (2D, 3D,
