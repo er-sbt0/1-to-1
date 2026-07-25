@@ -7,6 +7,18 @@ meaning, each built by its own subagent, then compared.
 **Input:** one theorem / definition / statement (e.g. *"Tychonoff's theorem"*, *"the Fourier
 transform"*, *"Bayes' rule"*, *"the Central Limit Theorem"*).
 
+**Args:**
+
+| arg | values | default | meaning |
+|---|---|---|---|
+| `math-model` | `fable` \| `opus` | `fable` | which model does the mathematical reasoning (Phases 0–1) |
+| `N` | integer | `3` | how many competing explainers to build |
+| `audience` | free text | motivated student who has seen the basics of the field | level to write for |
+
+`math-model=fable` → Fable 5 (`model: "fable"`). `math-model=opus` → Opus 5 (`model: "opus"`).
+The arg controls **only** the reasoning subagent in Phases 0–1; the Phase 3 coding subagents are
+always Opus. Below, **the reasoning model** means whichever of the two `math-model` selected.
+
 **Output:** N standalone directories (default N = 3) under `./<topic>/<theorem>/<idx>/`, each
 opening offline by double-click, plus a comparison writeup and a rolled-up tech inventory.
 
@@ -23,19 +35,21 @@ the whole arc:
 The N artifacts differ in **which deep angle they take** and **how they use visuals** to convey
 that meaning — not in whether they cover the arc. All of them cover it.
 
-**The split:** a **Fable 5 subagent** does the mathematical reasoning — essence, non-trivial
-insight, decomposition, and the N concept angles (Phases 0–1), returning a text brief and no
-code. You record the plan (Phase 2), then launch **Opus coding subagents one at a time**
-(Phase 3), relaying the relevant essence from Fable's brief **inline** into each coder's spec.
+**The split:** one **reasoning subagent** (the `math-model` model) does the mathematical
+reasoning — essence, non-trivial insight, decomposition, and the N concept angles (Phases 0–1),
+returning a text brief and no code. You record the plan (Phase 2), then launch **Opus coding
+subagents one at a time** (Phase 3), relaying the relevant essence from that brief **inline**
+into each coder's spec.
 Each coder picks its own libraries and builds; none re-derives the math. You compare in Phase 4.
 
 Run end to end with no approval stops.
 
 ---
 
-## Phases 0 + 1 — one Fable 5 subagent
+## Phases 0 + 1 — one reasoning subagent
 
-Launch with the Agent tool, `subagent_type: "general-purpose"`, `model: "fable"`. Send it this
+Launch with the Agent tool, `subagent_type: "general-purpose"`, and `model` set from `math-model`
+— `"fable"` for `math-model=fable` (the default), `"opus"` for `math-model=opus`. Send it this
 brief verbatim with the brackets filled. Its returned text drives Phases 2–4.
 
 ```
@@ -89,23 +103,23 @@ RETURN:
 ## Phase 2 — record the outline (no approval gate)
 
 Note the plan for the record: essence + non-trivial insight, the concept table, and the
-assumptions (audience, N, `<topic>/<theorem>` slugs). This is a checkpoint, not a stop — go
-straight to Phase 3.
+assumptions (`math-model`, audience, N, `<topic>/<theorem>` slugs). This is a checkpoint, not a
+stop — go straight to Phase 3.
 
 ---
 
 ## Phase 3 — build the artifacts, one Opus subagent at a time
 
-`subagent_type: "general-purpose"` on the default/session model — do **not** set
-`model: "fable"` here. Launch **sequentially**, waiting for each to finish, so you can tell the
-next subagent what the earlier ones built (angle + visual approach + stack) and keep them
+`subagent_type: "general-purpose"` on Opus (the default/session model) — `math-model` does **not**
+apply here, and never set `model: "fable"`. Launch **sequentially**, waiting for each to finish,
+so you can tell the next subagent what the earlier ones built (angle + visual approach + stack) and keep them
 distinct on all three.
 
 Write products to `./<topic>/<theorem>/<idx>/` — `<topic>` = discipline slug, `<theorem>` =
 statement slug, `<idx>` = zero-padded index + short slug (`topology/tychonoff/01-cantor-tree`).
 Create each directory immediately before launching its subagent.
 
-Fill the brackets below from Fable's brief — the coder does not re-derive the math.
+Fill the brackets below from the reasoning brief — the coder does not re-derive the math.
 
 ```
 You are building ONE standalone interactive web artifact that explains [THEOREM] through
@@ -250,6 +264,13 @@ templatize) versus one-offs. This roll-up is what feeds automating artifact crea
 ## Quick invocation
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
-> Use N = [3]. Audience = [level]. Run end to end with no approval stops: launch a **Fable 5**
-> subagent for the essence + concepts (Phases 0–1), then **Opus** coding subagents one at a
-> time, relaying Fable's essence inline into each, and compare when they're built.
+> `math-model=[fable|opus]`. Use N = [3]. Audience = [level]. Run end to end with no approval
+> stops: launch the **`math-model`** subagent for the essence + concepts (Phases 0–1), then
+> **Opus** coding subagents one at a time, relaying that essence inline into each, and compare
+> when they're built.
+
+Omit `math-model` and it defaults to `fable`. Examples:
+
+> Follow `explore_math_explanations.md` for **"Tychonoff's theorem"**. `math-model=opus`, N = 3.
+
+> Follow `explore_math_explanations.md` for **"the Fourier transform"**. `math-model=fable`.
