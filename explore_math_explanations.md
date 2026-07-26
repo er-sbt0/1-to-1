@@ -185,11 +185,18 @@ PAGE FORMAT — two axes. The page is a vertical stack of SECTIONS. Each section
 sticky visual and a sequence of BEATS over it, and is split LEFT/RIGHT: the beat's prose on
 one side, the sticky visual on the other.
 
-  ↓ SCROLL moves between sections. Never gated, never hijacked — the reader may leave a
-    section at any beat, and returning restores the beat they were on.
-  ← → move between beats INSIDE the current section. → stops at the last beat; it does not
-    carry into the next section. Arrow keys are the only beat control for now — no dot rail,
-    no prev/next buttons, no swipe.
+  ↑ ↓ / SCROLL move between SECTIONS, and the move is SMOOTH either way. ↑ ↓ animate to the
+    previous / next section — one full section per press, from any beat, never gated. Free
+    scroll and trackpad keep working and are never hijacked; sections settle into frame with
+    gentle snapping (`scroll-snap-type: y proximity` + `scroll-snap-align: start`) — proximity,
+    never `mandatory`, so a deliberate scroll past a section is never fought. Leaving a section
+    at any beat and returning restores the beat they were on; a first visit starts at beat 1.
+  ← → move between beats INSIDE the current section — the one owning the viewport, whose sticky
+    visual is on screen. → stops at the last beat; it does not carry into the next section.
+    Arrow keys are the only beat control for now — no dot rail, no prev/next buttons, no swipe.
+  Both axes are keyboard-driven only when nothing else claims the keys: bind at the document
+  and skip when focus sits in a field, slider, or other control that uses arrows itself. Honor
+  `prefers-reduced-motion` — jump instead of animating, on both axes.
 
 A BEAT is one state of the section's visual plus the one paragraph explaining that state.
 Advancing cross-fades caption and visual together as a single move: only the current beat's
