@@ -12,14 +12,14 @@ transform"*, *"Bayes' rule"*, *"the Central Limit Theorem"*).
 | arg | values | default | meaning |
 |---|---|---|---|
 | `math-model` | `fable` \| `opus` | `fable` | which model does the mathematical reasoning (Phases 0–1) |
-| `N` | integer | `3` | how many competing explainers to build |
+| `N` | integer | `2` | how many competing explainers to build |
 | `audience` | free text | motivated student who has seen the basics of the field | level to write for |
 
 `math-model=fable` → Fable 5 (`model: "fable"`). `math-model=opus` → Opus 5 (`model: "opus"`).
 The arg controls **only** the reasoning subagent in Phases 0–1; the Phase 3 coding subagents are
 always Opus. Below, **the reasoning model** means whichever of the two `math-model` selected.
 
-**Output:** N standalone directories (default N = 3) under `./<topic>/<theorem>/<idx>/`, each
+**Output:** N standalone directories (default N = 2) under `./<topic>/<theorem>/<idx>/`, each
 opening offline by double-click, plus a comparison writeup and a rolled-up tech inventory.
 
 **What every explainer must deliver.** Each artifact is opened on its own, so each one carries
@@ -65,7 +65,7 @@ not how to draw it.
 
 THEOREM: [statement]
 AUDIENCE: [level — default: motivated student who has seen the basics of the field]
-N: [number of concept angles — default 3]
+N: [number of concept angles — default 2]
 
 PHASE 0 — understand it. North star: find the essence. The goal is never to decorate the
 formula; it is to convey what the statement *means* and *why it is true*. Answer first: if
@@ -305,7 +305,7 @@ templatize) versus one-offs. This roll-up is what feeds automating artifact crea
 ## Quick invocation
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
-> `math-model=[fable|opus]`. Use N = [3]. Audience = [level]. Run end to end with no approval
+> `math-model=[fable|opus]`. Use N = [2]. Audience = [level]. Run end to end with no approval
 > stops: launch the **`math-model`** subagent for the essence + concepts (Phases 0–1), then
 > **Opus** coding subagents one at a time, relaying that essence inline into each, and compare
 > when they're built.
