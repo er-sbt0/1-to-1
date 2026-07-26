@@ -7,45 +7,25 @@ meaning, each built by its own subagent, then compared.
 **Input:** one theorem / definition / statement (e.g. *"Tychonoff's theorem"*, *"the Fourier
 transform"*, *"Bayes' rule"*, *"the Central Limit Theorem"*).
 
-**Args:**
+**Output:** N standalone directories under `./<topic>/<theorem>/<idx>/`, each opening offline by
+double-click, plus a comparison writeup and a rolled-up tech inventory.
 
 | arg | values | default | meaning |
 |---|---|---|---|
-| `math-model` | `fable` \| `opus` | `fable` | which model does the mathematical reasoning (Phases 0–1) |
+| `math-model` | `fable` \| `opus` | `fable` | the `model:` of the **reasoning** subagent (Phases 0–1) only — coding subagents are always Opus, never `fable` |
 | `N` | integer | `2` | how many competing explainers to build |
 | `audience` | free text | motivated student who has seen the basics of the field | level to write for |
 
-`math-model=fable` → Fable 5 (`model: "fable"`). `math-model=opus` → Opus 5 (`model: "opus"`).
-The arg controls **only** the reasoning subagent in Phases 0–1; the Phase 3 coding subagents are
-always Opus. Below, **the reasoning model** means whichever of the two `math-model` selected.
+**The split:** one **reasoning subagent** returns a text brief — essence, non-trivial insight,
+decomposition, N concept angles — and no code (Phases 0–1). You record it (Phase 2), then launch
+**Opus coding subagents one at a time** (Phase 3), relaying the relevant essence from that brief
+**inline** into each coder's spec; each coder picks its own libraries and builds, and none
+re-derives the math. You compare in Phase 4.
 
-**Output:** N standalone directories (default N = 2) under `./<topic>/<theorem>/<idx>/`, each
-opening offline by double-click, plus a comparison writeup and a rolled-up tech inventory.
-
-**What every explainer must deliver.** Each artifact is opened on its own, so each one carries
-the whole arc:
-
-1. **The theorem** — what it actually says, precisely and in plain words.
-2. **The meaning** — what the statement *means* once the notation is gone.
-3. **The proof idea** — why it is true, as an argument the viewer can follow.
-4. **Why it isn't obvious** — why the naive expectation fails, so the result reads as earned
-   rather than announced.
-5. **The boundary** — what breaks when a hypothesis is dropped, computed and on screen.
-6. **An honest ledger** — every claim tagged *proved here* / *computed here* / *cited*, so
-   "we showed this" never blurs into "we mentioned this".
-7. **Visuals that carry 1–6** — the visual *is* the explanation, not an ornament beside it. It
-   must correspond to the math it explains, never be a visual for the sake of a visual.
-8. **No bloat** — focused writing that serves the math. Quality over volume.
-
-The N artifacts differ in **which deep angle they take** and **how they use visuals** to convey
-that meaning — not in whether they cover the arc. All of them cover it.
-
-**The split:** one **reasoning subagent** (the `math-model` model) does the mathematical
-reasoning — essence, non-trivial insight, decomposition, and the N concept angles (Phases 0–1),
-returning a text brief and no code. You record the plan (Phase 2), then launch **Opus coding
-subagents one at a time** (Phase 3), relaying the relevant essence from that brief **inline**
-into each coder's spec.
-Each coder picks its own libraries and builds; none re-derives the math. You compare in Phase 4.
+Every artifact carries the whole arc — statement, meaning, proof idea, why it isn't obvious, the
+boundary, an honest ledger, visuals that carry all of it. The N differ in **which deep angle**
+they take and **how they use visuals**, never in whether they cover the arc. Full spec: the
+`WHAT THE PAGE MUST DELIVER` block in Phase 3.
 
 Run end to end with no approval stops.
 
@@ -53,9 +33,8 @@ Run end to end with no approval stops.
 
 ## Phases 0 + 1 — one reasoning subagent
 
-Launch with the Agent tool, `subagent_type: "general-purpose"`, and `model` set from `math-model`
-— `"fable"` for `math-model=fable` (the default), `"opus"` for `math-model=opus`. Send it this
-brief verbatim with the brackets filled. Its returned text drives Phases 2–4.
+Launch with the Agent tool, `subagent_type: "general-purpose"`, `model` set from `math-model`.
+Send this brief verbatim with the brackets filled. Its returned text drives Phases 2–4.
 
 ```
 You are a mathematician. Reason from first principles about the statement below and return a
@@ -107,18 +86,16 @@ RETURN:
 
 ## Phase 2 — record the outline (no approval gate)
 
-Note the plan for the record: essence + non-trivial insight, the concept table, and the
-assumptions (`math-model`, audience, N, `<topic>/<theorem>` slugs). This is a checkpoint, not a
-stop — go straight to Phase 3.
+Note for the record: essence + non-trivial insight, the concept table, and the assumptions
+(`math-model`, audience, N, `<topic>/<theorem>` slugs). A checkpoint, not a stop — go to Phase 3.
 
 ---
 
 ## Phase 3 — build the artifacts, one Opus subagent at a time
 
-`subagent_type: "general-purpose"` on Opus (the default/session model) — `math-model` does **not**
-apply here, and never set `model: "fable"`. Launch **sequentially**, waiting for each to finish,
-so you can tell the next subagent what the earlier ones built (angle + visual approach + stack) and keep them
-distinct on all three.
+`subagent_type: "general-purpose"` on Opus (the default/session model). Launch **sequentially**,
+waiting for each to finish, so you can tell the next subagent what the earlier ones built (angle
++ visual approach + stack) and keep them distinct on all three.
 
 Write products to `./<topic>/<theorem>/<idx>/` — `<topic>` = discipline slug, `<theorem>` =
 statement slug, `<idx>` = zero-padded index + short slug (`topology/tychonoff/01-cantor-tree`).
@@ -144,6 +121,12 @@ MATHEMATICAL CONTENT (must be correct):
   - [the proof idea in 2–4 beats]
   - [the honesty caveats that must be surfaced, not glossed]
 
+THE VISUAL RULE — every visual, and every highlight, must correspond to something real in the
+math: the object, the hypothesis, the step, the thing that breaks. No motion that illustrates
+nothing, no chart whose axes carry no theorem content, no 3D that only spins. If a visual could
+be removed and nothing about the meaning is lost, it was decoration — cut it. Prefer one deep,
+revealing visual over several shallow ones. This rule governs everything below.
+
 WHAT THE PAGE MUST DELIVER — this artifact is opened on its own, so it carries the whole arc:
   1. THE THEOREM — what it says, precisely and in plain words.
   2. THE MEANING — what it means once the notation is gone.
@@ -163,19 +146,12 @@ it is true?
   1. Choose your libraries from the palette below by what fits THIS scene.
   2. Decide exactly what the mathematical object on screen is — the data structure (a tree of
      paths? a parameterized surface? a swarm of samples? a cover of open sets?).
-  3. Build visuals that ARE the explanation. Every visual must correspond to something real in
-     the math — the object, the hypothesis, the step, the thing that breaks. No visuals for the
-     sake of visuals: no motion that illustrates nothing, no chart whose axes carry no theorem
-     content, no 3D that only spins. If a visual could be removed and nothing about the meaning
-     is lost, it was decoration — cut it. Prefer one deep, revealing visual over several
-     shallow ones.
-  4. Compute, don't fake — actually compute the subcover, the transform, the eigen-
+  3. Compute, don't fake — actually compute the subcover, the transform, the eigen-
      decomposition, the limit, so the picture can't lie. Label any metaphor/projection as such,
      and surface caveats (finite-vs-infinite, projection-vs-embedding, discretization) in the UI
      where the user sees them.
-  5. Define the interaction contract: what the user drags/toggles/steps, and what updates.
-  6. Define the narration: staged steps/panels carrying the argument, with the KaTeX statement
-     at each step.
+  4. Define the interaction contract: what the user drags/toggles/steps, and what updates.
+  5. Define the narration: staged beats carrying the argument, with the KaTeX statement at each.
 
 FOCUS — write for a reader who wants the math. Say the thing and move on: no intro paragraphs,
 no recaps, no restating the formula in prose. Text earns its place by saying what the visual
@@ -210,11 +186,10 @@ offer a one-click restore — and keep every readout honest for the configuratio
 screen, not the one the prose assumed.
 
 HIGHLIGHTING — optional, and earned. Where a beat's sentence refers to a specific object, the
-visual may spotlight exactly that object as the beat becomes active. Same rule as visuals: a
-highlight is legitimate only when it points at a real mathematical object the sentence is
-talking about. Granularity follows the math — a whole subgraph, one node, or a single symbol
-inside a KaTeX line (`\htmlClass` with `trust: true`) — never a fixed level applied uniformly
-because the mechanism exists. Highlighting nothing beats highlighting for the sake of it.
+visual may spotlight exactly that object as the beat becomes active. Granularity follows the
+math — a whole subgraph, one node, or a single symbol inside a KaTeX line (`\htmlClass` with
+`trust: true`) — never a fixed level applied uniformly because the mechanism exists.
+Highlighting nothing beats highlighting for the sake of it.
 
 LIBRARY PALETTE — a MENU, not a mandate. Reason from the scene to the tool; pick the fewest
 libraries that do the job and never two that do the same job. Rows overlap by design (2D, 3D,
@@ -290,9 +265,9 @@ chose your stack.
 ## Phase 4 — compare
 
 Present a comparison table (`# | dir | angle | visual approach | stack | how well it lands the
-meaning + proof idea`), call out shared gotchas, note any math-honesty flags, and offer next steps: a
-**landing page** linking all N for side-by-side judging, a **scored comparison** after the user
-looks, or **polish the strongest one**.
+meaning + proof idea`), call out shared gotchas, note any math-honesty flags, and offer next
+steps: a **landing page** linking all N for side-by-side judging, a **scored comparison** after
+the user looks, or **polish the strongest one**.
 
 Then **aggregate the tech inventory**: read every concept's `manifest.json` and roll them up
 into one `_inventory.json` at `./<topic>/<theorem>/` — the union of libraries (versions, roles,
@@ -305,10 +280,7 @@ templatize) versus one-offs. This roll-up is what feeds automating artifact crea
 ## Quick invocation
 
 > Follow `explore_math_explanations.md` for the statement: **"[THEOREM]"**.
-> `math-model=[fable|opus]`. Use N = [2]. Audience = [level]. Run end to end with no approval
-> stops: launch the **`math-model`** subagent for the essence + concepts (Phases 0–1), then
-> **Opus** coding subagents one at a time, relaying that essence inline into each, and compare
-> when they're built.
+> `math-model=[fable|opus]`. Use N = [2]. Audience = [level]. Run end to end, no approval stops.
 
 Omit `math-model` and it defaults to `fable`. Examples:
 
