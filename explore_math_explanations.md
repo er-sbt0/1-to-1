@@ -191,35 +191,29 @@ math — a whole subgraph, one node, or a single symbol inside a KaTeX line (`\h
 `trust: true`) — never a fixed level applied uniformly because the mechanism exists.
 Highlighting nothing beats highlighting for the sake of it.
 
-LIBRARY PALETTE — a MENU, not a mandate. Reason from the scene to the tool; pick the fewest
-libraries that do the job and never two that do the same job. Rows overlap by design (2D, 3D,
-physics, CAS are each interchangeable) — pick ONE per job and drop the rest. KaTeX plus one
-animation lib are fine to reuse across concepts.
+LIBRARY PALETTE — a starting MENU, not a mandate and not exhaustive. Reason from the scene to
+the tool; pick the fewest libraries that do the job and never two that do the same job. Reach
+outside this list when the scene calls for something it doesn't cover (physics, CAS,
+computational geometry, GPU point clouds) — just hold it to the same offline check below. KaTeX
+plus one animation lib are fine to reuse across concepts.
 
   Math / numerical: math.js (expressions, matrices, complex, numerics) · ml-matrix
-    (decompositions, solvers) · gl-matrix (fast vec/mat/quat for 3D) · numeric.js (linalg,
-    optimization, ODEs) · jStat or simple-statistics (distributions, regression) ·
-    fraction.js (exact rationals) · decimal.js (arbitrary precision) · ndarray
-  Symbolic / CAS: Nerdamer · Algebrite
-  Plotting: D3.js (low-level, relational — trees/graphs/sets/covers/morphs) · Plotly.js
-    (scientific: contours, surfaces, 3D) · Observable Plot (concise statistical charts)
+    (decompositions, solvers) · fraction.js (exact rationals) · decimal.js (arbitrary precision)
+  Plotting / relational: D3.js (low-level — trees/graphs/sets/covers/morphs) · ECharts or
+    Chart.js (conventional charts, fast to stand up)
   Creative 2D: p5.js (free-form, simulations, particles) · Paper.js (vector paths, geometry) ·
-    PixiJS (GPU, thousands of points) · regl (custom shaders)
-  3D: Three.js (use a UMD/global build) · Babylon.js
-  Physics: Matter.js (2D rigid body) · Planck.js (Box2D-accurate 2D) · cannon-es (3D, pairs
-    with Three) · Rapier.js (WASM, vendor the .wasm)
+    Two.js (lightweight scene graph)
+  3D: Three.js (use a UMD/global build)
   Animation: GSAP (timeline-based, precise) · Anime.js (light DOM/SVG/CSS)
-  Interaction: interact.js (drag, resize, snap) · Hammer.js (touch gestures)
-  Graphs: Cytoscape.js (viz + graph algorithms) · Sigma.js + Graphology (large graphs)
-  Geometry: flatten-js (points/lines/polygons/intersections) · polygon-clipping (booleans) ·
-    Delaunator (Delaunay) · Earcut (triangulation)
+  Interaction: interact.js (drag, resize, snap)
+  Graphs: Cytoscape.js (viz + graph algorithms)
   Notation (mandatory for any statement on screen): KaTeX. MathJax only for heavy AMS macros.
 
   Offline check BEFORE you commit to a lib: it must load from `file://` via a classic <script>
   tag — a plain global/UMD/IIFE build. ESM-only packages (including Three's default
   `three.module.js`) FAIL from file:// (CORS `origin: null`); no importmaps. WASM engines need
   their `.wasm` vendored into lib/, sometimes with an explicit local path. If a lib has no
-  usable non-ESM build, pick a neighbor from the same row instead of fighting the loader.
+  usable non-ESM build, pick a neighbor that does the same job instead of fighting the loader.
 
 DELIVERY REQUIREMENTS (strict):
   - A single `index.html` that opens directly in a browser with NO build step and NO internet
